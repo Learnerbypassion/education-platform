@@ -1,0 +1,40 @@
+.explore-page { padding: var(--space-2xl) 0; }
+
+.explore-header { margin-bottom: var(--space-2xl); opacity: 0; }
+
+.explore-filters {
+  display: flex;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-2xl);
+  opacity: 0;
+}
+
+.explore-search {
+  flex: 1;
+  position: relative;
+}
+.explore-search-icon {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 1.1rem;
+}
+.explore-search .input-field { padding-left: 2.6rem; }
+.explore-filters select { max-width: 200px; }
+
+.explore-grid { margin-bottom: var(--space-2xl); }
+
+.explore-pagination {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-xl);
+}
+
+@media (max-width: 768px) {
+  .explore-filters { flex-direction: column; }
+  .explore-filters select { max-width: 100%; }
+}

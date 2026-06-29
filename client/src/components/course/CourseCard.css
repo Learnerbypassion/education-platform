@@ -1,0 +1,101 @@
+.course-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  cursor: pointer;
+  opacity: 0;
+}
+.course-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+}
+
+.course-card-thumb {
+  position: relative;
+  height: 180px;
+  overflow: hidden;
+  background: var(--bg-tertiary);
+}
+.course-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
+.course-card:hover .course-card-thumb img { transform: scale(1.05); }
+
+.course-card-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
+  color: var(--text-muted);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+.course-card-difficulty {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  padding: 0.15rem 0.6rem;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: capitalize;
+  border-radius: var(--radius-full);
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--diff-color);
+  border: 1px solid var(--diff-color);
+  backdrop-filter: blur(8px);
+}
+
+.course-card-body {
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  flex: 1;
+}
+
+.course-card-category { align-self: flex-start; }
+
+.course-card-title {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+.course-card-desc {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  line-height: 1.5;
+  flex: 1;
+}
+
+.course-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border-color);
+  margin-top: auto;
+}
+
+.course-card-instructor {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+.course-card-stats {
+  display: flex;
+  gap: var(--space-md);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+.course-card-stats span { display: flex; align-items: center; gap: 4px; }

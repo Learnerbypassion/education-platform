@@ -1,0 +1,109 @@
+.create-course-page { padding-bottom: var(--space-3xl); }
+
+.create-course-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--space-2xl);
+  margin-top: var(--space-xl);
+}
+
+.create-course-form {
+  padding: var(--space-2xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.create-course-outline {
+  padding: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  height: fit-content;
+}
+
+.add-module-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.outline-modules-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.outline-module-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm);
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+}
+
+.outline-module-container {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.outline-module-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.outline-module-actions {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.outline-lessons-list {
+  padding: var(--space-sm) var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.outline-lesson-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px var(--space-sm);
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+}
+
+.add-lesson-box {
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  border-top: 1px solid var(--border-color);
+}
+.add-lesson-box h4 {
+  font-size: var(--font-size-sm);
+  color: var(--color-primary-light);
+  margin-bottom: var(--space-xs);
+}
+
+@media (max-width: 900px) {
+  .create-course-layout { grid-template-columns: 1fr; }
+}
+
