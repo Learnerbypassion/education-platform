@@ -20,7 +20,7 @@ const lessonSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['video', 'document', 'resource', 'quiz'],
+      enum: ['video', 'document', 'resource', 'quiz', 'lecture', 'dpp', 'notes', 'dpp-pdf', 'dpp-video'],
       required: true,
     },
     content: {

@@ -27,9 +27,10 @@ const CourseCreate = () => {
   
   // Lesson outline states
   const [activeModuleId, setActiveModuleId] = useState(null);
+  const [lessonFile, setLessonFile] = useState(null);
   const [lessonForm, setLessonForm] = useState({
     title: '',
-    type: 'video',
+    type: 'lecture',
     videoUrl: '',
     content: '',
   });
@@ -38,7 +39,21 @@ const CourseCreate = () => {
     e.preventDefault();
     if (!lessonForm.title.trim()) return;
     try {
-      const res = await createLesson(moduleId, { ...lessonForm, courseId: id });
+      let res;
+      if (lessonFile || ['notes', 'dpp-pdf', 'document'].includes(lessonForm.type)) {
+        const formData = new FormData();
+        formData.append('title', lessonForm.title);
+        formData.append('type', lessonForm.type);
+        formData.append('content', lessonForm.content);
+        formData.append('videoUrl', lessonForm.videoUrl);
+        formData.append('courseId', id);
+        if (lessonFile) {
+          formData.append('attachments', lessonFile);
+        }
+        res = await createLesson(moduleId, formData);
+      } else {
+        res = await createLesson(moduleId, { ...lessonForm, courseId: id });
+      }
       
       // Update modules state list
       const updated = modules.map(m => {
@@ -50,7 +65,8 @@ const CourseCreate = () => {
       setModules(updated);
       
       // Reset form
-      setLessonForm({ title: '', type: 'video', videoUrl: '', content: '' });
+      setLessonForm({ title: '', type: 'lecture', videoUrl: '', content: '' });
+      setLessonFile(null);
       setActiveModuleId(null);
       toast.success('Lesson successfully added!');
     } catch (err) {
@@ -227,14 +243,25 @@ const CourseCreate = () => {
                       <div className="input-group">
                         <label>Material Type</label>
                         <select className="input-field" value={lessonForm.type} onChange={(e) => setLessonForm({ ...lessonForm, type: e.target.value })}>
-                          <option value="video">Video Embed URL Link</option>
-                          <option value="document">Text Material / Document</option>
+                          <option value="lecture">Lecture (Video)</option>
+                          <option value="notes">Notes (Document / PDF)</option>
+                          <option value="dpp">DPP (Practice Quiz)</option>
+                          <option value="dpp-pdf">DPP PDF (Downloadable)</option>
+                          <option value="dpp-video">DPP Video (Solution)</option>
+                          <option value="video">Other Video Link</option>
+                          <option value="document">Other Text Material</option>
                         </select>
                       </div>
-                      {lessonForm.type === 'video' && (
+                      {['video', 'lecture', 'dpp-video'].includes(lessonForm.type) && (
                         <div className="input-group">
                           <label>Video URL (YouTube or Vimeo link)</label>
                           <input type="url" className="input-field" placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..." value={lessonForm.videoUrl} onChange={(e) => setLessonForm({ ...lessonForm, videoUrl: e.target.value })} required />
+                        </div>
+                      )}
+                      {['notes', 'dpp-pdf', 'document'].includes(lessonForm.type) && (
+                        <div className="input-group">
+                          <label>Attachment File (PDF, DOCX, ZIP)</label>
+                          <input type="file" className="input-field" onChange={(e) => setLessonFile(e.target.files[0])} />
                         </div>
                       )}
                       <div className="input-group">
