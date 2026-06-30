@@ -5,8 +5,9 @@ import StatsCard from '../components/dashboard/StatsCard';
 import Loader from '../components/common/Loader';
 import CourseCard from '../components/course/CourseCard';
 import { getStudentStats, getInstructorStats, getAdminStats } from '../api/analyticsApi';
-import { getEnrolledCourses, getInstructorCourses } from '../api/courseApi';
+import { getEnrolledCourses, getInstructorCourses, togglePublish } from '../api/courseApi';
 import { HiOutlineBookOpen, HiOutlineAcademicCap, HiOutlineClipboardCheck, HiOutlineUsers, HiOutlineChartBar, HiOutlineDocumentText } from 'react-icons/hi';
+import toast from 'react-hot-toast';
 
 const Dashboard = () => {
   const { user, isAdmin, isInstructor } = useAuth();
@@ -16,6 +17,23 @@ const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [coursesList, setCoursesList] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const handleTogglePublish = async (courseId) => {
+    try {
+      const res = await togglePublish(courseId);
+      const updated = coursesList.map(c => {
+        if (c._id === courseId) {
+          return { ...c, isPublished: res.data.data.isPublished };
+        }
+        return c;
+      });
+      setCoursesList(updated);
+      toast.success(res.data.data.isPublished ? 'Course published successfully!' : 'Course reverted to draft!');
+    } catch (err) {
+      console.error('Failed to toggle course visibility:', err);
+      toast.error('Failed to toggle course visibility');
+    }
+  };
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -116,7 +134,12 @@ const Dashboard = () => {
                   <span className={`badge ${course.isPublished ? 'badge-success' : 'badge-primary'}`}>
                     {course.isPublished ? 'Published' : 'Draft'}
                   </span>
-                  <Link to={`/course/${course._id}/edit`} className="btn btn-outline btn-sm">Edit</Link>
+                  <div className="flex gap-2">
+                    <button type="button" className={`btn btn-sm ${course.isPublished ? 'btn-outline' : 'btn-primary'}`} onClick={() => handleTogglePublish(course._id)}>
+                      {course.isPublished ? 'Unpublish' : 'Publish'}
+                    </button>
+                    <Link to={`/course/${course._id}/edit`} className="btn btn-outline btn-sm">Edit</Link>
+                  </div>
                 </div>
               </div>
             ))}
@@ -143,32 +166,82 @@ const Dashboard = () => {
             <h3 className="text-2xl font-bold text-slate-900 dark:text-white font-heading">No performance data available</h3>
           </div>
         ) : (
-          <div className="glass-card overflow-hidden animate-slide-up delay-1 p-0">
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
-                <thead className="bg-slate-50/80 text-slate-600 dark:bg-slate-800/80 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700">
-                  <tr>
-                    <th className="px-6 py-4 font-bold uppercase tracking-wider">Course Title</th>
-                    <th className="px-6 py-4 font-bold uppercase tracking-wider">Students Enrolled</th>
-                    <th className="px-6 py-4 font-bold uppercase tracking-wider">Average Exam Score</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {stats?.courseStats?.map((c) => (
-                    <tr key={c.courseId} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                      <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">{c.title}</td>
-                      <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{c.students} students</td>
-                      <td className="px-6 py-4">
-                        <span className="badge badge-success px-4 py-1.5 text-sm">
-                          {c.averageScore ? `${Math.round(c.averageScore)}%` : '—'}
-                        </span>
-                      </td>
+          <>
+            <div className="glass-card overflow-hidden animate-slide-up delay-1 p-0">
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="bg-slate-50/80 text-slate-600 dark:bg-slate-800/80 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700">
+                    <tr>
+                      <th className="px-6 py-4 font-bold uppercase tracking-wider">Course Title</th>
+                      <th className="px-6 py-4 font-bold uppercase tracking-wider">Students Enrolled</th>
+                      <th className="px-6 py-4 font-bold uppercase tracking-wider">Average Exam Score</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {stats?.courseStats?.map((c) => (
+                      <tr key={c.courseId} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                        <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">{c.title}</td>
+                        <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{c.students} students</td>
+                        <td className="px-6 py-4">
+                          <span className="badge badge-success px-4 py-1.5 text-sm">
+                            {c.averageScore ? `${Math.round(c.averageScore)}%` : '—'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+
+            {stats?.recentSubmissions?.length > 0 && (
+              <div className="space-y-4">
+                <div className="glass-card p-6">
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white font-heading">Recent student <span className="gradient-text">submissions</span></h3>
+                  <p className="text-slate-500 text-sm mt-1">Track individual grades for exams and assignments.</p>
+                </div>
+                <div className="glass-card overflow-hidden p-0">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-left text-sm">
+                      <thead className="bg-slate-50/80 text-slate-600 dark:bg-slate-800/80 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700">
+                        <tr>
+                          <th className="px-6 py-4 font-bold uppercase tracking-wider">Student</th>
+                          <th className="px-6 py-4 font-bold uppercase tracking-wider">Course</th>
+                          <th className="px-6 py-4 font-bold uppercase tracking-wider">Activity / Assessment</th>
+                          <th className="px-6 py-4 font-bold uppercase tracking-wider">Type</th>
+                          <th className="px-6 py-4 font-bold uppercase tracking-wider">Score / Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {stats?.recentSubmissions?.map((s) => (
+                          <tr key={s._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                            <td className="px-6 py-4">
+                              <div className="font-semibold text-slate-900 dark:text-white">{s.studentId?.name}</div>
+                              <div className="text-xs text-slate-500">{s.studentId?.email}</div>
+                            </td>
+                            <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{s.courseId?.title}</td>
+                            <td className="px-6 py-4 font-medium text-slate-700 dark:text-slate-200">
+                              {s.examId?.title || s.assignmentId?.title || 'Quiz / Submission'}
+                            </td>
+                            <td className="px-6 py-4 capitalize text-slate-500">{s.type}</td>
+                            <td className="px-6 py-4">
+                              {s.type === 'exam' ? (
+                                <span className={`badge ${s.isPassed ? 'badge-success' : 'badge-primary'} px-3 py-1 text-xs`}>
+                                  {s.score} / {s.totalMarks} ({s.percentage}%)
+                                </span>
+                              ) : (
+                                <span className="badge badge-info px-3 py-1 text-xs">Submitted</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     );

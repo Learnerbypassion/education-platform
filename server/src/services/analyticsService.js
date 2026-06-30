@@ -38,9 +38,16 @@ class AnalyticsService {
     const courses = await Course.find({ creatorId: instructorId });
     const courseIds = courses.map((c) => c._id);
 
-    const [totalStudents, totalSubmissions] = await Promise.all([
+    const [totalStudents, totalSubmissions, recentSubmissions] = await Promise.all([
       Enrollment.countDocuments({ courseId: { $in: courseIds } }),
       Submission.countDocuments({ courseId: { $in: courseIds } }),
+      Submission.find({ courseId: { $in: courseIds } })
+        .populate('studentId', 'name email')
+        .populate('courseId', 'title')
+        .populate('examId', 'title')
+        .populate('assignmentId', 'title')
+        .sort({ submittedAt: -1 })
+        .limit(15),
     ]);
 
     // Per-course stats
@@ -66,6 +73,7 @@ class AnalyticsService {
       publishedCourses: courses.filter((c) => c.isPublished).length,
       totalStudents,
       totalSubmissions,
+      recentSubmissions,
       courseStats,
     };
   }

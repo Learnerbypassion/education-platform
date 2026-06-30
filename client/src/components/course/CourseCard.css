@@ -3,10 +3,15 @@
   flex-direction: column;
   overflow: hidden;
   cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
 }
 .course-card:hover {
   transform: translateY(-6px);
   box-shadow: var(--shadow-lg);
+}
+
+html[data-theme='dark'] .course-card {
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
 
 .course-card-thumb {

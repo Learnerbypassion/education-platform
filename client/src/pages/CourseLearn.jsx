@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getCourseById, updateProgress, getEnrolledCourses } from '../api/courseApi';
+import { getCourseById, updateProgress, getEnrolledCourses, getMySubmissions } from '../api/courseApi';
 import { getAssignments } from '../api/assignmentApi';
 import { getExams } from '../api/examApi';
 import { generateCertificate } from '../api/certificateApi';
@@ -18,6 +18,7 @@ const CourseLearn = () => {
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState([]);
   const [completedIds, setCompletedIds] = useState(new Set());
+  const [submissions, setSubmissions] = useState([]);
   const [certUrl, setCertUrl] = useState(null);
   const [generatingCert, setGeneratingCert] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -33,13 +34,15 @@ const CourseLearn = () => {
         setActiveLesson(data.modules[0].lessons[0]);
       }
 
-      // Fetch assignments and exams
-      const [assignmentsRes, examsRes] = await Promise.all([
+      // Fetch assignments, exams, and submissions
+      const [assignmentsRes, examsRes, submissionsRes] = await Promise.all([
         getAssignments(id),
         getExams(id),
+        getMySubmissions(),
       ]);
       setAssignments(assignmentsRes.data.data);
       setExams(examsRes.data.data);
+      setSubmissions(submissionsRes.data.data);
 
       const enrolledRes = await getEnrolledCourses();
       const enrollmentObj = enrolledRes.data.data.find(e => e.courseId?._id === id);
@@ -133,11 +136,19 @@ const CourseLearn = () => {
             <div className="classroom-mod-item">
               <h4>Assignments</h4>
               <div className="classroom-lessons-sublist">
-                {assignments.map((ass) => (
-                  <Link key={ass._id} to={`/assignments/${ass._id}/view`} className="classroom-les-btn">
-                    <span>📝 {ass.title}</span>
-                  </Link>
-                ))}
+                {assignments.map((ass) => {
+                  const assSubmission = submissions.find(s => s.assignmentId?._id === ass._id);
+                  return (
+                    <Link key={ass._id} to={`/assignments/${ass._id}/view`} className="classroom-les-btn">
+                      <span>📝 {ass.title}</span>
+                      {assSubmission && (
+                        <span style={{ color: 'var(--color-success)', fontSize: '0.85rem' }}>
+                          (Submitted ✓)
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -147,11 +158,19 @@ const CourseLearn = () => {
             <div className="classroom-mod-item">
               <h4>Exams & Assessments</h4>
               <div className="classroom-lessons-sublist">
-                {exams.map((ex) => (
-                  <Link key={ex._id} to={`/exams/${ex._id}/take`} className="classroom-les-btn">
-                    <span>🏆 {ex.title}</span>
-                  </Link>
-                ))}
+                {exams.map((ex) => {
+                  const examSubmission = submissions.find(s => s.examId?._id === ex._id);
+                  return (
+                    <Link key={ex._id} to={`/exams/${ex._id}/take`} className="classroom-les-btn">
+                      <span>🏆 {ex.title}</span>
+                      {examSubmission && (
+                        <span style={{ color: 'var(--color-success)', fontSize: '0.85rem' }}>
+                          (Score: {examSubmission.score}/{examSubmission.totalMarks})
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           )}

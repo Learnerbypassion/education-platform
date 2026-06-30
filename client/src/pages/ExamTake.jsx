@@ -17,6 +17,7 @@ const ExamTake = () => {
   const [timeLeft, setTimeLeft] = useState(0); // in seconds
   const [loading, setLoading] = useState(true);
   const [violations, setViolations] = useState(0);
+  const [submissionResult, setSubmissionResult] = useState(null);
   
   const timerRef = useRef(null);
 
@@ -128,8 +129,8 @@ const ExamTake = () => {
       });
 
       const result = res.data.data;
+      setSubmissionResult(result);
       toast.success(result.isPassed ? 'Passed! 🎉' : 'Failed. Try again next time.');
-      navigate(`/dashboard`);
     } catch {
       toast.error('Failed to submit exam');
     } finally {
@@ -144,6 +145,46 @@ const ExamTake = () => {
   };
 
   if (loading) return <Loader text="Entering secure proctored environment..." />;
+
+  if (submissionResult) {
+    return (
+      <div className="exam-result-page animate-scale-in" style={{ padding: '2rem 1rem' }}>
+        <div className="glass-card exam-result-card text-center max-w-md mx-auto p-8 mt-12">
+          <span className="result-badge" style={{ fontSize: '4rem', display: 'block', marginBottom: '1rem' }}>
+            {submissionResult.isPassed ? '🎉' : '😢'}
+          </span>
+          <h2 className="text-3xl font-bold mt-4">Exam Completed!</h2>
+          <p className="text-slate-500 mt-2">Your response has been graded automatically.</p>
+          
+          <div className="score-details mt-6 space-y-3 bg-slate-50 dark:bg-slate-800 p-5 rounded-2xl">
+            <div className="flex justify-between" style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Your Score</span>
+              <strong className="text-brand-600 dark:text-brand-400">{submissionResult.score} / {submissionResult.totalMarks}</strong>
+            </div>
+            <div className="flex justify-between" style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Percentage</span>
+              <strong>{submissionResult.percentage}%</strong>
+            </div>
+            <div className="flex justify-between" style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Result Status</span>
+              <span className={`badge ${submissionResult.isPassed ? 'badge-success' : 'badge-primary'}`}>
+                {submissionResult.isPassed ? 'Passed' : 'Failed'}
+              </span>
+            </div>
+            <div className="flex justify-between" style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Attempt Number</span>
+              <strong>#{submissionResult.attemptNumber}</strong>
+            </div>
+          </div>
+          
+          <button className="btn btn-primary w-full mt-8 btn-lg" onClick={() => navigate(-1)}>
+            Back to Classroom
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!exam) return <div className="container"><h3>Exam not found</h3></div>;
 
   const currentQuestion = questions[activeIdx];
@@ -183,7 +224,7 @@ const ExamTake = () => {
               
               <div className="exam-options-list">
                 {currentQuestion.type === 'mcq' || currentQuestion.type === 'true-false' || currentQuestion.type === 'multiple-correct' ? (
-                  currentQuestion.options?.map((opt, i) => {
+                  (currentQuestion.type === 'true-false' ? [{ text: 'True' }, { text: 'False' }] : currentQuestion.options)?.map((opt, i) => {
                     const isMultiple = currentQuestion.type === 'multiple-correct';
                     const isSelected = isMultiple
                       ? answers[currentQuestion._id]?.includes(opt.text)

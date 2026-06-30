@@ -30,7 +30,7 @@ const CourseCreate = () => {
   const [lessonForm, setLessonForm] = useState({
     title: '',
     type: 'video',
-    videoEmbedUrl: '',
+    videoUrl: '',
     content: '',
   });
 
@@ -38,7 +38,7 @@ const CourseCreate = () => {
     e.preventDefault();
     if (!lessonForm.title.trim()) return;
     try {
-      const res = await createLesson(moduleId, lessonForm);
+      const res = await createLesson(moduleId, { ...lessonForm, courseId: id });
       
       // Update modules state list
       const updated = modules.map(m => {
@@ -50,10 +50,11 @@ const CourseCreate = () => {
       setModules(updated);
       
       // Reset form
-      setLessonForm({ title: '', type: 'video', videoEmbedUrl: '', content: '' });
+      setLessonForm({ title: '', type: 'video', videoUrl: '', content: '' });
       setActiveModuleId(null);
       toast.success('Lesson successfully added!');
-    } catch {
+    } catch (err) {
+      console.error(err);
       toast.error('Failed to add lesson to module');
     }
   };
@@ -200,7 +201,7 @@ const CourseCreate = () => {
                       <button type="button" className="btn btn-ghost btn-sm" onClick={() => setActiveModuleId(activeModuleId === mod._id ? null : mod._id)}>
                         {activeModuleId === mod._id ? 'Cancel' : '+ Add Lesson'}
                       </button>
-                      <Link to={`/exams/${mod._id}/create`} className="btn btn-ghost btn-sm">Add Exam</Link>
+                      <Link to={`/exams/${id}/create`} className="btn btn-ghost btn-sm">Add Exam</Link>
                     </div>
                   </div>
 
@@ -232,8 +233,8 @@ const CourseCreate = () => {
                       </div>
                       {lessonForm.type === 'video' && (
                         <div className="input-group">
-                          <label>Video URL (e.g. YouTube Embed link)</label>
-                          <input type="url" className="input-field" placeholder="https://www.youtube.com/embed/..." value={lessonForm.videoEmbedUrl} onChange={(e) => setLessonForm({ ...lessonForm, videoEmbedUrl: e.target.value })} required />
+                          <label>Video URL (YouTube or Vimeo link)</label>
+                          <input type="url" className="input-field" placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..." value={lessonForm.videoUrl} onChange={(e) => setLessonForm({ ...lessonForm, videoUrl: e.target.value })} required />
                         </div>
                       )}
                       <div className="input-group">

@@ -103,12 +103,26 @@ const updateProgress = asyncHandler(async (req, res) => {
     { upsert: true, new: true }
   );
 
-  // Update enrollment completed lessons
+  // Update enrollment completed lessons and recalculate progress percentage
   if (isCompleted) {
-    await Enrollment.findOneAndUpdate(
+    const enrollment = await Enrollment.findOneAndUpdate(
       { studentId: req.user._id, courseId: lesson.courseId },
-      { $addToSet: { completedLessons: lesson._id }, lastAccessedAt: new Date() }
+      { $addToSet: { completedLessons: lesson._id }, lastAccessedAt: new Date() },
+      { new: true }
     );
+
+    if (enrollment) {
+      const totalLessons = await Lesson.countDocuments({ courseId: lesson.courseId });
+      const completedCount = enrollment.completedLessons.length;
+      const progressPercent = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+      
+      enrollment.progress = progressPercent;
+      if (progressPercent === 100) {
+        enrollment.status = 'completed';
+        enrollment.completedAt = new Date();
+      }
+      await enrollment.save();
+    }
   }
 
   ApiResponse.success(res, 'Progress updated', progress);

@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom';
 import { HiOutlineUsers, HiOutlineStar } from 'react-icons/hi';
 import { getCategoryLabel, getDifficultyColor, truncateText, getInitials } from '../../utils/helpers';
+import './CourseCard.css';
 
 const CourseCard = ({ course }) => {
   const creator = course.creatorId || {};
 
   return (
-    <Link to={`/courses/${course._id}`} className="glass-card overflow-hidden hover-lift" id={`course-${course._id}`}>
+    <Link to={`/courses/${course._id}`} className="glass-card course-card overflow-hidden hover-lift" id={`course-${course._id}`}>
       <div className="h-40 overflow-hidden bg-gradient-to-br from-brand-50 via-slate-50 to-brand-100 dark:from-slate-800 dark:via-slate-900 dark:to-brand-950/40">
         {course.thumbnail ? (
           <img src={course.thumbnail} alt={course.title} className="h-full w-full object-cover transition-transform duration-500 hover:scale-105" />
