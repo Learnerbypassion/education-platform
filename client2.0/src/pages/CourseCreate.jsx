@@ -120,10 +120,10 @@ const CourseCreate = () => {
   };
 
   return (
-    <div className="create-course-page animate-page-enter">
-      <h1 className={`text-4xl font-bold font-heading text-slate-900 dark:text-white ${!isEdit ? 'text-center' : ''}`}>{isEdit ? 'Edit' : 'Create'} <span className="gradient-text">Course</span></h1>
+    <div className="create-course-page">
+      <h1 className="section-title">{isEdit ? 'Edit' : 'Create'} <span className="gradient-text">Course</span></h1>
       
-      <div className={`create-course-layout animate-slide-up delay-1 ${isEdit ? 'is-edit' : 'is-create'}`}>
+      <div className="create-course-layout">
         <form onSubmit={handleSubmit} className="create-course-form glass-card" id="course-create-form">
           <div className="input-group">
             <label htmlFor="course-title">Course Title</label>

@@ -1,0 +1,243 @@
+.classroom-page {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ─── Mobile toggle button ────────────────────── */
+.classroom-mobile-toggle {
+  display: none;
+  position: fixed;
+  bottom: var(--space-lg);
+  left: var(--space-lg);
+  z-index: 50;
+  padding: 0.6rem 1rem;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  align-items: center;
+  gap: var(--space-xs);
+  box-shadow: 0 4px 16px rgba(91, 109, 224, 0.4);
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+.classroom-mobile-toggle:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(91, 109, 224, 0.5);
+}
+
+/* ─── Mobile overlay ──────────────────────────── */
+.classroom-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+}
+.classroom-overlay-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ─── Sidebar ─────────────────────────────────── */
+.classroom-sidebar {
+  width: 320px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.classroom-sidebar-header {
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--border-color);
+}
+.classroom-back-btn {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 8px;
+  transition: color 150ms ease;
+}
+.classroom-back-btn:hover { color: var(--color-primary-light); }
+.classroom-sidebar-header h3 { font-size: var(--font-size-md); font-weight: 700; }
+
+.classroom-modules-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.classroom-mod-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.classroom-mod-label { font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+.classroom-mod-item h4 { font-size: var(--font-size-sm); margin-bottom: 4px; }
+
+.classroom-lessons-sublist {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.classroom-les-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  transition: all 200ms ease;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+.classroom-les-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.classroom-les-active {
+  background: var(--color-primary-glow) !important;
+  color: var(--color-primary-light) !important;
+  font-weight: 600;
+}
+
+.classroom-sidebar-footer {
+  padding: var(--space-md);
+  border-top: 1px solid var(--border-color);
+}
+.classroom-sidebar-footer .btn { width: 100%; }
+
+/* ─── Main content ────────────────────────────── */
+.classroom-main {
+  flex: 1;
+  background: var(--bg-primary);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.classroom-viewport {
+  padding: var(--space-2xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.classroom-player-wrapper {
+  position: relative;
+  padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+  height: 0;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  background: #000;
+}
+.classroom-player-wrapper iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.classroom-document-placeholder {
+  height: 350px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  color: var(--text-secondary);
+}
+
+.classroom-content-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.classroom-content-details h2 {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+}
+
+.classroom-markdown-content {
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.classroom-action-row {
+  margin-top: var(--space-md);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.classroom-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: var(--space-md);
+  color: var(--text-muted);
+  text-align: center;
+  padding: var(--space-2xl);
+}
+
+/* ─── Mobile: Sidebar becomes a slide-out drawer ─ */
+@media (max-width: 768px) {
+  .classroom-mobile-toggle {
+    display: flex;
+  }
+
+  .classroom-overlay {
+    display: block;
+  }
+
+  .classroom-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 45;
+    width: 85%;
+    max-width: 340px;
+    height: 100vh;
+    transform: translateX(-100%);
+  }
+
+  .classroom-sidebar-open {
+    transform: translateX(0);
+  }
+
+  .classroom-viewport {
+    padding: var(--space-lg);
+  }
+
+  .classroom-document-placeholder {
+    height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .classroom-viewport {
+    padding: var(--space-md);
+  }
+}

@@ -43,24 +43,16 @@ const Sidebar = () => {
         onClick={close}
       />
       <aside
-        className={`
-          fixed left-0 top-[72px] z-50 h-[calc(100vh-72px)] w-72 border-r border-slate-200/70 bg-white/95 p-4 backdrop-blur-xl transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] dark:border-slate-800 dark:bg-slate-950/95
-          lg:sticky lg:top-[96px] lg:h-[calc(100vh-120px)] lg:rounded-3xl lg:border lg:bg-white lg:dark:bg-slate-900/70
-          ${sidebarOpen 
-            ? 'translate-x-0 lg:w-72 lg:opacity-100 lg:px-4 lg:ml-0' 
-            : '-translate-x-full lg:translate-x-0 lg:w-0 lg:opacity-0 lg:overflow-hidden lg:px-0 lg:border-none lg:-ml-6'
-          }
-        `}
+        className={`fixed left-0 top-16 z-30 h-[calc(100vh-4rem)] w-72 border-r border-slate-200/70 bg-white/95 p-4 backdrop-blur-xl transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] dark:border-slate-800 dark:bg-slate-950/95 lg:sticky lg:top-20 lg:h-auto lg:w-72 lg:rounded-3xl lg:border lg:bg-white lg:p-4 dark:lg:bg-slate-900/70 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
         id="main-sidebar"
       >
-        <div className="w-[254px] lg:w-64">
-          <div className="mb-4 flex items-center justify-between lg:hidden">
-            <span className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Navigation</span>
-            <button className="rounded-2xl p-2 text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800" onClick={close}>
-              <HiOutlineX size={18} />
-            </button>
-          </div>
-          <nav className="space-y-1">
+        <div className="mb-4 flex items-center justify-between lg:hidden">
+          <span className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Navigation</span>
+          <button className="rounded-2xl p-2 text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800" onClick={close}>
+            <HiOutlineX size={18} />
+          </button>
+        </div>
+        <nav className="space-y-1">
           {links.map((link) => (
             <NavLink
               key={link.to}
@@ -76,11 +68,10 @@ const Sidebar = () => {
           ))}
         </nav>
         <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600 transition hover:border-brand-300 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-300">
-            <NavLink to="/verify" className="flex items-center gap-3" onClick={close}>
-              <HiOutlineDocumentText />
-              <span>Verify Certificate</span>
-            </NavLink>
-          </div>
+          <NavLink to="/verify" className="flex items-center gap-3" onClick={close}>
+            <HiOutlineDocumentText />
+            <span>Verify Certificate</span>
+          </NavLink>
         </div>
       </aside>
     </>

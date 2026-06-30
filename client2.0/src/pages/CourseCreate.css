@@ -1,18 +1,10 @@
 .create-course-page { padding-bottom: var(--space-3xl); }
 
 .create-course-layout {
-  margin-top: var(--space-xl);
-}
-
-.create-course-layout.is-edit {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: var(--space-2xl);
-}
-
-.create-course-layout.is-create {
-  max-width: 800px;
-  margin: var(--space-xl) auto 0;
+  margin-top: var(--space-xl);
 }
 
 .create-course-form {
@@ -112,6 +104,6 @@
 }
 
 @media (max-width: 900px) {
-  .create-course-layout.is-edit { grid-template-columns: 1fr; }
+  .create-course-layout { grid-template-columns: 1fr; }
 }
 
