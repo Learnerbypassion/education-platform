@@ -6,7 +6,7 @@ import { getExams } from '../api/examApi';
 import { generateCertificate } from '../api/certificateApi';
 import Loader from '../components/common/Loader';
 import toast from 'react-hot-toast';
-import { HiOutlineBookOpen, HiOutlineChevronRight, HiOutlinePlay, HiOutlineDocumentText, HiOutlineQuestionMarkCircle, HiOutlineAcademicCap } from 'react-icons/hi';
+import { HiOutlineBookOpen, HiOutlineChevronRight, HiOutlinePlay, HiOutlineDocumentText, HiOutlineQuestionMarkCircle, HiOutlineAcademicCap, HiOutlineMenu, HiOutlineX } from 'react-icons/hi';
 import './CourseLearn.css';
 
 const CourseLearn = () => {
@@ -20,6 +20,7 @@ const CourseLearn = () => {
   const [completedIds, setCompletedIds] = useState(new Set());
   const [certUrl, setCertUrl] = useState(null);
   const [generatingCert, setGeneratingCert] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const fetchCourseData = async () => {
     try {
@@ -80,12 +81,33 @@ const CourseLearn = () => {
     }
   };
 
-  if (loading) return <Loader text="Entering classroom workspace..." />;
-  if (!course) return <div className="container"><h3>Workspace not found</h3></div>;
+  const handleLessonSelect = (lesson) => {
+    setActiveLesson(lesson);
+    setSidebarOpen(false);
+  };
+
+  if (loading) return <div className="flex min-h-screen items-center justify-center"><Loader text="Entering classroom workspace..." /></div>;
+  if (!course) return <div className="container" style={{ padding: '4rem 0' }}><h3>Workspace not found</h3></div>;
 
   return (
     <div className="classroom-page">
-      <div className="classroom-sidebar">
+      {/* Mobile sidebar toggle button */}
+      <button
+        className="classroom-mobile-toggle"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        aria-label="Toggle course outline"
+      >
+        {sidebarOpen ? <HiOutlineX size={20} /> : <HiOutlineMenu size={20} />}
+        <span>{sidebarOpen ? 'Close' : 'Outline'}</span>
+      </button>
+
+      {/* Mobile overlay */}
+      <div
+        className={`classroom-overlay ${sidebarOpen ? 'classroom-overlay-active' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+      />
+
+      <div className={`classroom-sidebar ${sidebarOpen ? 'classroom-sidebar-open' : ''}`}>
         <div className="classroom-sidebar-header">
           <Link to={`/courses/${id}`} className="classroom-back-btn">← Course Info</Link>
           <h3>{course.title}</h3>
@@ -97,7 +119,7 @@ const CourseLearn = () => {
               <h4>{mod.title}</h4>
               <div className="classroom-lessons-sublist">
                 {mod.lessons?.map((les) => (
-                  <button key={les._id} className={`classroom-les-btn ${activeLesson?._id === les._id ? 'classroom-les-active' : ''}`} onClick={() => setActiveLesson(les)}>
+                  <button key={les._id} className={`classroom-les-btn ${activeLesson?._id === les._id ? 'classroom-les-active' : ''}`} onClick={() => handleLessonSelect(les)}>
                     <span>{les.type === 'video' ? <HiOutlinePlay /> : <HiOutlineDocumentText />} {les.title}</span>
                     {completedIds.has(les._id) && <span style={{ color: 'var(--color-success)' }}>✓</span>}
                   </button>
@@ -148,7 +170,7 @@ const CourseLearn = () => {
 
       <div className="classroom-main">
         {activeLesson ? (
-          <div className="classroom-viewport animate-fade-in">
+          <div className="classroom-viewport animate-page-enter" key={activeLesson._id}>
             {activeLesson.type === 'video' && activeLesson.videoEmbedUrl ? (
               <div className="classroom-player-wrapper">
                 <iframe src={activeLesson.videoEmbedUrl} title={activeLesson.title} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
@@ -164,7 +186,7 @@ const CourseLearn = () => {
               {activeLesson.content && <div className="classroom-markdown-content" dangerouslySetInnerHTML={{ __html: activeLesson.content }} />}
               
               <div className="classroom-action-row">
-                <button onClick={handleMarkComplete} disabled={completedIds.has(activeLesson._id)} className="btn btn-primary btn-lg">
+                <button onClick={handleMarkComplete} disabled={completedIds.has(activeLesson._id)} className={`btn ${completedIds.has(activeLesson._id) ? 'btn-outline' : 'btn-primary'} btn-lg`}>
                   {completedIds.has(activeLesson._id) ? 'Completed ✓' : 'Mark as Complete'}
                 </button>
               </div>

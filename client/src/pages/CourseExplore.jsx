@@ -6,7 +6,6 @@ import Loader from '../components/common/Loader';
 import { CATEGORIES, DIFFICULTIES } from '../utils/constants';
 import { HiOutlineSearch, HiOutlineAdjustments } from 'react-icons/hi';
 import { useDebounce } from '../hooks/useDebounce';
-import './CourseExplore.css';
 
 const CourseExplore = () => {
   const dispatch = useDispatch();
@@ -22,47 +21,55 @@ const CourseExplore = () => {
   }, [dispatch, debouncedSearch, category, difficulty, page]);
 
   return (
-    <div className="explore-page">
-      <div className="container">
-        <div className="explore-header animate-fade-in-up">
-          <h1 className="section-title">Explore <span className="gradient-text">Courses</span></h1>
-          <p className="section-subtitle">Discover courses from expert instructors worldwide</p>
+    <div className="px-4 py-12 sm:px-6 lg:px-8 animate-page-enter">
+      <div className="mx-auto max-w-7xl">
+        <div className="text-center sm:text-left">
+          <h1 className="text-4xl font-bold text-slate-900 dark:text-white font-heading">Explore <span className="gradient-text">courses</span></h1>
+          <p className="mt-3 text-lg text-slate-600 dark:text-slate-300">Browse a thoughtful collection of courses from expert instructors.</p>
         </div>
 
-        {/* Filters */}
-        <div className="explore-filters glass-card animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-          <div className="explore-search">
-            <HiOutlineSearch className="explore-search-icon" />
-            <input type="text" className="input-field" placeholder="Search courses..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} id="course-search" />
+        <div className="glass-card mt-10 grid gap-4 p-5 md:grid-cols-[1.3fr_0.7fr_0.7fr] animate-slide-up delay-1">
+          <div className="relative hover-lift">
+            <HiOutlineSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+            <input type="text" className="input-field pl-12 h-12" placeholder="Search courses..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} id="course-search" />
           </div>
-          <select className="input-field" value={category} onChange={(e) => { setCategory(e.target.value); setPage(1); }} id="category-filter">
-            <option value="">All Categories</option>
-            {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-          </select>
-          <select className="input-field" value={difficulty} onChange={(e) => { setDifficulty(e.target.value); setPage(1); }} id="difficulty-filter">
-            <option value="">All Levels</option>
-            {DIFFICULTIES.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
-          </select>
+          <div className="hover-lift">
+            <select className="input-field h-12" value={category} onChange={(e) => { setCategory(e.target.value); setPage(1); }} id="category-filter">
+              <option value="">All Categories</option>
+              {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+            </select>
+          </div>
+          <div className="hover-lift">
+            <select className="input-field h-12" value={difficulty} onChange={(e) => { setDifficulty(e.target.value); setPage(1); }} id="difficulty-filter">
+              <option value="">All Levels</option>
+              {DIFFICULTIES.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
+            </select>
+          </div>
         </div>
 
-        {/* Results */}
         {loading ? (
-          <Loader text="Loading courses..." />
+          <div className="mt-16"><Loader text="Loading courses..." /></div>
         ) : courses.length === 0 ? (
-          <div className="empty-state">
-            <HiOutlineAdjustments size={48} />
-            <h3>No courses found</h3>
-            <p>Try adjusting your search or filters</p>
+          <div className="glass-card mt-12 flex flex-col items-center justify-center px-8 py-20 text-center animate-slide-up delay-2">
+            <div className="rounded-full bg-brand-50 p-6 dark:bg-brand-900/40 text-brand-500 mb-6 shadow-glow">
+              <HiOutlineAdjustments size={56} />
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white font-heading">No courses found</h3>
+            <p className="mt-2 text-slate-500">Try adjusting your search or filters.</p>
           </div>
         ) : (
           <>
-            <div className="grid grid-3 explore-grid">
-              {courses.map((course) => <CourseCard key={course._id} course={course} />)}
+            <div className="mt-12 grid gap-8 md:grid-cols-2 xl:grid-cols-3 animate-slide-up delay-2">
+              {courses.map((course, idx) => (
+                <div key={course._id} className={`hover-lift delay-${(idx % 4) + 1}`}>
+                  <CourseCard course={course} />
+                </div>
+              ))}
             </div>
             {pagination && pagination.pages > 1 && (
-              <div className="explore-pagination">
+              <div className="mt-12 flex flex-wrap justify-center gap-3 animate-slide-up delay-3">
                 {Array.from({ length: pagination.pages }, (_, i) => (
-                  <button key={i} className={`btn ${page === i + 1 ? 'btn-primary' : 'btn-ghost'} btn-sm`} onClick={() => setPage(i + 1)}>
+                  <button key={i} className={`btn ${page === i + 1 ? 'btn-primary shadow-glow' : 'btn-outline'} btn-sm px-4`} onClick={() => setPage(i + 1)}>
                     {i + 1}
                   </button>
                 ))}

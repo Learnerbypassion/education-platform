@@ -175,7 +175,7 @@ const ExamTake = () => {
           <button className="btn btn-accent w-full" onClick={() => handleSubmit(false)}>Submit Exam</button>
         </div>
 
-        <div className="exam-q-workspace glass-card animate-fade-in">
+        <div className="exam-q-workspace glass-card animate-page-enter" key={activeIdx}>
           {currentQuestion ? (
             <div className="exam-question-item">
               <span className="exam-q-number">Question {activeIdx + 1} of {questions.length}</span>

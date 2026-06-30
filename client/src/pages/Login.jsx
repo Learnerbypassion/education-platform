@@ -4,7 +4,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { login, clearError } from '../store/slices/authSlice';
 import toast from 'react-hot-toast';
 import { HiOutlineMail, HiOutlineLockClosed, HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
-import './Auth.css';
 
 const Login = () => {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -26,37 +25,37 @@ const Login = () => {
   };
 
   return (
-    <div className="auth-page">
-      <h2 className="auth-title">Welcome Back</h2>
-      <p className="auth-subtitle">Sign in to continue your learning journey</p>
-      <form onSubmit={handleSubmit} className="auth-form" id="login-form">
-        <div className="input-group">
-          <label htmlFor="login-email">Email</label>
-          <div className="input-icon-wrapper">
-            <HiOutlineMail className="input-icon" />
-            <input id="login-email" type="email" className="input-field input-with-icon" placeholder="you@example.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+    <div className="rounded-[2rem] border border-slate-200/70 bg-white/80 p-6 shadow-[0_10px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/70 sm:p-8">
+      <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Welcome back</h2>
+      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Sign in to continue your learning journey.</p>
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4" id="login-form">
+        <div>
+          <label htmlFor="login-email" className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">Email</label>
+          <div className="relative">
+            <HiOutlineMail className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input id="login-email" type="email" className="input-field pl-10" placeholder="you@example.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
           </div>
         </div>
-        <div className="input-group">
-          <label htmlFor="login-password">Password</label>
-          <div className="input-icon-wrapper">
-            <HiOutlineLockClosed className="input-icon" />
-            <input id="login-password" type={showPass ? 'text' : 'password'} className="input-field input-with-icon" placeholder="••••••••" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
-            <button type="button" className="input-icon-right" onClick={() => setShowPass(!showPass)}>
+        <div>
+          <label htmlFor="login-password" className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">Password</label>
+          <div className="relative">
+            <HiOutlineLockClosed className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input id="login-password" type={showPass ? 'text' : 'password'} className="input-field pl-10 pr-10" placeholder="••••••••" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
+            <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" onClick={() => setShowPass(!showPass)}>
               {showPass ? <HiOutlineEyeOff /> : <HiOutlineEye />}
             </button>
           </div>
         </div>
-        <div className="auth-extras">
-          <Link to="/forgot-password" className="auth-link">Forgot password?</Link>
+        <div className="flex items-center justify-end">
+          <Link to="/forgot-password" className="text-sm font-medium text-brand-600 hover:text-brand-700">Forgot password?</Link>
         </div>
-        {error && <p className="auth-error">{error}</p>}
-        <button type="submit" className="btn btn-primary btn-lg auth-submit" disabled={loading}>
+        {error && <p className="text-sm text-rose-500">{error}</p>}
+        <button type="submit" className="btn btn-primary w-full" disabled={loading}>
           {loading ? 'Signing in...' : 'Sign In'}
         </button>
       </form>
-      <p className="auth-switch">
-        Don&apos;t have an account? <Link to="/register" className="auth-link">Sign up</Link>
+      <p className="mt-5 text-center text-sm text-slate-600 dark:text-slate-300">
+        Don&apos;t have an account? <Link to="/register" className="font-semibold text-brand-600">Sign up</Link>
       </p>
     </div>
   );

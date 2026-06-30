@@ -3,7 +3,6 @@
 .verify-header {
   text-align: center;
   margin-bottom: var(--space-2xl);
-  opacity: 0;
 }
 .verify-header-icon {
   font-size: 3rem;
@@ -17,7 +16,6 @@
   padding: var(--space-lg);
   max-width: 700px;
   margin: 0 auto var(--space-2xl);
-  opacity: 0;
 }
 
 .verify-input-wrapper {
@@ -39,7 +37,6 @@
   margin: 0 auto;
   padding: var(--space-2xl);
   text-align: center;
-  opacity: 0;
 }
 
 .verify-result-icon { font-size: 4rem; margin-bottom: var(--space-md); }
@@ -63,4 +60,5 @@
 
 @media (max-width: 600px) {
   .verify-form { flex-direction: column; }
+  .verify-detail { flex-direction: column; gap: 2px; }
 }

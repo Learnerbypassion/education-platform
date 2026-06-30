@@ -4,12 +4,15 @@ import { Provider } from 'react-redux';
 import store from './store/store';
 import App from './App';
 import { Toaster } from 'react-hot-toast';
+import { ThemeProvider } from './context/ThemeContext';
 import './styles/index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <Provider store={store}>
-      <App />
+      <ThemeProvider>
+        <App />
+      </ThemeProvider>
       <Toaster
         position="top-right"
         toastOptions={{

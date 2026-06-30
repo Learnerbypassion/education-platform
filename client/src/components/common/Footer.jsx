@@ -8,10 +8,10 @@ const Footer = () => (
       <div className="footer-grid">
         <div className="footer-brand">
           <Link to="/" className="footer-logo">
-            <FaGraduationCap className="footer-logo-icon" />
-            <span>Edu<span className="gradient-text">Platform</span></span>
+            <span className="footer-logo-icon"><FaGraduationCap size={24} /></span>
+            <span>Edu<span className="text-brand-500">Platform</span></span>
           </Link>
-          <p className="footer-desc">Automated Online Course Management, Assessment & Certification Platform. Learn, teach, and earn certificates.</p>
+          <p className="footer-desc">Simple learning tools for creating courses, managing exams, and issuing certificates without the clutter.</p>
           <div className="footer-socials">
             <a href="#" aria-label="GitHub"><FaGithub /></a>
             <a href="#" aria-label="Twitter"><FaTwitter /></a>
@@ -38,7 +38,7 @@ const Footer = () => (
         </div>
       </div>
       <div className="footer-bottom">
-        <p>&copy; {new Date().getFullYear()} EduPlatform. All rights reserved.</p>
+        © {new Date().getFullYear()} EduPlatform. All rights reserved.
       </div>
     </div>
   </footer>

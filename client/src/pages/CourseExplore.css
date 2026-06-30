@@ -1,13 +1,12 @@
 .explore-page { padding: var(--space-2xl) 0; }
 
-.explore-header { margin-bottom: var(--space-2xl); opacity: 0; }
+.explore-header { margin-bottom: var(--space-2xl); }
 
 .explore-filters {
   display: flex;
   gap: var(--space-md);
   padding: var(--space-lg);
   margin-bottom: var(--space-2xl);
-  opacity: 0;
 }
 
 .explore-search {

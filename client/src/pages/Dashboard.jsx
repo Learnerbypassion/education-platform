@@ -7,7 +7,6 @@ import CourseCard from '../components/course/CourseCard';
 import { getStudentStats, getInstructorStats, getAdminStats } from '../api/analyticsApi';
 import { getEnrolledCourses, getInstructorCourses } from '../api/courseApi';
 import { HiOutlineBookOpen, HiOutlineAcademicCap, HiOutlineClipboardCheck, HiOutlineUsers, HiOutlineChartBar, HiOutlineDocumentText } from 'react-icons/hi';
-import './Dashboard.css';
 
 const Dashboard = () => {
   const { user, isAdmin, isInstructor } = useAuth();
@@ -46,30 +45,37 @@ const Dashboard = () => {
     fetchDashboardData();
   }, [isAdmin, isInstructor, tab]);
 
-  if (loading) return <Loader text="Loading dashboard content..." />;
+  if (loading) return <div className="flex min-h-[50vh] items-center justify-center"><Loader text="Loading dashboard content..." /></div>;
 
   // Render Enrolled Courses
   if (tab === 'enrolled') {
     return (
-      <div className="dashboard-page">
-        <h1 className="section-title">Enrolled <span className="gradient-text">Courses</span></h1>
-        <p className="section-subtitle">Resume your learning journey where you left off</p>
-        
+      <div className="space-y-8 animate-page-enter">
+        <div className="glass-card p-8">
+          <h1 className="text-4xl font-bold text-slate-900 dark:text-white font-heading">Enrolled <span className="gradient-text">courses</span></h1>
+          <p className="mt-3 text-lg text-slate-600 dark:text-slate-300">Resume your learning journey where you left off.</p>
+        </div>
         {coursesList.length === 0 ? (
-          <div className="empty-state">
-            <HiOutlineBookOpen size={48} />
-            <h3>No enrolled courses</h3>
-            <Link to="/courses" className="btn btn-primary mt-md">Browse Catalog</Link>
+          <div className="glass-card flex flex-col items-center justify-center px-8 py-20 text-center animate-slide-up delay-1">
+            <div className="rounded-full bg-brand-50 p-6 dark:bg-brand-900/40 text-brand-500 mb-6 shadow-glow">
+              <HiOutlineBookOpen size={56} />
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white font-heading">No enrolled courses</h3>
+            <p className="mt-2 text-slate-500">You haven't started any courses yet.</p>
+            <Link to="/courses" className="btn btn-primary btn-lg mt-8 shadow-glow hover-lift">Browse Catalog</Link>
           </div>
         ) : (
-          <div className="grid grid-3">
-            {coursesList.map((enrollment) => (
-              <div key={enrollment._id} className="dashboard-course-item">
+          <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3 animate-slide-up delay-1">
+            {coursesList.map((enrollment, idx) => (
+              <div key={enrollment._id} className={`space-y-4 hover-lift delay-${(idx % 4) + 1}`}>
                 <CourseCard course={enrollment.courseId} />
-                <div className="dashboard-progress-bar glass-card">
-                  <span>Progress: {enrollment.progress}%</span>
-                  <div className="progress-track">
-                    <div className="progress-fill" style={{ width: `${enrollment.progress}%` }} />
+                <div className="glass-card p-5">
+                  <div className="mb-3 flex items-center justify-between text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                    <span>Progress</span>
+                    <span className="text-brand-600 dark:text-brand-400">{enrollment.progress}%</span>
+                  </div>
+                  <div className="h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden shadow-inner">
+                    <div className="h-full rounded-full bg-gradient-to-r from-brand-600 to-brand-400" style={{ width: `${enrollment.progress}%` }} />
                   </div>
                 </div>
               </div>
@@ -83,31 +89,34 @@ const Dashboard = () => {
   // Render Instructor's Created Courses
   if (tab === 'courses') {
     return (
-      <div className="dashboard-page">
-        <div className="dashboard-header-row">
+      <div className="space-y-8 animate-page-enter">
+        <div className="flex flex-col justify-between gap-6 glass-card p-8 sm:flex-row sm:items-center">
           <div>
-            <h1 className="section-title">My Created <span className="gradient-text">Courses</span></h1>
-            <p className="section-subtitle">Manage, edit, and publish your content</p>
+            <h1 className="text-4xl font-bold text-slate-900 dark:text-white font-heading">My created <span className="gradient-text">courses</span></h1>
+            <p className="mt-3 text-lg text-slate-600 dark:text-slate-300">Manage, edit, and publish your content.</p>
           </div>
-          <Link to="/course/create" className="btn btn-primary">Create Course</Link>
+          <Link to="/course/create" className="btn btn-primary btn-lg shadow-glow hover-lift">Create Course</Link>
         </div>
 
         {coursesList.length === 0 ? (
-          <div className="empty-state">
-            <HiOutlineDocumentText size={48} />
-            <h3>No courses created yet</h3>
-            <Link to="/course/create" className="btn btn-primary mt-md">Create Your First Course</Link>
+          <div className="glass-card flex flex-col items-center justify-center px-8 py-20 text-center animate-slide-up delay-1">
+            <div className="rounded-full bg-brand-50 p-6 dark:bg-brand-900/40 text-brand-500 mb-6 shadow-glow">
+              <HiOutlineDocumentText size={56} />
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white font-heading">No courses created yet</h3>
+            <p className="mt-2 text-slate-500">Share your knowledge with the world.</p>
+            <Link to="/course/create" className="btn btn-primary btn-lg mt-8 shadow-glow hover-lift">Create Your First Course</Link>
           </div>
         ) : (
-          <div className="grid grid-3">
-            {coursesList.map((course) => (
-              <div key={course._id} className="dashboard-course-item">
+          <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3 animate-slide-up delay-1">
+            {coursesList.map((course, idx) => (
+              <div key={course._id} className={`space-y-4 hover-lift delay-${(idx % 4) + 1}`}>
                 <CourseCard course={course} />
-                <div className="dashboard-course-actions glass-card">
-                  <span className={`badge ${course.isPublished ? 'badge-success' : 'badge-warning'}`}>
+                <div className="glass-card flex items-center justify-between p-5">
+                  <span className={`badge ${course.isPublished ? 'badge-success' : 'badge-primary'}`}>
                     {course.isPublished ? 'Published' : 'Draft'}
                   </span>
-                  <Link to={`/course/${course._id}/edit`} className="btn btn-outline btn-sm">Edit Details</Link>
+                  <Link to={`/course/${course._id}/edit`} className="btn btn-outline btn-sm">Edit</Link>
                 </div>
               </div>
             ))}
@@ -120,39 +129,45 @@ const Dashboard = () => {
   // Render Instructor Analytics Table
   if (tab === 'analytics' && (isInstructor || isAdmin)) {
     return (
-      <div className="dashboard-page">
-        <h1 className="section-title">Course <span className="gradient-text">Performance Analytics</span></h1>
-        <p className="section-subtitle">Real-time statistics on student enrollment and exam scores</p>
+      <div className="space-y-8 animate-page-enter">
+        <div className="glass-card p-8">
+          <h1 className="text-4xl font-bold text-slate-900 dark:text-white font-heading">Course <span className="gradient-text">performance</span></h1>
+          <p className="mt-3 text-lg text-slate-600 dark:text-slate-300">Real-time statistics on enrollment and exam scores.</p>
+        </div>
 
         {stats?.courseStats?.length === 0 ? (
-          <div className="empty-state">
-            <HiOutlineChartBar size={48} />
-            <h3>No performance data available</h3>
+          <div className="glass-card flex flex-col items-center justify-center px-8 py-20 text-center animate-slide-up delay-1">
+            <div className="rounded-full bg-brand-50 p-6 dark:bg-brand-900/40 text-brand-500 mb-6 shadow-glow">
+              <HiOutlineChartBar size={56} />
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white font-heading">No performance data available</h3>
           </div>
         ) : (
-          <div className="admin-table-wrapper glass-card">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Course Title</th>
-                  <th>Students Enrolled</th>
-                  <th>Average Exam Score</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats?.courseStats?.map((c) => (
-                  <tr key={c.courseId}>
-                    <td className="admin-user-cell">{c.title}</td>
-                    <td>{c.students} students</td>
-                    <td>
-                      <span className="badge badge-success">
-                        {c.averageScore ? `${Math.round(c.averageScore)}%` : '—'}
-                      </span>
-                    </td>
+          <div className="glass-card overflow-hidden animate-slide-up delay-1 p-0">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-slate-50/80 text-slate-600 dark:bg-slate-800/80 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700">
+                  <tr>
+                    <th className="px-6 py-4 font-bold uppercase tracking-wider">Course Title</th>
+                    <th className="px-6 py-4 font-bold uppercase tracking-wider">Students Enrolled</th>
+                    <th className="px-6 py-4 font-bold uppercase tracking-wider">Average Exam Score</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {stats?.courseStats?.map((c) => (
+                    <tr key={c.courseId} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">{c.title}</td>
+                      <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{c.students} students</td>
+                      <td className="px-6 py-4">
+                        <span className="badge badge-success px-4 py-1.5 text-sm">
+                          {c.averageScore ? `${Math.round(c.averageScore)}%` : '—'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
@@ -161,55 +176,58 @@ const Dashboard = () => {
 
   // Fallback / Overview Tab
   return (
-    <div className="dashboard-page">
-      <div className="dashboard-welcome animate-fade-in-up">
-        <h1>Welcome back, <span className="gradient-text">{user?.name}</span> 👋</h1>
-        <p className="dashboard-role badge badge-primary">{user?.role}</p>
+    <div className="space-y-8 animate-page-enter">
+      <div className="glass-card p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h1 className="text-4xl font-bold text-slate-900 dark:text-white font-heading">Welcome back, <span className="gradient-text">{user?.name}</span></h1>
+          <p className="mt-2 text-slate-500">Here's what's happening with your learning journey today.</p>
+        </div>
+        <div className="inline-flex items-center gap-2 rounded-full bg-brand-50 px-4 py-2 text-sm font-bold uppercase tracking-widest text-brand-700 dark:bg-brand-900/60 dark:text-brand-300 border border-brand-200 dark:border-brand-700 shadow-sm">
+          <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+          {user?.role}
+        </div>
       </div>
 
-      {/* Student Stats */}
       {!isInstructor && !isAdmin && stats && (
-        <div className="grid grid-4 dashboard-stats animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-          <StatsCard icon={<HiOutlineBookOpen />} label="Enrolled Courses" value={stats.enrolledCourses || 0} color="var(--color-primary)" />
-          <StatsCard icon={<HiOutlineClipboardCheck />} label="Completed" value={stats.completedCourses || 0} color="var(--color-success)" />
-          <StatsCard icon={<HiOutlineChartBar />} label="In Progress" value={stats.inProgressCourses || 0} color="var(--color-warning)" />
-          <StatsCard icon={<HiOutlineAcademicCap />} label="Certificates" value={stats.certificates || 0} color="var(--color-accent)" />
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 animate-slide-up delay-1">
+          <div className="hover-lift"><StatsCard icon={<HiOutlineBookOpen />} label="Enrolled Courses" value={stats.enrolledCourses || 0} color="#6b7aff" /></div>
+          <div className="hover-lift"><StatsCard icon={<HiOutlineClipboardCheck />} label="Completed" value={stats.completedCourses || 0} color="#10b981" /></div>
+          <div className="hover-lift"><StatsCard icon={<HiOutlineChartBar />} label="In Progress" value={stats.inProgressCourses || 0} color="#f59e0b" /></div>
+          <div className="hover-lift"><StatsCard icon={<HiOutlineAcademicCap />} label="Certificates" value={stats.certificates || 0} color="#f43f5e" /></div>
         </div>
       )}
 
-      {/* Instructor Stats */}
       {isInstructor && !isAdmin && stats && (
-        <div className="grid grid-4 dashboard-stats animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-          <StatsCard icon={<HiOutlineBookOpen />} label="Total Courses" value={stats.totalCourses || 0} color="var(--color-primary)" />
-          <StatsCard icon={<HiOutlineDocumentText />} label="Published" value={stats.publishedCourses || 0} color="var(--color-success)" />
-          <StatsCard icon={<HiOutlineUsers />} label="Total Students" value={stats.totalStudents || 0} color="var(--color-info)" />
-          <StatsCard icon={<HiOutlineClipboardCheck />} label="Submissions" value={stats.totalSubmissions || 0} color="var(--color-warning)" />
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 animate-slide-up delay-1">
+          <div className="hover-lift"><StatsCard icon={<HiOutlineBookOpen />} label="Total Courses" value={stats.totalCourses || 0} color="#6b7aff" /></div>
+          <div className="hover-lift"><StatsCard icon={<HiOutlineDocumentText />} label="Published" value={stats.publishedCourses || 0} color="#10b981" /></div>
+          <div className="hover-lift"><StatsCard icon={<HiOutlineUsers />} label="Total Students" value={stats.totalStudents || 0} color="#3b82f6" /></div>
+          <div className="hover-lift"><StatsCard icon={<HiOutlineClipboardCheck />} label="Submissions" value={stats.totalSubmissions || 0} color="#f59e0b" /></div>
         </div>
       )}
 
-      {/* Admin Stats */}
       {isAdmin && stats && (
-        <div className="grid grid-4 dashboard-stats animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-          <StatsCard icon={<HiOutlineUsers />} label="Total Users" value={stats.totalUsers || 0} color="var(--color-primary)" />
-          <StatsCard icon={<HiOutlineBookOpen />} label="Total Courses" value={stats.totalCourses || 0} color="var(--color-success)" />
-          <StatsCard icon={<HiOutlineClipboardCheck />} label="Enrollments" value={stats.totalEnrollments || 0} color="var(--color-info)" />
-          <StatsCard icon={<HiOutlineAcademicCap />} label="Certificates" value={stats.totalCertificates || 0} color="var(--color-accent)" />
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 animate-slide-up delay-1">
+          <div className="hover-lift"><StatsCard icon={<HiOutlineUsers />} label="Total Users" value={stats.totalUsers || 0} color="#6b7aff" /></div>
+          <div className="hover-lift"><StatsCard icon={<HiOutlineBookOpen />} label="Total Courses" value={stats.totalCourses || 0} color="#10b981" /></div>
+          <div className="hover-lift"><StatsCard icon={<HiOutlineClipboardCheck />} label="Enrollments" value={stats.totalEnrollments || 0} color="#3b82f6" /></div>
+          <div className="hover-lift"><StatsCard icon={<HiOutlineAcademicCap />} label="Certificates" value={stats.totalCertificates || 0} color="#f43f5e" /></div>
         </div>
       )}
 
-      <div className="dashboard-section glass-card animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-        <h2>Quick Actions</h2>
-        <div className="dashboard-actions">
+      <div className="glass-card p-8 animate-slide-up delay-2">
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-heading">Quick actions</h2>
+        <div className="mt-6 flex flex-wrap gap-4">
           {isInstructor || isAdmin ? (
             <>
-              <Link to="/course/create" className="btn btn-primary">Create Course</Link>
-              <Link to="/courses" className="btn btn-outline">View All Courses</Link>
+              <Link to="/course/create" className="btn btn-primary shadow-glow hover-lift">Create Course</Link>
+              <Link to="/courses" className="btn btn-outline hover-lift">View All Courses</Link>
             </>
           ) : (
             <>
-              <Link to="/courses" className="btn btn-primary">Browse Courses</Link>
-              <Link to="/certificates" className="btn btn-outline">My Certificates</Link>
-              <Link to="/verify" className="btn btn-ghost">Verify Certificate</Link>
+              <Link to="/courses" className="btn btn-primary shadow-glow hover-lift">Browse Courses</Link>
+              <Link to="/verify" className="btn btn-outline hover-lift">Verify Certificate</Link>
+              <Link to="/dashboard?tab=enrolled" className="btn btn-ghost hover-lift">My Courses</Link>
             </>
           )}
         </div>

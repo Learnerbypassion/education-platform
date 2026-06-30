@@ -5,6 +5,8 @@
   justify-content: center;
   gap: var(--space-md);
   padding: var(--space-2xl);
+  min-height: 200px;
+  animation: fadeIn 300ms ease forwards;
 }
 
 .loader-spinner {
@@ -26,4 +28,5 @@
   inset: 0;
   background: var(--bg-primary);
   z-index: var(--z-modal);
+  min-height: 100vh;
 }

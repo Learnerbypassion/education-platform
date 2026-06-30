@@ -3,7 +3,6 @@
   flex-direction: column;
   overflow: hidden;
   cursor: pointer;
-  opacity: 0;
 }
 .course-card:hover {
   transform: translateY(-6px);

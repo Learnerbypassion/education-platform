@@ -3,7 +3,6 @@
 .assignment-header {
   text-align: center;
   margin-bottom: var(--space-2xl);
-  opacity: 0;
 }
 .assignment-header-icon {
   font-size: 3rem;
@@ -24,7 +23,6 @@
   flex-direction: column;
   gap: var(--space-md);
   height: fit-content;
-  opacity: 0;
 }
 
 .assignment-instructions {
@@ -38,6 +36,7 @@
   display: flex;
   gap: var(--space-xl);
   margin-top: var(--space-md);
+  flex-wrap: wrap;
 }
 .assignment-meta-summary div {
   display: flex;
@@ -59,9 +58,9 @@
   gap: var(--space-sm);
   color: var(--text-muted);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all 200ms ease;
 }
-.file-uploader-box:hover { border-color: var(--color-primary); color: var(--text-primary); }
+.file-uploader-box:hover { border-color: var(--color-primary); color: var(--text-primary); background: rgba(91, 109, 224, 0.04); }
 .file-uploader-box input {
   position: absolute;
   inset: 0;
@@ -76,4 +75,8 @@
 
 @media (max-width: 900px) {
   .assignment-body { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .assignment-meta-summary { flex-direction: column; gap: var(--space-sm); }
 }

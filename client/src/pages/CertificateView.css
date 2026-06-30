@@ -5,7 +5,6 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--space-xl);
-  opacity: 0;
 }
 .cert-actions-group { display: flex; gap: var(--space-sm); }
 
@@ -15,7 +14,6 @@
   padding: 40px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  opacity: 0;
 }
 
 .cert-border-outer {
@@ -144,8 +142,11 @@
 @media (max-width: 768px) {
   .cert-document-wrapper { padding: var(--space-md); }
   .cert-border-inner { padding: var(--space-md); }
+  .cert-title { font-size: 1.5rem; }
+  .cert-recipient { font-size: 1.5rem; }
   .cert-footer { flex-direction: column; align-items: center; gap: var(--space-xl); }
-  .cert-signatures { text-align: center; }
+  .cert-signatures { text-align: center; flex-direction: column; gap: var(--space-lg); }
   .cert-meta { align-items: center; }
   .cert-badge-wrapper { position: static; margin-bottom: var(--space-md); }
+  .cert-action-bar { flex-direction: column; gap: var(--space-sm); }
 }

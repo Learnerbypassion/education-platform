@@ -5,16 +5,14 @@
   align-items: center;
   gap: var(--space-md);
   margin-bottom: var(--space-2xl);
-  opacity: 0;
 }
 .dashboard-welcome h1 { font-size: var(--font-size-3xl); font-weight: 800; }
 
-.dashboard-stats { margin-bottom: var(--space-2xl); opacity: 0; }
+.dashboard-stats { margin-bottom: var(--space-2xl); }
 
 .dashboard-section {
   padding: var(--space-xl);
   margin-bottom: var(--space-2xl);
-  opacity: 0;
 }
 .dashboard-section h2 { font-size: var(--font-size-xl); margin-bottom: var(--space-lg); }
 
@@ -67,6 +65,5 @@
   height: 100%;
   background: var(--color-success);
   border-radius: var(--radius-full);
-  transition: width 0.3s ease;
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
-
