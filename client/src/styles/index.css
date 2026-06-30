@@ -2,6 +2,8 @@
 @import './variables.css';
 @import './animations.css';
 
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
 @theme {
   --color-brand-50: #f4f6ff;
   --color-brand-100: #e9edff;
