@@ -20,6 +20,7 @@ const certificateRoutes = require('./routes/certificateRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const searchRoutes = require('./routes/searchRoutes');
+const aiRoutes = require('./routes/aiRoutes');
 
 const app = express();
 
@@ -47,6 +48,7 @@ app.use('/api/certificates', certificateRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/ai', aiRoutes);
 
 // ─── Health Check ────────────────────────────────────────
 app.get('/api/health', (req, res) => {
