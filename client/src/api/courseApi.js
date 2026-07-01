@@ -24,7 +24,12 @@ export const deleteModule = (id) => API.delete(`/modules/${id}`);
 
 // Lessons
 export const getLessons = (moduleId) => API.get(`/lessons/${moduleId}`);
-export const createLesson = (moduleId, data) => API.post(`/lessons/${moduleId}`, data);
+export const createLesson = (moduleId, data) => {
+  const config = data instanceof FormData
+    ? { headers: { 'Content-Type': 'multipart/form-data' } }
+    : {};
+  return API.post(`/lessons/${moduleId}`, data, config);
+};
 export const updateLesson = (id, data) => API.put(`/lessons/${id}`, data);
 export const deleteLesson = (id) => API.delete(`/lessons/${id}`);
 export const updateProgress = (id, data) => API.post(`/lessons/${id}/progress`, data);
