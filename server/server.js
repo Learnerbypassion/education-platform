@@ -23,7 +23,7 @@ const startServer = async () => {
     await connectDB();
 
     // Start server
-    app.listen(config.port, () => {
+    app.listen(config.port,"0.0.0.0", () => {
       console.log(`\n🚀 EduPlatform API Server`);
       console.log(`   Environment: ${config.nodeEnv}`);
       console.log(`   Port: ${config.port}`);

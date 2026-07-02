@@ -1,0 +1,42 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: mern_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  server:
+    build:
+      context: ./server
+    container_name: mern_server
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./server/.env.docker
+    depends_on:
+      - mongo
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+
+  client:
+    build:
+      context: ./client
+    container_name: mern_client
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    env_file:
+      - ./client/.env.docker
+    depends_on:
+      - server
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+
+volumes:
+  mongo_data:
