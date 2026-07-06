@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { createCourse, getCourseById, updateCourse, createModule, createLesson } from '../api/courseApi';
+import { createCourse, getCourseById, updateCourse, createModule, createLesson, deleteModule, deleteLesson, togglePublish } from '../api/courseApi';
 import { generateCourseDescription, generateLessonSummary } from '../api/aiApi';
 import toast from 'react-hot-toast';
 import { CATEGORIES, DIFFICULTIES, STRUCTURE_TYPES } from '../utils/constants';
@@ -23,6 +23,7 @@ const CourseCreate = () => {
   });
   const [imageFile, setImageFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isPublished, setIsPublished] = useState(false);
   const [modules, setModules] = useState([]);
   const [newModTitle, setNewModTitle] = useState('');
   
@@ -129,6 +130,7 @@ const CourseCreate = () => {
             estimatedDuration: c.estimatedDuration || '',
           });
           setModules(c.modules || []);
+          setIsPublished(c.isPublished || false);
         } catch {
           toast.error('Failed to load course for editing');
         }
@@ -149,7 +151,7 @@ const CourseCreate = () => {
         await updateCourse(id, formData);
         toast.success('Course updated successfully!');
       } else {
-        const res = await createCourse(form); // API logic supports JSON body for simple creator
+        const res = await createCourse(formData);
         toast.success('Course created successfully!');
         navigate(`/course/${res.data.data._id}/edit`);
       }
@@ -173,9 +175,60 @@ const CourseCreate = () => {
     }
   };
 
+  const handleDeleteModule = async (moduleId) => {
+    if (!window.confirm('Are you sure you want to delete this module? This will remove the module heading (lessons can be re-assigned).')) return;
+    try {
+      await deleteModule(moduleId);
+      setModules(modules.filter(m => m._id !== moduleId));
+      toast.success('Module deleted!');
+    } catch {
+      toast.error('Failed to delete module');
+    }
+  };
+
+  const handleDeleteLesson = async (moduleId, lessonId) => {
+    if (!window.confirm('Are you sure you want to delete this lesson?')) return;
+    try {
+      await deleteLesson(lessonId);
+      setModules(modules.map(m => {
+        if (m._id === moduleId) {
+          return { ...m, lessons: m.lessons.filter(l => l._id !== lessonId) };
+        }
+        return m;
+      }));
+      toast.success('Lesson deleted!');
+    } catch {
+      toast.error('Failed to delete lesson');
+    }
+  };
+
+  const handleTogglePublish = async () => {
+    try {
+      const res = await togglePublish(id);
+      setIsPublished(res.data.data.isPublished);
+      toast.success(`Course ${res.data.data.isPublished ? 'published' : 'unpublished'} successfully!`);
+    } catch {
+      toast.error('Failed to toggle publish status');
+    }
+  };
+
   return (
     <div className="create-course-page animate-page-enter">
-      <h1 className={`text-4xl font-bold font-heading text-slate-900 dark:text-white ${!isEdit ? 'text-center' : ''}`}>{isEdit ? 'Edit' : 'Create'} <span className="gradient-text">Course</span></h1>
+      <div className="flex justify-between items-center mb-md" style={{ flexWrap: 'wrap', gap: '15px' }}>
+        <h1 className="text-4xl font-bold font-heading text-slate-900 dark:text-white" style={{ margin: 0 }}>
+          {isEdit ? 'Edit' : 'Create'} <span className="gradient-text">Course</span>
+        </h1>
+        {isEdit && (
+          <div className="flex items-center gap-2">
+            <span className={`badge ${isPublished ? 'badge-success' : 'badge-accent'}`}>
+              {isPublished ? 'Published' : 'Draft'}
+            </span>
+            <button type="button" className="btn btn-outline btn-sm" onClick={handleTogglePublish}>
+              {isPublished ? 'Unpublish Course' : 'Publish Course'}
+            </button>
+          </div>
+        )}
+      </div>
       
       <div className={`create-course-layout animate-slide-up delay-1 ${isEdit ? 'is-edit' : 'is-create'}`}>
         <form onSubmit={handleSubmit} className="create-course-form glass-card" id="course-create-form">
@@ -260,11 +313,12 @@ const CourseCreate = () => {
                 <div key={mod._id} className="outline-module-container">
                   <div className="outline-module-header">
                     <span>{i + 1}. {mod.title}</span>
-                    <div className="outline-module-actions">
+                    <div className="outline-module-actions flex items-center gap-2">
                       <button type="button" className="btn btn-ghost btn-sm" onClick={() => setActiveModuleId(activeModuleId === mod._id ? null : mod._id)}>
                         {activeModuleId === mod._id ? 'Cancel' : '+ Add Lesson'}
                       </button>
                       <Link to={`/exams/${id}/create`} className="btn btn-ghost btn-sm">Add Exam</Link>
+                      <button type="button" className="btn btn-ghost btn-sm" style={{ color: '#ef4444', padding: '4px 8px', minHeight: 'unset' }} onClick={() => handleDeleteModule(mod._id)}>Delete</button>
                     </div>
                   </div>
 
@@ -272,8 +326,9 @@ const CourseCreate = () => {
                   {mod.lessons && mod.lessons.length > 0 && (
                     <div className="outline-lessons-list">
                       {mod.lessons.map((les, idx) => (
-                        <div key={les._id} className="outline-lesson-item">
+                        <div key={les._id} className="outline-lesson-item flex justify-between items-center" style={{ padding: '8px 12px' }}>
                           <span>📄 {idx + 1}. {les.title} <span className="badge badge-primary">{les.type}</span></span>
+                          <button type="button" className="btn btn-ghost btn-sm" style={{ color: '#ef4444', padding: '2px 6px', minHeight: 'unset' }} onClick={() => handleDeleteLesson(mod._id, les._id)}>Delete</button>
                         </div>
                       ))}
                     </div>

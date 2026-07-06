@@ -8,7 +8,14 @@ class ExamService {
    * Create an exam with questions.
    */
   async createExam(examData, questions, createdBy) {
-    const exam = await Exam.create({ ...examData, createdBy });
+    let totalMarks = 0;
+    if (questions && questions.length > 0) {
+      totalMarks = questions.reduce((sum, q) => sum + (Number(q.marks) || 1), 0);
+    } else {
+      totalMarks = Number(examData.totalMarks) || 0;
+    }
+
+    const exam = await Exam.create({ ...examData, totalMarks, createdBy });
 
     if (questions && questions.length > 0) {
       const questionsWithExamId = questions.map((q, index) => ({
@@ -23,12 +30,54 @@ class ExamService {
   }
 
   /**
+   * Recalculate exam total marks based on its questions.
+   */
+  async recalculateTotalMarks(examId) {
+    const questions = await Question.find({ examId });
+    const totalMarks = questions.reduce((sum, q) => sum + (Number(q.marks) || 1), 0);
+    await Exam.findByIdAndUpdate(examId, { totalMarks });
+    return totalMarks;
+  }
+
+  /**
    * Get exam with questions (for taking).
+   * Checks enrollment, publish status, dates, and attempts.
    * Removes correct answers from questions.
    */
-  async getExamForStudent(examId) {
+  async getExamForStudent(examId, studentId) {
     const exam = await Exam.findById(examId);
     if (!exam) throw ApiError.notFound('Exam not found');
+
+    // Check if exam is published
+    if (!exam.isPublished) {
+      throw ApiError.badRequest('This exam is not yet published');
+    }
+
+    // Check date constraints (only if dates exist)
+    const now = new Date();
+    if (exam.startDate && now < exam.startDate) {
+      throw ApiError.badRequest(`This exam starts on ${exam.startDate.toLocaleDateString()}`);
+    }
+    if (exam.endDate && now > exam.endDate) {
+      throw ApiError.badRequest('This exam has expired');
+    }
+
+    // Check enrollment
+    const Enrollment = require('../models/Enrollment');
+    const enrollment = await Enrollment.findOne({ studentId, courseId: exam.courseId });
+    if (!enrollment) {
+      throw ApiError.forbidden('You must be enrolled in this course to take this exam');
+    }
+
+    // Check max attempts before loading exam
+    const attemptCount = await Submission.countDocuments({
+      examId,
+      studentId,
+      type: 'exam',
+    });
+    if (attemptCount >= exam.maxAttempts) {
+      throw ApiError.badRequest(`Maximum attempts (${exam.maxAttempts}) reached for this exam`);
+    }
 
     let questions = await Question.find({ examId }).sort({ order: 1 });
 
@@ -37,7 +86,7 @@ class ExamService {
       questions = this.shuffleArray([...questions]);
     }
 
-    // Remove correct answers
+    // Remove correct answers — never expose to frontend
     const sanitized = questions.map((q) => {
       const obj = q.toObject();
       delete obj.correctAnswer;
@@ -57,6 +106,27 @@ class ExamService {
     const exam = await Exam.findById(examId);
     if (!exam) throw ApiError.notFound('Exam not found');
 
+    // Check if exam is published
+    if (!exam.isPublished) {
+      throw ApiError.badRequest('This exam is not yet published');
+    }
+
+    // Check date constraints (only if dates exist)
+    const now = new Date();
+    if (exam.startDate && now < exam.startDate) {
+      throw ApiError.badRequest(`This exam starts on ${exam.startDate.toLocaleDateString()}`);
+    }
+    if (exam.endDate && now > exam.endDate) {
+      throw ApiError.badRequest('This exam has expired');
+    }
+
+    // Check enrollment
+    const Enrollment = require('../models/Enrollment');
+    const enrollment = await Enrollment.findOne({ studentId, courseId: exam.courseId });
+    if (!enrollment) {
+      throw ApiError.forbidden('You must be enrolled in this course to submit this exam');
+    }
+
     // Check max attempts
     const attemptCount = await Submission.countDocuments({
       examId,
@@ -65,7 +135,7 @@ class ExamService {
     });
 
     if (attemptCount >= exam.maxAttempts) {
-      throw ApiError.badRequest('Maximum attempts reached');
+      throw ApiError.badRequest(`Maximum attempts (${exam.maxAttempts}) reached for this exam`);
     }
 
     // Fetch questions
@@ -136,6 +206,15 @@ class ExamService {
       submittedAt: new Date(),
       gradedAt: new Date(),
     });
+
+    // Create notification for student
+    createNotification(
+      studentId,
+      'exam-schedule',
+      'Exam Graded 📝',
+      `Your exam "${exam.title}" has been graded. Result: ${isPassed ? 'PASSED' : 'FAILED'}. Score: ${score}/${exam.totalMarks}.`,
+      `/exams/${examId}/results`
+    ).catch(console.error);
 
     return submission;
   }

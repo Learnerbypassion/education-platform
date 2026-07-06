@@ -8,6 +8,9 @@ const Course = require('../models/Course');
 // @route   POST /api/courses
 // @access  Private/Instructor
 const createCourse = asyncHandler(async (req, res) => {
+  if (req.file) {
+    req.body.thumbnail = `/uploads/${req.file.filename}`;
+  }
   const course = await courseService.createCourse(req.body, req.user._id);
   ApiResponse.created(res, 'Course created', course);
 });
@@ -29,7 +32,7 @@ const getCourses = asyncHandler(async (req, res) => {
 // @route   GET /api/courses/:id
 // @access  Public
 const getCourseById = asyncHandler(async (req, res) => {
-  const course = await courseService.getCourseById(req.params.id);
+  const course = await courseService.getCourseById(req.params.id, req.user);
   ApiResponse.success(res, 'Course details', course);
 });
 

@@ -262,12 +262,60 @@ const Dashboard = () => {
       </div>
 
       {!isInstructor && !isAdmin && stats && (
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 animate-slide-up delay-1">
-          <div className="hover-lift"><StatsCard icon={<HiOutlineBookOpen />} label="Enrolled Courses" value={stats.enrolledCourses || 0} color="#6b7aff" /></div>
-          <div className="hover-lift"><StatsCard icon={<HiOutlineClipboardCheck />} label="Completed" value={stats.completedCourses || 0} color="#10b981" /></div>
-          <div className="hover-lift"><StatsCard icon={<HiOutlineChartBar />} label="In Progress" value={stats.inProgressCourses || 0} color="#f59e0b" /></div>
-          <div className="hover-lift"><StatsCard icon={<HiOutlineAcademicCap />} label="Certificates" value={stats.certificates || 0} color="#f43f5e" /></div>
-        </div>
+        <>
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 animate-slide-up delay-1">
+            <div className="hover-lift"><StatsCard icon={<HiOutlineBookOpen />} label="Enrolled Courses" value={stats.enrolledCourses || 0} color="#6b7aff" /></div>
+            <div className="hover-lift"><StatsCard icon={<HiOutlineClipboardCheck />} label="Completed" value={stats.completedCourses || 0} color="#10b981" /></div>
+            <div className="hover-lift"><StatsCard icon={<HiOutlineChartBar />} label="In Progress" value={stats.inProgressCourses || 0} color="#f59e0b" /></div>
+            <div className="hover-lift"><StatsCard icon={<HiOutlineAcademicCap />} label="Certificates" value={stats.certificates || 0} color="#f43f5e" /></div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 animate-slide-up delay-2 mt-6">
+            {/* Upcoming Exams */}
+            <div className="glass-card p-6">
+              <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-slate-900 dark:text-white font-heading">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span> Upcoming Exams
+              </h3>
+              {stats.upcomingExams && stats.upcomingExams.length > 0 ? (
+                <div className="space-y-4">
+                  {stats.upcomingExams.map((exam) => (
+                    <div key={exam._id} className="border-b border-slate-100 dark:border-slate-800 pb-3 last:border-0 last:pb-0">
+                      <h4 className="font-semibold text-slate-800 dark:text-white">{exam.title}</h4>
+                      <p className="text-xs text-slate-500">{exam.courseId?.title}</p>
+                      <p className="text-xs text-brand-600 font-semibold mt-1">
+                        Starts: {new Date(exam.startDate).toLocaleString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-500 text-sm py-4">No upcoming exams scheduled.</p>
+              )}
+            </div>
+
+            {/* Recent Submissions */}
+            <div className="glass-card p-6">
+              <h3 className="text-xl font-bold mb-4 text-slate-900 dark:text-white font-heading">Recent Submissions</h3>
+              {stats.recentSubmissions && stats.recentSubmissions.length > 0 ? (
+                <div className="space-y-4">
+                  {stats.recentSubmissions.map((sub) => (
+                    <div key={sub._id} className="border-b border-slate-100 dark:border-slate-800 pb-3 last:border-0 last:pb-0 flex justify-between items-center">
+                      <div>
+                        <h4 className="font-semibold text-slate-800 dark:text-white">{sub.examId?.title || sub.assignmentId?.title || 'Submission'}</h4>
+                        <p className="text-xs text-slate-500">{sub.courseId?.title} • {sub.type}</p>
+                      </div>
+                      <span className={`badge ${sub.isPassed ? 'badge-success' : 'badge-primary'} px-2 py-0.5 text-xs`}>
+                        {sub.score}/{sub.totalMarks}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-500 text-sm py-4">No recent submissions.</p>
+              )}
+            </div>
+          </div>
+        </>
       )}
 
       {isInstructor && !isAdmin && stats && (

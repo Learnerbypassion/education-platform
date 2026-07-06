@@ -1,28 +1,34 @@
 import { useEffect, useState } from 'react';
 import API from '../api/axios';
+import { getAdminStats } from '../api/analyticsApi';
 import Loader from '../components/common/Loader';
 import toast from 'react-hot-toast';
-import { HiOutlineUserRemove, HiOutlineAcademicCap } from 'react-icons/hi';
+import { HiOutlineUserRemove, HiOutlineAcademicCap, HiOutlineUserGroup, HiOutlineBookOpen, HiOutlineCollection, HiOutlineBadgeCheck } from 'react-icons/hi';
 import { formatDate } from '../utils/helpers';
 import './AdminPanel.css';
 
 const AdminPanel = () => {
   const [users, setUsers] = useState([]);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUsers = async () => {
+  const fetchData = async () => {
     try {
-      const res = await API.get('/users');
-      setUsers(res.data.data);
+      const [usersRes, statsRes] = await Promise.all([
+        API.get('/users'),
+        getAdminStats()
+      ]);
+      setUsers(usersRes.data.data);
+      setStats(statsRes.data.data);
     } catch {
-      toast.error('Failed to load users list');
+      toast.error('Failed to load administrative data');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchData();
   }, []);
 
   const handleDelete = async (id) => {
@@ -30,7 +36,7 @@ const AdminPanel = () => {
     try {
       await API.delete(`/users/${id}`);
       toast.success('User deleted');
-      fetchUsers();
+      fetchData();
     } catch {
       toast.error('Delete failed');
     }
@@ -39,11 +45,45 @@ const AdminPanel = () => {
   if (loading) return <Loader text="Loading administrative space..." />;
 
   return (
-    <div className="admin-page">
+    <div className="admin-page animate-page-enter">
       <h1 className="section-title">Admin <span className="gradient-text">Panel</span></h1>
       <p className="section-subtitle">System administration & user moderation</p>
 
-      <div className="admin-table-wrapper glass-card">
+      {stats && (
+        <div className="stats-grid grid grid-4 mb-lg animate-slide-up">
+          <div className="stat-card glass-card">
+            <div className="stat-icon-wrapper text-brand-600"><HiOutlineUserGroup size={24} /></div>
+            <div className="stat-info">
+              <h3>{stats.totalUsers}</h3>
+              <p>Total Users</p>
+            </div>
+          </div>
+          <div className="stat-card glass-card">
+            <div className="stat-icon-wrapper text-info-600"><HiOutlineBookOpen size={24} /></div>
+            <div className="stat-info">
+              <h3>{stats.totalCourses}</h3>
+              <p>Total Courses</p>
+            </div>
+          </div>
+          <div className="stat-card glass-card">
+            <div className="stat-icon-wrapper text-success-600"><HiOutlineCollection size={24} /></div>
+            <div className="stat-info">
+              <h3>{stats.totalEnrollments}</h3>
+              <p>Enrollments</p>
+            </div>
+          </div>
+          <div className="stat-card glass-card">
+            <div className="stat-icon-wrapper text-accent-600"><HiOutlineBadgeCheck size={24} /></div>
+            <div className="stat-info">
+              <h3>{stats.totalCertificates}</h3>
+              <p>Certificates</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="admin-table-wrapper glass-card animate-slide-up delay-1">
+        <h3>User Management</h3>
         <table className="admin-table">
           <thead>
             <tr>

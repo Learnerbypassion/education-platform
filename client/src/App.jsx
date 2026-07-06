@@ -11,6 +11,7 @@ import VerifyCertificate from './pages/VerifyCertificate';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import NotFound from './pages/NotFound';
 import OAuthCallback from './pages/OAuthCallback';
 
@@ -25,6 +26,8 @@ import ExamCreate from './pages/ExamCreate';
 import AssignmentView from './pages/AssignmentView';
 import CertificateView from './pages/CertificateView';
 import AdminPanel from './pages/AdminPanel';
+import AssignmentCreate from './pages/AssignmentCreate';
+import GradingDashboard from './pages/GradingDashboard';
 
 function App() {
   return (
@@ -35,6 +38,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Route>
         
         {/* Standalone Auth Routes */}
@@ -60,6 +64,9 @@ function App() {
           <Route path="/course/create" element={<ProtectedRoute roles={['instructor', 'admin']}><CourseCreate /></ProtectedRoute>} />
           <Route path="/course/:id/edit" element={<ProtectedRoute roles={['instructor', 'admin']}><CourseCreate /></ProtectedRoute>} />
           <Route path="/exams/:id/create" element={<ProtectedRoute roles={['instructor', 'admin']}><ExamCreate /></ProtectedRoute>} />
+          <Route path="/course/:courseId/assignments/create" element={<ProtectedRoute roles={['instructor', 'admin']}><AssignmentCreate /></ProtectedRoute>} />
+          <Route path="/assignments/:id/edit" element={<ProtectedRoute roles={['instructor', 'admin']}><AssignmentCreate /></ProtectedRoute>} />
+          <Route path="/assignments/:id/grade" element={<ProtectedRoute roles={['instructor', 'admin']}><GradingDashboard /></ProtectedRoute>} />
         </Route>
 
         {/* Dynamic Learning Space & Assessments (Standalone Layouts / Custom Views) */}

@@ -5,11 +5,15 @@ const fs = require('fs');
 const Certificate = require('../models/Certificate');
 const Enrollment = require('../models/Enrollment');
 const Submission = require('../models/Submission');
+const Assignment = require('../models/Assignment');
+const Exam = require('../models/Exam');
 const Course = require('../models/Course');
 const User = require('../models/User');
 const { generateQRBuffer } = require('../utils/qrGenerator');
 const ApiError = require('../utils/ApiError');
 const config = require('../config/env');
+const emailService = require('./emailService');
+const { createNotification } = require('../utils/notificationHelper');
 
 class CertificateService {
   /**
@@ -22,10 +26,53 @@ class CertificateService {
       return existing;
     }
 
-    // Verify enrollment and completion
+    // 1. Verify enrollment exists
     const enrollment = await Enrollment.findOne({ studentId, courseId });
     if (!enrollment) {
       throw ApiError.badRequest('Not enrolled in this course');
+    }
+
+    // 2. Check course progress is 100%
+    if (enrollment.progress < 100) {
+      throw ApiError.badRequest(
+        `Course progress is ${enrollment.progress}%. You must complete 100% of the course to earn a certificate.`
+      );
+    }
+
+    // 3. Check all assignments for this course are passed
+    const assignments = await Assignment.find({ courseId });
+    if (assignments.length > 0) {
+      for (const assignment of assignments) {
+        const passedSubmission = await Submission.findOne({
+          assignmentId: assignment._id,
+          studentId,
+          type: 'assignment',
+          isPassed: true,
+        });
+        if (!passedSubmission) {
+          throw ApiError.badRequest(
+            `You must pass all assignments before earning a certificate. Assignment "${assignment.title}" is not yet passed.`
+          );
+        }
+      }
+    }
+
+    // 4. Check all exams for this course are passed
+    const exams = await Exam.find({ courseId });
+    if (exams.length > 0) {
+      for (const exam of exams) {
+        const passedSubmission = await Submission.findOne({
+          examId: exam._id,
+          studentId,
+          type: 'exam',
+          isPassed: true,
+        });
+        if (!passedSubmission) {
+          throw ApiError.badRequest(
+            `You must pass all exams before earning a certificate. Exam "${exam.title}" is not yet passed.`
+          );
+        }
+      }
     }
 
     // Get course and student info
@@ -36,7 +83,7 @@ class CertificateService {
       throw ApiError.notFound('Course or student not found');
     }
 
-    // Get best exam score for this course
+    // Get best exam score for this course (for grading)
     const bestSubmission = await Submission.findOne({
       studentId,
       courseId,
@@ -85,6 +132,22 @@ class CertificateService {
       grade,
       score: bestSubmission ? bestSubmission.percentage : 0,
     });
+
+    // Try sending email (safely wrapped)
+    try {
+      await emailService.sendCertificateEmail(student, certificate);
+    } catch (err) {
+      console.error(`❌ Certificate email failed: ${err.message}`);
+    }
+
+    // Create notification
+    createNotification(
+      studentId,
+      'certificate-issued',
+      'Certificate Earned! 🎉',
+      `Congratulations! You've earned a certificate for completing "${course.title}".`,
+      `/certificates/${certificate._id}`
+    ).catch(console.error);
 
     return certificate;
   }

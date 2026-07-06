@@ -2,7 +2,12 @@ import API from './axios';
 
 export const getCourses = (params) => API.get('/courses', { params });
 export const getCourseById = (id) => API.get(`/courses/${id}`);
-export const createCourse = (data) => API.post('/courses', data);
+export const createCourse = (data) => {
+  const config = data instanceof FormData
+    ? { headers: { 'Content-Type': 'multipart/form-data' } }
+    : {};
+  return API.post('/courses', data, config);
+};
 export const updateCourse = (id, data) => {
   const config = data instanceof FormData
     ? { headers: { 'Content-Type': 'multipart/form-data' } }

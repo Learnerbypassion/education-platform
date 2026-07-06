@@ -4,7 +4,7 @@ const {
   createCourse, getCourses, getCourseById, updateCourse,
   deleteCourse, togglePublish, enrollCourse, getInstructorCourses, getEnrolledCourses,
 } = require('../controllers/courseController');
-const { protect } = require('../middleware/auth');
+const { protect, optionalAuth } = require('../middleware/auth');
 const { authorize } = require('../middleware/rbac');
 const { validate } = require('../middleware/validate');
 const { createCourseSchema, updateCourseSchema } = require('../validators/courseValidator');
@@ -14,12 +14,12 @@ const reviewRouter = require('./reviewRoutes');
 // Re-route into other resource routers
 router.use('/:courseId/reviews', reviewRouter);
 
-// Public
+// Public / Optional Auth
 router.get('/', getCourses);
-router.get('/:id', getCourseById);
+router.get('/:id', optionalAuth, getCourseById);
 
 // Instructor
-router.post('/', protect, authorize('instructor', 'admin'), validate(createCourseSchema), createCourse);
+router.post('/', protect, authorize('instructor', 'admin'), uploadSingle('thumbnail'), validate(createCourseSchema), createCourse);
 router.put('/:id', protect, authorize('instructor', 'admin'), uploadSingle('thumbnail'), updateCourse);
 router.delete('/:id', protect, authorize('instructor', 'admin'), deleteCourse);
 router.patch('/:id/publish', protect, authorize('instructor', 'admin'), togglePublish);

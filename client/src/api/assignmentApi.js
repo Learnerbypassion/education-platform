@@ -12,3 +12,4 @@ export const submitAssignment = (id, data) => {
   return API.post(`/assignments/${id}/submit`, data, config);
 };
 export const getSubmissions = (id) => API.get(`/assignments/${id}/submissions`);
+export const gradeSubmission = (id, submissionId, data) => API.put(`/assignments/${id}/submissions/${submissionId}/grade`, data);

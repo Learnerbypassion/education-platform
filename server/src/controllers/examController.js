@@ -37,7 +37,7 @@ const getExam = asyncHandler(async (req, res) => {
 // @route   GET /api/exams/:id/take
 // @access  Private/Student
 const takeExam = asyncHandler(async (req, res) => {
-  const result = await examService.getExamForStudent(req.params.id);
+  const result = await examService.getExamForStudent(req.params.id, req.user._id);
   ApiResponse.success(res, 'Exam loaded', result);
 });
 
@@ -102,6 +102,8 @@ const addQuestion = asyncHandler(async (req, res) => {
     examId: req.params.id,
     order: req.body.order ?? count,
   });
+  // Recalculate exam total marks
+  await examService.recalculateTotalMarks(req.params.id);
   ApiResponse.created(res, 'Question added', question);
 });
 

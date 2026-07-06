@@ -8,6 +8,7 @@ import { FcGoogle } from 'react-icons/fc';
 import { FaGithub } from 'react-icons/fa';
 
 const Login = () => {
+  const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
   const [form, setForm] = useState({ email: '', password: '' });
   const [showPass, setShowPass] = useState(false);
   const dispatch = useDispatch();
@@ -62,11 +63,11 @@ const Login = () => {
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-4">
-          <a href="http://localhost:5000/api/auth/google" className="btn btn-outline flex w-full items-center justify-center gap-2">
+          <a href={`${serverUrl}/api/auth/google`} className="btn btn-outline flex w-full items-center justify-center gap-2">
             <FcGoogle className="text-xl" />
             <span>Google</span>
           </a>
-          <a href="http://localhost:5000/api/auth/github" className="btn btn-outline flex w-full items-center justify-center gap-2">
+          <a href={`${serverUrl}/api/auth/github`} className="btn btn-outline flex w-full items-center justify-center gap-2">
             <FaGithub className="text-xl text-slate-900 dark:text-white" />
             <span>GitHub</span>
           </a>

@@ -44,8 +44,35 @@ const createLesson = asyncHandler(async (req, res) => {
 
 // @desc    Get lessons for a module
 // @route   GET /api/lessons/:moduleId
-// @access  Public
+// @access  Private (Enrolled students/Owner/Admin)
 const getLessons = asyncHandler(async (req, res) => {
+  const Module = require('../models/Module');
+  const Course = require('../models/Course');
+  const Enrollment = require('../models/Enrollment');
+
+  const mod = await Module.findById(req.params.moduleId);
+  if (!mod) throw ApiError.notFound('Module not found');
+
+  const course = await Course.findById(mod.courseId);
+  if (!course) throw ApiError.notFound('Associated course not found');
+
+  // Verify access: Owner, Admin, or Enrolled Student
+  let hasAccess = false;
+  if (req.user.role === 'admin' || course.creatorId.toString() === req.user._id.toString()) {
+    hasAccess = true;
+  } else {
+    const enrollment = await Enrollment.findOne({ studentId: req.user._id, courseId: course._id });
+    if (enrollment) {
+      hasAccess = true;
+    }
+  }
+
+  if (!hasAccess) {
+    // Only return free/preview lessons if not authorized
+    const lessons = await Lesson.find({ moduleId: req.params.moduleId, isFree: true }).sort({ order: 1 });
+    return ApiResponse.success(res, 'Preview lessons fetched', lessons);
+  }
+
   const lessons = await Lesson.find({ moduleId: req.params.moduleId }).sort({ order: 1 });
   ApiResponse.success(res, 'Lessons fetched', lessons);
 });

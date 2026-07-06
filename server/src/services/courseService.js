@@ -3,6 +3,9 @@ const Module = require('../models/Module');
 const Lesson = require('../models/Lesson');
 const Enrollment = require('../models/Enrollment');
 const ApiError = require('../utils/ApiError');
+const User = require('../models/User');
+const emailService = require('./emailService');
+const { createNotification } = require('../utils/notificationHelper');
 
 class CourseService {
   /**
@@ -47,7 +50,7 @@ class CourseService {
   /**
    * Get full course details with modules and lessons.
    */
-  async getCourseById(courseId) {
+  async getCourseById(courseId, user = null) {
     const course = await Course.findById(courseId)
       .populate('creatorId', 'name profileImage bio');
 
@@ -61,11 +64,41 @@ class CourseService {
     const lessons = await Lesson.find({ courseId })
       .sort({ order: 1 });
 
-    // Group lessons by module
-    const modulesWithLessons = modules.map((mod) => ({
-      ...mod.toObject(),
-      lessons: lessons.filter((l) => l.moduleId.toString() === mod._id.toString()),
-    }));
+    // Check if the user is authorized to see the full premium content
+    let isAuthorized = false;
+    if (user) {
+      if (user.role === 'admin' || course.creatorId.toString() === user._id.toString()) {
+        isAuthorized = true;
+      } else {
+        const enrollment = await Enrollment.findOne({ studentId: user._id, courseId });
+        if (enrollment) {
+          isAuthorized = true;
+        }
+      }
+    }
+
+    // Group lessons by module and sanitize content if not authorized
+    const modulesWithLessons = modules.map((mod) => {
+      const filteredLessons = lessons
+        .filter((l) => l.moduleId.toString() === mod._id.toString())
+        .map((l) => {
+          if (isAuthorized || l.isFree) {
+            return l.toObject();
+          }
+          // Sanitize non-free lesson for public preview
+          const obj = l.toObject();
+          delete obj.content;
+          delete obj.videoUrl;
+          delete obj.videoEmbedUrl;
+          delete obj.attachments;
+          return obj;
+        });
+
+      return {
+        ...mod.toObject(),
+        lessons: filteredLessons,
+      };
+    });
 
     return {
       ...course.toObject(),
@@ -91,6 +124,25 @@ class CourseService {
 
     // Increment enrollment count
     await Course.findByIdAndUpdate(courseId, { $inc: { enrollmentCount: 1 } });
+
+    // Try sending email (safely wrapped)
+    try {
+      const student = await User.findById(studentId);
+      if (student) {
+        await emailService.sendEnrollmentEmail(student, course);
+      }
+    } catch (err) {
+      console.error(`❌ Enrollment email failed: ${err.message}`);
+    }
+
+    // Create notification
+    createNotification(
+      studentId,
+      'enrollment',
+      'Enrolled successfully! 🎓',
+      `You have successfully enrolled in "${course.title}". Start learning now!`,
+      `/courses/${courseId}/learn`
+    ).catch(console.error);
 
     return enrollment;
   }

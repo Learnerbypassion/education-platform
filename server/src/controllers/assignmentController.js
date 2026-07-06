@@ -123,7 +123,43 @@ const getSubmissions = asyncHandler(async (req, res) => {
   ApiResponse.success(res, 'Submissions fetched', submissions);
 });
 
+// @desc    Grade a submission (Instructor)
+// @route   PUT /api/assignments/:id/submissions/:submissionId/grade
+// @access  Private/Instructor
+const gradeSubmission = asyncHandler(async (req, res) => {
+  const { score, feedback, isPassed } = req.body;
+  const assignment = await Assignment.findById(req.params.id);
+  if (!assignment) throw ApiError.notFound('Assignment not found');
+
+  const submission = await Submission.findById(req.params.submissionId);
+  if (!submission) throw ApiError.notFound('Submission not found');
+
+  submission.score = Number(score) || 0;
+  submission.feedback = feedback || '';
+  if (isPassed !== undefined) {
+    submission.isPassed = isPassed;
+  } else {
+    submission.isPassed = submission.score >= assignment.passingMarks;
+  }
+  
+  submission.percentage = submission.totalMarks > 0 ? Math.round((submission.score / submission.totalMarks) * 100 * 100) / 100 : 0;
+  submission.gradedAt = new Date();
+  await submission.save();
+
+  // Create notification for student
+  const { createNotification } = require('../utils/notificationHelper');
+  createNotification(
+    submission.studentId,
+    'submission-graded',
+    'Assignment Graded 📝',
+    `Your submission for "${assignment.title}" has been graded. Score: ${submission.score}/${submission.totalMarks}.`,
+    `/assignments/${req.params.id}/view`
+  ).catch(console.error);
+
+  ApiResponse.success(res, 'Submission graded successfully', submission);
+});
+
 module.exports = {
   createAssignment, getAssignments, getAssignment,
-  updateAssignment, deleteAssignment, submitAssignment, getSubmissions,
+  updateAssignment, deleteAssignment, submitAssignment, getSubmissions, gradeSubmission
 };

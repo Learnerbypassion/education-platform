@@ -9,11 +9,11 @@ class AnalyticsService {
    * Get student dashboard statistics.
    */
   async getStudentStats(studentId) {
-    const [enrolledCourses, completedCourses, certificates, submissions] = await Promise.all([
+    const [enrolledCoursesCount, completedCoursesCount, certificates, submissions] = await Promise.all([
       Enrollment.countDocuments({ studentId }),
       Enrollment.countDocuments({ studentId, status: 'completed' }),
       Certificate.countDocuments({ studentId }),
-      Submission.find({ studentId }).sort({ submittedAt: -1 }).limit(5),
+      Submission.find({ studentId }).sort({ studentId }).populate('courseId', 'title').populate('examId', 'title').populate('assignmentId', 'title').sort({ submittedAt: -1 }).limit(5),
     ]);
 
     const recentEnrollments = await Enrollment.find({ studentId })
@@ -21,13 +21,27 @@ class AnalyticsService {
       .sort({ enrolledAt: -1 })
       .limit(5);
 
+    const enrolledCourses = await Enrollment.find({ studentId }).select('courseId');
+    const courseIds = enrolledCourses.map((e) => e.courseId);
+
+    const Exam = require('../models/Exam');
+    const upcomingExams = await Exam.find({
+      courseId: { $in: courseIds },
+      isPublished: true,
+      startDate: { $gt: new Date() },
+    })
+      .populate('courseId', 'title')
+      .sort({ startDate: 1 })
+      .limit(5);
+
     return {
-      enrolledCourses,
-      completedCourses,
+      enrolledCourses: enrolledCoursesCount,
+      completedCourses: completedCoursesCount,
       certificates,
-      inProgressCourses: enrolledCourses - completedCourses,
+      inProgressCourses: enrolledCoursesCount - completedCoursesCount,
       recentEnrollments,
       recentSubmissions: submissions,
+      upcomingExams,
     };
   }
 
