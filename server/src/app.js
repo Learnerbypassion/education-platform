@@ -5,6 +5,8 @@ const morgan = require('morgan');
 const path = require('path');
 const corsOptions = require('./config/cors');
 const errorHandler = require('./middleware/errorHandler');
+const session = require('express-session');
+const passport = require('./config/passport');
 const { apiLimiter } = require('./middleware/rateLimiter');
 
 // Route imports
@@ -31,6 +33,17 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(morgan('dev'));
 app.use(apiLimiter);
+
+// ─── Session & Passport ──────────────────────────────────
+app.use(
+  session({
+    secret: process.env.JWT_SECRET || 'fallback_secret',
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
 // ─── Static Files ────────────────────────────────────────
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));

@@ -12,6 +12,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import NotFound from './pages/NotFound';
+import OAuthCallback from './pages/OAuthCallback';
 
 // Protected pages
 import Dashboard from './pages/Dashboard';
@@ -35,6 +36,9 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
         </Route>
+        
+        {/* Standalone Auth Routes */}
+        <Route path="/auth/callback" element={<OAuthCallback />} />
 
         {/* Public pages under MainLayout */}
         <Route element={<MainLayout />}>

@@ -9,6 +9,10 @@ const { authorize } = require('../middleware/rbac');
 const { validate } = require('../middleware/validate');
 const { createCourseSchema, updateCourseSchema } = require('../validators/courseValidator');
 const { uploadSingle } = require('../middleware/upload');
+const reviewRouter = require('./reviewRoutes');
+
+// Re-route into other resource routers
+router.use('/:courseId/reviews', reviewRouter);
 
 // Public
 router.get('/', getCourses);

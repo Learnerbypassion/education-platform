@@ -1,6 +1,7 @@
 const asyncHandler = require('../utils/asyncHandler');
 const ApiResponse = require('../utils/ApiResponse');
 const authService = require('../services/authService');
+const { generateToken } = require('../utils/generateToken');
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
@@ -41,4 +42,14 @@ const getMe = asyncHandler(async (req, res) => {
   ApiResponse.success(res, 'User profile', req.user);
 });
 
-module.exports = { register, login, forgotPassword, resetPassword, getMe };
+// @desc    OAuth Callback (Google & GitHub)
+// @route   GET /api/auth/:provider/callback
+// @access  Public
+const oauthCallback = asyncHandler(async (req, res) => {
+  // req.user is set by passport
+  const token = generateToken(req.user._id, req.user.role);
+  // Redirect to frontend with token
+  res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/auth/callback?token=${token}`);
+});
+
+module.exports = { register, login, forgotPassword, resetPassword, getMe, oauthCallback };
