@@ -468,3 +468,216 @@
 .classroom-back-to-chapter-btn:hover {
   color: var(--text-primary);
 }
+
+/* Week-based Learning Styles */
+.classroom-sidebar-banner {
+  background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+  padding: var(--space-lg);
+  color: #fff;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.classroom-banner-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.classroom-banner-header h4 {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.classroom-search-icon {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #fff;
+  cursor: pointer;
+  padding: 0;
+}
+
+.classroom-banner-progress-wrapper {
+  margin-top: 2px;
+}
+
+.classroom-banner-progress-text {
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: var(--space-xs);
+  opacity: 0.9;
+}
+
+.classroom-banner-progress-bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.classroom-banner-progress-fill {
+  height: 100%;
+  background: #ffffff;
+  border-radius: var(--radius-full);
+  transition: width 300ms ease;
+}
+
+.classroom-week-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--space-xs);
+}
+
+.classroom-week-header-btn {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  text-align: left;
+  gap: var(--space-md);
+  transition: background 200ms ease;
+}
+
+.classroom-week-header-btn:hover {
+  background: var(--bg-hover);
+}
+
+.classroom-week-title {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.classroom-progress-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid var(--color-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--color-primary-light);
+  background: var(--bg-primary);
+  flex-shrink: 0;
+}
+
+.classroom-progress-circle-small {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--color-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: 800;
+  color: var(--color-primary-light);
+  background: var(--bg-primary);
+  flex-shrink: 0;
+}
+
+.classroom-accordion-indicator {
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+.classroom-week-modules-sublist {
+  padding-left: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.classroom-week-modules-sublist .classroom-chapter-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  margin-bottom: 2px;
+  border-radius: var(--radius-md);
+}
+
+.classroom-play-icon-indicator {
+  font-size: 8px;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+/* Viewport Header Styles */
+.classroom-viewport-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.classroom-prev-lesson-pill-container {
+  display: flex;
+}
+
+.classroom-prev-lesson-pill {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  padding: 0.4rem 1rem;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  transition: all 200ms ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.classroom-prev-lesson-pill:hover {
+  background: var(--color-primary-glow);
+  border-color: var(--color-primary-light);
+  color: var(--color-primary-light);
+}
+
+.classroom-lesson-details-header {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--space-md);
+}
+
+.classroom-lesson-counter {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.classroom-lesson-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.classroom-title-underline {
+  width: 80px;
+  height: 4px;
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+  margin-top: var(--space-xs);
+}
+

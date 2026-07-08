@@ -26,6 +26,8 @@ const CourseCreate = () => {
   const [isPublished, setIsPublished] = useState(false);
   const [modules, setModules] = useState([]);
   const [newModTitle, setNewModTitle] = useState('');
+  const [extraWeeks, setExtraWeeks] = useState([]);
+  const [newModTitles, setNewModTitles] = useState({});
   
   // Lesson outline states
   const [activeModuleId, setActiveModuleId] = useState(null);
@@ -166,10 +168,24 @@ const CourseCreate = () => {
     e.preventDefault();
     if (!newModTitle.trim() || !id) return;
     try {
-      const res = await createModule(id, { title: newModTitle.trim() });
+      const res = await createModule(id, { title: newModTitle.trim(), week: 1 });
       setModules([...modules, res.data.data]);
       setNewModTitle('');
       toast.success('Module added!');
+    } catch {
+      toast.error('Failed to add module');
+    }
+  };
+
+  const handleAddModuleForWeek = async (e, weekNum) => {
+    e.preventDefault();
+    const title = newModTitles[weekNum];
+    if (!title || !title.trim() || !id) return;
+    try {
+      const res = await createModule(id, { title: title.trim(), week: weekNum });
+      setModules([...modules, res.data.data]);
+      setNewModTitles(prev => ({ ...prev, [weekNum]: '' }));
+      toast.success(`Module added to Week ${weekNum}!`);
     } catch {
       toast.error('Failed to add module');
     }
@@ -301,92 +317,125 @@ const CourseCreate = () => {
 
         {isEdit && (
           <div className="create-course-outline glass-card">
-            <h3>Course Curriculum Outline</h3>
-            
-            <form onSubmit={handleAddModule} className="add-module-form" id="add-module-form">
-              <input type="text" className="input-field" placeholder="New Module Title..." value={newModTitle} onChange={(e) => setNewModTitle(e.target.value)} required />
-              <button type="submit" className="btn btn-accent btn-sm">Add Module</button>
-            </form>
+            <div className="flex justify-between items-center mb-md">
+              <h3 style={{ margin: 0 }}>Course Curriculum Outline</h3>
+              <button 
+                type="button" 
+                className="btn btn-accent btn-sm" 
+                onClick={() => {
+                  const weeks = Array.from(new Set([1, ...modules.map(m => m.week || 1), ...extraWeeks]));
+                  const nextWeek = Math.max(...weeks, 0) + 1;
+                  setExtraWeeks([...extraWeeks, nextWeek]);
+                }}
+              >
+                + Add Week
+              </button>
+            </div>
 
-            <div className="outline-modules-list">
-              {modules.map((mod, i) => (
-                <div key={mod._id} className="outline-module-container">
-                  <div className="outline-module-header">
-                    <span>{i + 1}. {mod.title}</span>
-                    <div className="outline-module-actions flex items-center gap-2">
-                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => setActiveModuleId(activeModuleId === mod._id ? null : mod._id)}>
-                        {activeModuleId === mod._id ? 'Cancel' : '+ Add Lesson'}
-                      </button>
-                      <Link to={`/exams/${id}/create`} className="btn btn-ghost btn-sm">Add Exam</Link>
-                      <button type="button" className="btn btn-ghost btn-sm" style={{ color: '#ef4444', padding: '4px 8px', minHeight: 'unset' }} onClick={() => handleDeleteModule(mod._id)}>Delete</button>
-                    </div>
-                  </div>
+            <div className="weeks-list">
+              {(() => {
+                const weeks = Array.from(new Set([1, ...modules.map(m => m.week || 1), ...extraWeeks])).sort((a, b) => a - b);
+                return weeks.map((weekNum) => {
+                  const weekModules = modules.filter(m => (m.week || 1) === weekNum);
+                  return (
+                    <div key={weekNum} className="week-section mb-lg" style={{ border: '1px dashed var(--border-color)', borderRadius: 'var(--radius-md)', padding: 'var(--space-md)', background: 'rgba(255, 255, 255, 0.02)' }}>
+                      <h4 className="text-lg font-bold mb-md" style={{ color: 'var(--color-primary-light)', borderBottom: '1px solid var(--border-color)', paddingBottom: '4px' }}>
+                        📅 Week {weekNum}
+                      </h4>
+                      
+                      <form onSubmit={(e) => handleAddModuleForWeek(e, weekNum)} className="add-module-form mb-md" style={{ display: 'flex', gap: '8px', flexDirection: 'row', alignItems: 'center' }}>
+                        <input type="text" className="input-field" style={{ flex: 1, height: '36px' }} placeholder="New Module Title..." value={newModTitles[weekNum] || ''} onChange={(e) => setNewModTitles({...newModTitles, [weekNum]: e.target.value})} required />
+                        <button type="submit" className="btn btn-primary btn-sm" style={{ whiteSpace: 'nowrap', height: '36px' }}>Add Module</button>
+                      </form>
 
-                  {/* Lessons in this module */}
-                  {mod.lessons && mod.lessons.length > 0 && (
-                    <div className="outline-lessons-list">
-                      {mod.lessons.map((les, idx) => (
-                        <div key={les._id} className="outline-lesson-item flex justify-between items-center" style={{ padding: '8px 12px' }}>
-                          <span>📄 {idx + 1}. {les.title} <span className="badge badge-primary">{les.type}</span></span>
-                          <button type="button" className="btn btn-ghost btn-sm" style={{ color: '#ef4444', padding: '2px 6px', minHeight: 'unset' }} onClick={() => handleDeleteLesson(mod._id, les._id)}>Delete</button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                      <div className="outline-modules-list">
+                        {weekModules.length === 0 ? (
+                          <div className="text-slate-400 text-xs py-2">No modules in this week.</div>
+                        ) : (
+                          weekModules.map((mod) => (
+                            <div key={mod._id} className="outline-module-container mb-sm">
+                              <div className="outline-module-header">
+                                <span>📦 {mod.title}</span>
+                                <div className="outline-module-actions flex items-center gap-2">
+                                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => setActiveModuleId(activeModuleId === mod._id ? null : mod._id)}>
+                                    {activeModuleId === mod._id ? 'Cancel' : '+ Add Lesson'}
+                                  </button>
+                                  <Link to={`/exams/${id}/create`} className="btn btn-ghost btn-sm">Add Exam</Link>
+                                  <button type="button" className="btn btn-ghost btn-sm" style={{ color: '#ef4444', padding: '4px 8px', minHeight: 'unset' }} onClick={() => handleDeleteModule(mod._id)}>Delete</button>
+                                </div>
+                              </div>
 
-                  {/* Add Lesson Form */}
-                  {activeModuleId === mod._id && (
-                    <div className="add-lesson-box glass-card">
-                      <h4>New Lesson Details</h4>
-                      <div className="input-group">
-                        <label>Title</label>
-                        <input type="text" className="input-field" value={lessonForm.title} onChange={(e) => setLessonForm({ ...lessonForm, title: e.target.value })} required />
+                              {/* Lessons in this module */}
+                              {mod.lessons && mod.lessons.length > 0 && (
+                                <div className="outline-lessons-list">
+                                  {mod.lessons.map((les, idx) => (
+                                    <div key={les._id} className="outline-lesson-item flex justify-between items-center" style={{ padding: '8px 12px' }}>
+                                      <span>📄 {idx + 1}. {les.title} <span className="badge badge-primary">{les.type}</span></span>
+                                      <button type="button" className="btn btn-ghost btn-sm" style={{ color: '#ef4444', padding: '2px 6px', minHeight: 'unset' }} onClick={() => handleDeleteLesson(mod._id, les._id)}>Delete</button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Add Lesson Form */}
+                              {activeModuleId === mod._id && (
+                                <div className="add-lesson-box glass-card">
+                                  <h4>New Lesson Details</h4>
+                                  <div className="input-group">
+                                    <label>Title</label>
+                                    <input type="text" className="input-field" value={lessonForm.title} onChange={(e) => setLessonForm({ ...lessonForm, title: e.target.value })} required />
+                                  </div>
+                                  <div className="input-group">
+                                    <label>Material Type</label>
+                                    <select className="input-field" value={lessonForm.type} onChange={(e) => setLessonForm({ ...lessonForm, type: e.target.value })}>
+                                      <option value="lecture">Lecture (Video)</option>
+                                      <option value="notes">Notes (Document / PDF)</option>
+                                      <option value="dpp">DPP (Practice Quiz)</option>
+                                      <option value="dpp-pdf">DPP PDF (Downloadable)</option>
+                                      <option value="dpp-video">DPP Video (Solution)</option>
+                                      <option value="video">Other Video Link</option>
+                                      <option value="document">Other Text Material</option>
+                                    </select>
+                                  </div>
+                                  {['video', 'lecture', 'dpp-video'].includes(lessonForm.type) && (
+                                    <div className="input-group">
+                                      <label>Video URL (YouTube or Vimeo link)</label>
+                                      <input type="url" className="input-field" placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..." value={lessonForm.videoUrl} onChange={(e) => setLessonForm({ ...lessonForm, videoUrl: e.target.value })} required />
+                                    </div>
+                                  )}
+                                  {['notes', 'dpp-pdf', 'document'].includes(lessonForm.type) && (
+                                    <div className="input-group">
+                                      <label>Attachment File (PDF, DOCX, ZIP)</label>
+                                      <input type="file" className="input-field" onChange={(e) => setLessonFile(e.target.files[0])} />
+                                    </div>
+                                  )}
+                                  <div className="input-group">
+                                    <div className="flex justify-between items-center mb-xs">
+                                      <label>Text Content / Summary</label>
+                                      <button
+                                        type="button"
+                                        className="ai-generate-btn"
+                                        onClick={handleGenerateLessonSummary}
+                                        disabled={aiLoading}
+                                      >
+                                        {aiLoading ? 'Generating...' : '✨ Generate Summary'}
+                                      </button>
+                                    </div>
+                                    <textarea className="input-field textarea-large" placeholder="Optional description..." value={lessonForm.content} onChange={(e) => setLessonForm({ ...lessonForm, content: e.target.value })} />
+                                  </div>
+                                  <button type="button" className="btn btn-accent btn-sm" onClick={(e) => handleAddLesson(e, mod._id)}>
+                                    Add Lesson
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          ))
+                        )}
                       </div>
-                      <div className="input-group">
-                        <label>Material Type</label>
-                        <select className="input-field" value={lessonForm.type} onChange={(e) => setLessonForm({ ...lessonForm, type: e.target.value })}>
-                          <option value="lecture">Lecture (Video)</option>
-                          <option value="notes">Notes (Document / PDF)</option>
-                          <option value="dpp">DPP (Practice Quiz)</option>
-                          <option value="dpp-pdf">DPP PDF (Downloadable)</option>
-                          <option value="dpp-video">DPP Video (Solution)</option>
-                          <option value="video">Other Video Link</option>
-                          <option value="document">Other Text Material</option>
-                        </select>
-                      </div>
-                      {['video', 'lecture', 'dpp-video'].includes(lessonForm.type) && (
-                        <div className="input-group">
-                          <label>Video URL (YouTube or Vimeo link)</label>
-                          <input type="url" className="input-field" placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..." value={lessonForm.videoUrl} onChange={(e) => setLessonForm({ ...lessonForm, videoUrl: e.target.value })} required />
-                        </div>
-                      )}
-                      {['notes', 'dpp-pdf', 'document'].includes(lessonForm.type) && (
-                        <div className="input-group">
-                          <label>Attachment File (PDF, DOCX, ZIP)</label>
-                          <input type="file" className="input-field" onChange={(e) => setLessonFile(e.target.files[0])} />
-                        </div>
-                      )}
-                      <div className="input-group">
-                        <div className="flex justify-between items-center mb-xs">
-                          <label>Text Content / Summary</label>
-                          <button
-                            type="button"
-                            className="ai-generate-btn"
-                            onClick={handleGenerateLessonSummary}
-                            disabled={aiLoading}
-                          >
-                            {aiLoading ? 'Generating...' : '✨ Generate Summary'}
-                          </button>
-                        </div>
-                        <textarea className="input-field textarea-large" placeholder="Optional description..." value={lessonForm.content} onChange={(e) => setLessonForm({ ...lessonForm, content: e.target.value })} />
-                      </div>
-                      <button type="button" className="btn btn-accent btn-sm" onClick={(e) => handleAddLesson(e, mod._id)}>
-                        Add Lesson
-                      </button>
                     </div>
-                  )}
-                </div>
-              ))}
+                  );
+                });
+              })()}
             </div>
           </div>
         )}

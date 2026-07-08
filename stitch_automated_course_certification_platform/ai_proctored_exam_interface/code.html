@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lumina LMS | Secure Exam Environment</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .ai-glow {
+            box-shadow: 0 0 15px rgba(31, 16, 142, 0.05), inset 0 0 0 1px rgba(96, 99, 238, 0.2);
+        }
+        .progress-segment {
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        /* Lock down cursor and selection for exam integrity */
+        .exam-mode {
+            user-select: none;
+        }
+        /* Custom scrollbar for clean aesthetics */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c8c4d5;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-fixed-variant": "#2f2ebe",
+                      "on-secondary": "#ffffff",
+                      "surface-bright": "#f8f9ff",
+                      "on-primary": "#ffffff",
+                      "surface-container": "#e5eeff",
+                      "surface-dim": "#cbdbf5",
+                      "secondary-fixed": "#e1e0ff",
+                      "primary-fixed-dim": "#c3c0ff",
+                      "on-surface": "#0b1c30",
+                      "on-surface-variant": "#464553",
+                      "error-container": "#ffdad6",
+                      "tertiary": "#003421",
+                      "inverse-on-surface": "#eaf1ff",
+                      "primary-container": "#3730a3",
+                      "on-error": "#ffffff",
+                      "on-tertiary-container": "#2dc68d",
+                      "error": "#ba1a1a",
+                      "surface": "#f8f9ff",
+                      "secondary": "#4648d4",
+                      "background": "#f8f9ff",
+                      "on-primary-fixed-variant": "#3b35a7",
+                      "on-tertiary": "#ffffff",
+                      "tertiary-fixed": "#6ffbbe",
+                      "outline-variant": "#c8c4d5",
+                      "primary": "#1f108e",
+                      "primary-fixed": "#e2dfff",
+                      "surface-tint": "#544fc0",
+                      "on-secondary-fixed": "#07006c",
+                      "on-tertiary-fixed-variant": "#005236",
+                      "surface-container-high": "#dce9ff",
+                      "surface-container-low": "#eff4ff",
+                      "surface-container-highest": "#d3e4fe",
+                      "on-background": "#0b1c30",
+                      "surface-variant": "#d3e4fe",
+                      "inverse-primary": "#c3c0ff",
+                      "on-error-container": "#93000a",
+                      "secondary-fixed-dim": "#c0c1ff",
+                      "tertiary-fixed-dim": "#4edea3",
+                      "on-secondary-container": "#fffbff",
+                      "secondary-container": "#6063ee",
+                      "inverse-surface": "#213145",
+                      "on-primary-container": "#a9a7ff",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary-fixed": "#002113",
+                      "outline": "#777584",
+                      "tertiary-container": "#004d33",
+                      "on-primary-fixed": "#0f0069"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xl": "64px",
+                      "base": "4px",
+                      "sm": "16px",
+                      "container-max": "1280px",
+                      "gutter": "24px",
+                      "lg": "40px",
+                      "md": "24px",
+                      "xs": "8px"
+              },
+              "fontFamily": {
+                      "headline-lg": ["Hanken Grotesk"],
+                      "label-md": ["Inter"],
+                      "headline-lg-mobile": ["Hanken Grotesk"],
+                      "body-lg": ["Inter"],
+                      "display-lg": ["Hanken Grotesk"],
+                      "caption": ["Inter"],
+                      "headline-md": ["Hanken Grotesk"],
+                      "title-lg": ["Inter"],
+                      "body-md": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background exam-mode font-body-md overflow-hidden h-screen flex flex-col">
+<!-- Top Navigation Bar (Simplified for Exam Mode) -->
+<!-- Content Policy: Use TopNavBar JSON guidance but exclude standard links for Focus Mode -->
+<header class="w-full top-0 bg-surface border-b border-outline-variant h-16 flex justify-between items-center px-gutter max-w-container-max mx-auto shrink-0 z-50">
+<div class="flex items-center gap-sm">
+<span class="font-headline-md text-headline-md font-bold text-primary">Lumina LMS</span>
+<div class="h-6 w-px bg-outline-variant mx-2"></div>
+<span class="font-title-lg text-title-lg text-on-surface-variant">Midterm: Advanced Algorithms</span>
+</div>
+<div class="flex items-center gap-md">
+<!-- Countdown Timer -->
+<div class="flex items-center bg-error-container text-on-error-container px-sm py-xs rounded-lg gap-2 animate-pulse">
+<span class="material-symbols-outlined text-body-md">timer</span>
+<span class="font-label-md text-label-md font-bold tabular-nums" id="countdown">58:24</span>
+</div>
+<div class="hidden md:flex flex-col items-end">
+<span class="font-label-md text-label-md text-on-surface-variant">Candidate ID</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">LM-88291-ZX</span>
+</div>
+<img class="w-10 h-10 rounded-full border-2 border-primary object-cover" data-alt="A professional studio headshot of a student in a neutral gray background, wearing a simple navy blue polo shirt. The lighting is bright and even, typical of a corporate identification photo, matching the clean and serious Lumina LMS brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1K5LeR5GD91J0ol0jJjcqm2_ludwSyDaXxU-GNOqdnIWUUace5cphWFZHIpRnoFPMnWHXLTh2meovIhBeQ_vGV1sJODgp-YogNtLA8BvUlR1qd8Hqy2SQz7OVlwCMPzJEzoYN_EwxWw9u4JXQivZTD8Sm4AGbiwXUdFGeEm82FeZCQ9isBH6W-pUvxU_u_l3fWMD40PKm4f-FIrP0K8UA6V1BiSTZmC3oIraDAeG5v0noVEz03UdMbg"/>
+</div>
+</header>
+<!-- Main Workspace -->
+<main class="flex-grow flex flex-col md:flex-row overflow-hidden relative">
+<!-- Left Side: Side Navigation (Exam Progress) -->
+<aside class="hidden lg:flex flex-col w-64 bg-surface-container-low border-r border-outline-variant p-sm shrink-0">
+<div class="mb-md">
+<h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider font-bold mb-xs">Question Overview</h3>
+<div class="grid grid-cols-4 gap-2">
+<!-- Progress Grid -->
+<div class="w-10 h-10 flex items-center justify-center rounded bg-primary text-on-primary font-bold">1</div>
+<div class="w-10 h-10 flex items-center justify-center rounded bg-primary text-on-primary font-bold">2</div>
+<div class="w-10 h-10 flex items-center justify-center rounded bg-secondary-container text-on-secondary-container font-bold ring-2 ring-primary">3</div>
+<div class="w-10 h-10 flex items-center justify-center rounded bg-surface-container-highest text-on-surface-variant">4</div>
+<div class="w-10 h-10 flex items-center justify-center rounded bg-surface-container-highest text-on-surface-variant">5</div>
+<div class="w-10 h-10 flex items-center justify-center rounded bg-surface-container-highest text-on-surface-variant">6</div>
+<div class="w-10 h-10 flex items-center justify-center rounded bg-surface-container-highest text-on-surface-variant">7</div>
+<div class="w-10 h-10 flex items-center justify-center rounded bg-surface-container-highest text-on-surface-variant">8</div>
+</div>
+</div>
+<div class="mt-auto space-y-md">
+<div class="p-sm bg-surface-container rounded-xl">
+<p class="font-caption text-caption text-on-surface-variant mb-1">Current Progress</p>
+<div class="w-full bg-outline-variant h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-full progress-segment" style="width: 32%"></div>
+</div>
+<p class="font-label-md text-label-md font-bold text-on-surface mt-2">8 of 25 answered</p>
+</div>
+<div class="flex items-center gap-2 p-xs text-on-error">
+<span class="material-symbols-outlined text-error">warning</span>
+<span class="font-label-md text-label-md text-error">0 Violations Detected</span>
+</div>
+</div>
+</aside>
+<!-- Center: Question Area -->
+<section class="flex-grow overflow-y-auto p-md md:p-xl flex justify-center bg-white">
+<div class="max-w-3xl w-full">
+<!-- Question Header -->
+<div class="mb-lg">
+<div class="flex items-center gap-2 mb-sm">
+<span class="bg-surface-container text-primary px-3 py-1 rounded-full font-label-md text-label-md font-bold">Question 3</span>
+<span class="text-on-surface-variant font-label-md text-label-md">Topic: Graph Theory</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface leading-snug">
+                        Which of the following algorithms is most efficient for finding the shortest path in a graph with non-negative edge weights?
+                    </h2>
+</div>
+<!-- Options -->
+<div class="space-y-sm">
+<button class="w-full group flex items-center gap-sm p-md rounded-xl border-2 border-outline-variant hover:border-primary hover:bg-surface-container-low transition-all text-left">
+<div class="w-6 h-6 rounded-full border-2 border-outline group-hover:border-primary flex items-center justify-center shrink-0">
+<span class="w-3 h-3 rounded-full bg-primary opacity-0 group-focus:opacity-100"></span>
+</div>
+<span class="font-body-lg text-body-lg text-on-surface">Bellman-Ford Algorithm</span>
+</button>
+<button class="w-full group flex items-center gap-sm p-md rounded-xl border-2 border-primary bg-surface-container text-left">
+<div class="w-6 h-6 rounded-full border-2 border-primary flex items-center justify-center shrink-0">
+<span class="w-3 h-3 rounded-full bg-primary"></span>
+</div>
+<span class="font-body-lg text-body-lg text-on-surface font-semibold">Dijkstra's Algorithm</span>
+</button>
+<button class="w-full group flex items-center gap-sm p-md rounded-xl border-2 border-outline-variant hover:border-primary hover:bg-surface-container-low transition-all text-left">
+<div class="w-6 h-6 rounded-full border-2 border-outline group-hover:border-primary flex items-center justify-center shrink-0">
+<span class="w-3 h-3 rounded-full bg-primary opacity-0 group-focus:opacity-100"></span>
+</div>
+<span class="font-body-lg text-body-lg text-on-surface">Floyd-Warshall Algorithm</span>
+</button>
+<button class="w-full group flex items-center gap-sm p-md rounded-xl border-2 border-outline-variant hover:border-primary hover:bg-surface-container-low transition-all text-left">
+<div class="w-6 h-6 rounded-full border-2 border-outline group-hover:border-primary flex items-center justify-center shrink-0">
+<span class="w-3 h-3 rounded-full bg-primary opacity-0 group-focus:opacity-100"></span>
+</div>
+<span class="font-body-lg text-body-lg text-on-surface">Kruskal's Algorithm</span>
+</button>
+</div>
+<!-- Guidance / Notes area -->
+<div class="mt-xl p-md rounded-xl border border-dashed border-outline-variant bg-surface-bright flex gap-sm items-start">
+<span class="material-symbols-outlined text-on-surface-variant">lightbulb</span>
+<p class="font-caption text-caption text-on-surface-variant">
+                        Note: Ensure you consider the asymptotic time complexity in the worst-case scenario. This question carries 5 points.
+                    </p>
+</div>
+</div>
+</section>
+<!-- Right Side: AI Proctoring Panel -->
+<aside class="absolute top-md right-md w-48 md:w-64 z-40 space-y-sm">
+<!-- Webcam Preview -->
+<div class="relative rounded-xl overflow-hidden shadow-lg border-2 border-primary bg-black aspect-video ai-glow">
+<img class="w-full h-full object-cover opacity-90" data-alt="A webcam view of a young adult student looking directly into the lens with a focused expression. In the background, a minimalist, tidy office setting is visible. Overlayed on the video frame is a subtle, translucent green bounding box around the student's face, indicating active AI facial tracking and monitoring in a secure exam environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQRL17e6RxVasdnhoGTyu2TbfhX1NrKo2FzGIeAXApiGgWPgAvizan0r4iikA65o3XPiw3CsxC6qXEkb30LZeNWQIOzMnlYv_2Wkdn_wKIAcHREmNSG7GubsZQBZouAHghrejgA0Gy2C5B6QB0Xr196EKaqlVPUphZnrYBJgsVj2iFNfSMSl9lfA-7C0jZjaq5LBAx2IRNC0hCMFLqwOAsxBXPI4n2277eBQ9NI8XpbovWX5kwl2tM_w"/>
+<div class="absolute top-2 left-2 flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full">
+<div class="w-2 h-2 rounded-full bg-tertiary-fixed-dim animate-pulse"></div>
+<span class="text-[10px] text-white font-bold uppercase tracking-tighter">Live Monitor</span>
+</div>
+<!-- Scanning Effect Overlay -->
+<div class="absolute inset-0 pointer-events-none overflow-hidden">
+<div class="w-full h-1 bg-primary/30 blur-sm absolute animate-[bounce_4s_infinite]" style="top: 20%;"></div>
+</div>
+</div>
+<!-- Monitoring Status Card -->
+<div class="bg-white/80 backdrop-blur-xl p-sm rounded-xl border border-primary/20 shadow-sm">
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-md text-[11px] text-on-surface-variant uppercase font-bold">AI Status</span>
+<span class="text-on-tertiary-fixed-variant font-bold text-[11px]">SECURE</span>
+</div>
+<div class="space-y-1.5">
+<div class="flex items-center gap-2 text-[12px] text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-on-tertiary-container" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        Face Recognition
+                    </div>
+<div class="flex items-center gap-2 text-[12px] text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-on-tertiary-container" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        Audio Analysis
+                    </div>
+<div class="flex items-center gap-2 text-[12px] text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-on-tertiary-container" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        Tab Lock Active
+                    </div>
+</div>
+</div>
+<!-- Warnings (Contextual) -->
+<div class="bg-error-container/50 p-sm rounded-xl border border-error/20 flex flex-col gap-1">
+<span class="text-[10px] text-error font-bold uppercase">Violation Log</span>
+<p class="text-[11px] text-on-error-container italic">No suspicious activity detected in the last 15 mins.</p>
+</div>
+</aside>
+</main>
+<!-- Footer Controls -->
+<footer class="h-20 bg-surface border-t border-outline-variant px-gutter flex justify-between items-center shrink-0">
+<div class="flex gap-sm">
+<button class="flex items-center gap-2 px-sm py-2 rounded-lg border border-outline-variant text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined">arrow_back</span>
+                Previous
+            </button>
+<button class="flex items-center gap-2 px-sm py-2 rounded-lg border border-outline-variant text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low transition-colors">
+                Mark for Review
+            </button>
+</div>
+<div class="flex gap-sm">
+<button class="flex items-center gap-2 px-lg py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md shadow-md hover:opacity-90 transition-all active:scale-95">
+                Next Question
+                <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+<div class="h-10 w-px bg-outline-variant mx-2"></div>
+<button class="flex items-center gap-2 px-sm py-2 rounded-lg bg-on-surface text-surface font-label-md text-label-md hover:bg-on-surface-variant transition-colors">
+                Submit Exam
+            </button>
+</div>
+</footer>
+<!-- Fullscreen AI Background Decor (Subtle) -->
+<div class="fixed inset-0 pointer-events-none -z-10 opacity-30">
+
+</div>
+<script>
+        // Simple micro-interactions and timer logic
+        let timeRemaining = 58 * 60 + 24;
+        const timerDisplay = document.getElementById('countdown');
+
+        setInterval(() => {
+            if (timeRemaining > 0) {
+                timeRemaining--;
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = timeRemaining % 60;
+                timerDisplay.innerText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                // Visual warning for low time
+                if (timeRemaining < 300) {
+                    timerDisplay.parentElement.classList.add('animate-bounce');
+                }
+            }
+        }, 1000);
+
+        // Prevent Right Click
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Keyboard Shortcuts (Standard proctoring simulation)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
+                e.preventDefault();
+                alert("Developer tools are disabled during this session.");
+            }
+        });
+    </script>
+</body></html>

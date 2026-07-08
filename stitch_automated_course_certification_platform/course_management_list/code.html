@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lumina LMS | Instructor Portal</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Hanken+Grotesk:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-container": "#3730a3",
+                    "surface-container-highest": "#d3e4fe",
+                    "surface-container-high": "#dce9ff",
+                    "inverse-primary": "#c3c0ff",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-fixed": "#e2dfff",
+                    "on-primary-fixed": "#0f0069",
+                    "on-secondary-container": "#fffbff",
+                    "secondary-fixed-dim": "#c0c1ff",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "secondary-fixed": "#e1e0ff",
+                    "on-secondary-fixed": "#07006c",
+                    "on-secondary": "#ffffff",
+                    "surface-variant": "#d3e4fe",
+                    "on-primary-fixed-variant": "#3b35a7",
+                    "inverse-on-surface": "#eaf1ff",
+                    "on-surface": "#0b1c30",
+                    "primary": "#1f108e",
+                    "on-tertiary-container": "#2dc68d",
+                    "surface-bright": "#f8f9ff",
+                    "surface-dim": "#cbdbf5",
+                    "outline-variant": "#c8c4d5",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-low": "#eff4ff",
+                    "on-secondary-fixed-variant": "#2f2ebe",
+                    "on-background": "#0b1c30",
+                    "surface-container": "#e5eeff",
+                    "on-primary": "#ffffff",
+                    "surface-tint": "#544fc0",
+                    "on-error": "#ffffff",
+                    "tertiary-container": "#004d33",
+                    "secondary-container": "#6063ee",
+                    "on-surface-variant": "#464553",
+                    "on-error-container": "#93000a",
+                    "primary-fixed-dim": "#c3c0ff",
+                    "error-container": "#ffdad6",
+                    "on-primary-container": "#a9a7ff",
+                    "tertiary": "#003421",
+                    "inverse-surface": "#213145",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "background": "#f8f9ff",
+                    "surface": "#f8f9ff",
+                    "on-tertiary-fixed": "#002113",
+                    "error": "#ba1a1a",
+                    "tertiary-fixed": "#6ffbbe",
+                    "outline": "#777584",
+                    "secondary": "#4648d4"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "8px",
+                    "md": "24px",
+                    "sm": "16px",
+                    "base": "4px",
+                    "lg": "40px",
+                    "gutter": "24px",
+                    "xl": "64px",
+                    "container-max": "1280px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-lg": ["Hanken Grotesk"],
+                    "headline-lg-mobile": ["Hanken Grotesk"],
+                    "title-lg": ["Inter"],
+                    "caption": ["Inter"],
+                    "display-lg": ["Hanken Grotesk"],
+                    "body-md": ["Inter"],
+                    "headline-md": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+
+        /* Glassmorphism for AI components */
+        .ai-glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+        }
+        .ai-glass::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            z-index: -1;
+            background: linear-gradient(135deg, #3730a3, #2dc68d);
+            border-radius: inherit;
+            opacity: 0.3;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c8c4d5;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- Sidebar (Shared Component Anchor) -->
+<aside class="h-screen w-64 fixed left-0 top-0 flex flex-col h-full border-r border-outline-variant bg-surface z-50">
+<div class="p-md flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'FILL' 1;">school</span>
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md font-bold text-primary">Lumina LMS</span>
+<span class="font-label-md text-label-md text-outline">Instructor Portal</span>
+</div>
+</div>
+<nav class="mt-lg flex-1">
+<!-- Active Tab: Courses -->
+<a class="text-primary font-bold border-r-4 border-primary bg-surface-container-low p-4 flex items-center gap-3 transition-all opacity-90" href="#">
+<span class="material-symbols-outlined">book</span>
+<span class="font-body-md text-body-md">Courses</span>
+</a>
+<a class="text-on-surface-variant p-4 flex items-center gap-3 hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined">assignment</span>
+<span class="font-body-md text-body-md">Assignments</span>
+</a>
+<a class="text-on-surface-variant p-4 flex items-center gap-3 hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined">quiz</span>
+<span class="font-body-md text-body-md">Exams</span>
+</a>
+<a class="text-on-surface-variant p-4 flex items-center gap-3 hover:bg-surface-container transition-colors" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-body-md text-body-md">Analytics</span>
+</a>
+</nav>
+<div class="p-md mt-auto border-t border-outline-variant/30">
+<div class="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-container transition-colors cursor-pointer">
+<img class="w-10 h-10 rounded-full object-cover shadow-sm" data-alt="A professional studio portrait of a university instructor in their early 40s, wearing a modern navy blazer over a crisp white shirt. The background is a soft-focus library with warm wood tones and professional lighting. The image conveys authority, approachability, and structured intelligence in a minimalist corporate style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1nEJgsJ4MDT_FVg34zmIFV-n3FLl28jkis57gwldb4iH4rkfDX3V2NTn8y3mG8z2gNY7-WiUXc0W5MYYj41GpsemszjWz1jquLh7bF0if57qqFFK2YtQMYbEECfnNEHJ7gyOKe0CMQgl7Wsrb5EwUpSlAGSeFamXHoU6N41Cg5ZBW_ry0VPe1lMuYJ1XttDcSBNYCbcvJmFIL_r-RjF_eb4vkzlKZp-XfXuMqBllOWXPqCQ9UM1y3Jw"/>
+<div class="overflow-hidden">
+<p class="font-label-md text-label-md truncate">Dr. Helena Vance</p>
+<p class="text-caption text-outline truncate">Senior Lecturer</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Top Navigation (Shared Component Anchor) -->
+<header class="fixed top-0 right-0 left-64 h-16 flex justify-between items-center px-md z-40 bg-surface-container-lowest border-b border-outline-variant shadow-sm">
+<div class="flex items-center flex-1 max-w-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 text-label-md focus:ring-2 focus:ring-primary-container transition-all" placeholder="Search courses, students, or resources..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md ml-md">
+<button class="relative p-2 text-on-surface-variant hover:text-primary transition-colors active:scale-95 duration-150">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors active:scale-95 duration-150">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="h-8 w-px bg-outline-variant"></div>
+<button class="bg-primary text-on-primary px-sm py-2 rounded-lg font-label-md flex items-center gap-2 hover:opacity-90 transition-all active:scale-95">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                Create New Course
+            </button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pl-64 pt-16 min-h-screen">
+<div class="max-w-container-max mx-auto p-md space-y-lg">
+<!-- Page Header & Stats Bento -->
+<section class="grid grid-cols-1 md:grid-cols-4 gap-md">
+<div class="md:col-span-2 space-y-base">
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Course Management</h1>
+<p class="text-body-md text-on-surface-variant">Manage your curriculum and monitor student engagement across your active catalog.</p>
+</div>
+<!-- AI Smart Summary Card -->
+<div class="md:col-span-2 ai-glass p-md rounded-xl flex items-center justify-between">
+<div class="space-y-1">
+<div class="flex items-center gap-2 text-primary font-bold">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="text-caption uppercase tracking-wider">AI Insight</span>
+</div>
+<p class="text-label-md">Engagement is up <span class="text-tertiary-container font-bold">+12%</span> this week in "Advanced UX Systems".</p>
+</div>
+<button class="text-primary font-label-md hover:underline">View Report</button>
+</div>
+</section>
+<!-- Filters Bar -->
+<section class="flex flex-wrap items-center justify-between gap-sm bg-surface-container-lowest p-sm rounded-xl border border-outline-variant/30">
+<div class="flex items-center gap-sm">
+<button class="flex items-center gap-2 px-4 py-2 bg-surface-container-high rounded-lg text-label-md font-medium text-primary">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+                        All Courses
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 hover:bg-surface-container text-label-md font-medium text-on-surface-variant rounded-lg transition-colors">
+                        Active
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 hover:bg-surface-container text-label-md font-medium text-on-surface-variant rounded-lg transition-colors">
+                        Drafts
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 hover:bg-surface-container text-label-md font-medium text-on-surface-variant rounded-lg transition-colors">
+                        Archived
+                    </button>
+</div>
+<div class="flex items-center gap-sm">
+<span class="text-caption text-outline">Sort by:</span>
+<select class="bg-transparent border-none text-label-md font-medium focus:ring-0 cursor-pointer">
+<option>Recently Created</option>
+<option>Completion Rate</option>
+<option>Enrolled Students</option>
+</select>
+</div>
+</section>
+<!-- Data Table / List -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 overflow-hidden shadow-sm">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low border-b border-outline-variant/30">
+<tr>
+<th class="p-md font-label-md text-label-md text-outline">Course Details</th>
+<th class="p-md font-label-md text-label-md text-outline">Category</th>
+<th class="p-md font-label-md text-label-md text-outline">Status</th>
+<th class="p-md font-label-md text-label-md text-outline">Enrolled</th>
+<th class="p-md font-label-md text-label-md text-outline">Avg. Completion</th>
+<th class="p-md font-label-md text-label-md text-outline text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/20">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="p-md">
+<div class="flex items-center gap-4">
+<div class="w-16 h-10 rounded-lg overflow-hidden bg-surface-dim">
+<img class="w-full h-full object-cover" data-alt="A clean, minimalist 3D rendering of abstract floating glass spheres in soft shades of indigo and emerald. The background is a bright white studio space. The composition is professional and technical, representing high-end design systems and corporate digital education." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAClj-tRBxLVyPe261fAbq1J-3HbnByN-GBrbnPrUbARyJ7fL4KMIRoOPYF6XOd56nfcFZyjYbdOeIns2PQobEnZ5eCNQ7i7kVnpkG98_JxmL6Q1YFogfuRBdAfMoz59LibHP4pOQ_6mVoiq0-UzqiBNwMwtNPkas5XNR96alLUz7jRK3S_KAFmEu5NfiQx3s1XKLDHRK9iynLXqV2pGEEtuS5Bt4Kw6Ik2f2OpvBEqOIG66gT-edZ6TA"/>
+</div>
+<div>
+<p class="font-title-lg text-label-md text-on-surface group-hover:text-primary transition-colors">Introduction to Design Systems</p>
+<p class="text-caption text-outline">Last edited 2 days ago</p>
+</div>
+</div>
+</td>
+<td class="p-md">
+<span class="px-2 py-1 bg-surface-container text-caption text-primary rounded-full">Digital Design</span>
+</td>
+<td class="p-md">
+<div class="flex items-center gap-1.5 text-tertiary-container font-medium">
+<span class="w-2 h-2 bg-tertiary-container rounded-full"></span>
+<span class="text-caption">Published</span>
+</div>
+</td>
+<td class="p-md">
+<div class="flex items-center gap-2">
+<span class="font-title-lg text-label-md">1,248</span>
+<span class="text-caption text-tertiary-container">+42</span>
+</div>
+</td>
+<td class="p-md">
+<div class="w-full max-w-[120px] space-y-1">
+<div class="flex justify-between text-caption font-bold">
+<span>78%</span>
+</div>
+<div class="h-1 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 78%"></div>
+</div>
+</div>
+</td>
+<td class="p-md text-right">
+<button class="p-2 hover:bg-surface-container rounded-full transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="p-md">
+<div class="flex items-center gap-4">
+<div class="w-16 h-10 rounded-lg overflow-hidden bg-surface-dim">
+<img class="w-full h-full object-cover" data-alt="A macro photograph of high-tech circuit boards with glowing blue and green light trails. The style is sharp, professional, and slightly futuristic. The lighting is low-key with vibrant electronic accents, fitting a course on advanced technical systems and engineering." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvcKMiVV12ULMSyD2yDH9ueK1ZLGTs1dpSvXLD6OMY933GRcqtt7e3hkmCN30VQ1-OMGmKCPhUwCVpH0vMdZ5vD_AdwOjBVXJw_994-I8v6ei_uPBiKRDUFcOZA7FgbWUy170B88CesejebPkG2viLYVsDP6qlP7mE7eOaR-xcZF0CrN6UQur3YdRFUgaUElckDvD_Kc4sUoBcZenlRriuhoFYAM3TFn0CFUs1BDmriI9ZiTeZPKUReg"/>
+</div>
+<div>
+<p class="font-title-lg text-label-md text-on-surface group-hover:text-primary transition-colors">Advanced Backend Architecture</p>
+<p class="text-caption text-outline">Last edited 5 hours ago</p>
+</div>
+</div>
+</td>
+<td class="p-md">
+<span class="px-2 py-1 bg-surface-container text-caption text-primary rounded-full">Engineering</span>
+</td>
+<td class="p-md">
+<div class="flex items-center gap-1.5 text-outline font-medium">
+<span class="w-2 h-2 bg-outline rounded-full"></span>
+<span class="text-caption">Draft</span>
+</div>
+</td>
+<td class="p-md">
+<span class="font-title-lg text-label-md">—</span>
+</td>
+<td class="p-md">
+<span class="font-title-lg text-label-md">—</span>
+</td>
+<td class="p-md text-right">
+<button class="p-2 hover:bg-surface-container rounded-full transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="p-md">
+<div class="flex items-center gap-4">
+<div class="w-16 h-10 rounded-lg overflow-hidden bg-surface-dim">
+<img class="w-full h-full object-cover" data-alt="A minimalist architectural photograph of a modern office space with clean lines, large glass windows, and ergonomic furniture. The lighting is natural and bright, conveying a sense of productivity and professional management. The color palette is dominated by whites, grays, and subtle wood tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3U4eLkZuSeVZLAC-_OlMUyoMeVOp3Bg1v4z3TXqhV0kdGCBaIhkuCYpV_7SiyfzJjd0ig_6fH6RfgjWy2tfjPQXMdaZCmNLTsUNiavdSjpx0Htp32cX0_OSnSCeaW01b6WVxU3VNgILvUL5pb3RlAHNLrn__TJx0-LuNYnHQLWA3aJ6bi-TgpomdG0oAPgz9R1w9gHmWGSklWD2YkLGdCRmPhnSAgenD55ogXb3albhGEd3dX_c_SIw"/>
+</div>
+<div>
+<p class="font-title-lg text-label-md text-on-surface group-hover:text-primary transition-colors">Agile Leadership for Teams</p>
+<p class="text-caption text-outline">Last edited 1 week ago</p>
+</div>
+</div>
+</td>
+<td class="p-md">
+<span class="px-2 py-1 bg-surface-container text-caption text-primary rounded-full">Management</span>
+</td>
+<td class="p-md">
+<div class="flex items-center gap-1.5 text-tertiary-container font-medium">
+<span class="w-2 h-2 bg-tertiary-container rounded-full"></span>
+<span class="text-caption">Published</span>
+</div>
+</td>
+<td class="p-md">
+<div class="flex items-center gap-2">
+<span class="font-title-lg text-label-md">856</span>
+<span class="text-caption text-error">-5</span>
+</div>
+</td>
+<td class="p-md">
+<div class="w-full max-w-[120px] space-y-1">
+<div class="flex justify-between text-caption font-bold">
+<span>62%</span>
+</div>
+<div class="h-1 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 62%"></div>
+</div>
+</div>
+</td>
+<td class="p-md text-right">
+<button class="p-2 hover:bg-surface-container rounded-full transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="p-md">
+<div class="flex items-center gap-4">
+<div class="w-16 h-10 rounded-lg overflow-hidden bg-surface-dim">
+<img class="w-full h-full object-cover" data-alt="A conceptual digital artwork showing a network of interconnecting dots and lines over a deep indigo gradient background. The style is sophisticated and mathematical, representing data science and analytics. Thin neon lines add a sense of movement and technical precision." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6WLRWxBcfDk0on6M_kvKY3BU8VcA21LW9inl1m6OFzKdtf3c3FwS7za1DItgy9s5mOmtQwg_bxUmrMPcXczEMjnwplTWpO5dIH4M893EvrRH4u3icdDAr-sn9JtrO5KA6tRI34aWFevWlDqgqUjqtH6E5B0PA0SWWzzUzlQuSFWCM7Z-p0rVNBeaXHJy4eAYL8tR-lyA5gCVy1-ipJMxQk2wfVA_Oo1SvzXrZeAlCg0qCMgYx6Egb1Q"/>
+</div>
+<div>
+<p class="font-title-lg text-label-md text-on-surface group-hover:text-primary transition-colors">Data Foundations: SQL &amp; NoSQL</p>
+<p class="text-caption text-outline">Last edited 1 month ago</p>
+</div>
+</div>
+</td>
+<td class="p-md">
+<span class="px-2 py-1 bg-surface-container text-caption text-primary rounded-full">Data Science</span>
+</td>
+<td class="p-md">
+<div class="flex items-center gap-1.5 text-on-surface-variant font-medium opacity-50">
+<span class="w-2 h-2 bg-on-surface-variant rounded-full"></span>
+<span class="text-caption">Archived</span>
+</div>
+</td>
+<td class="p-md">
+<div class="flex items-center gap-2">
+<span class="font-title-lg text-label-md">3,412</span>
+</div>
+</td>
+<td class="p-md">
+<div class="w-full max-w-[120px] space-y-1">
+<div class="flex justify-between text-caption font-bold">
+<span>91%</span>
+</div>
+<div class="h-1 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 91%"></div>
+</div>
+</div>
+</td>
+<td class="p-md text-right">
+<button class="p-2 hover:bg-surface-container rounded-full transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+<!-- Pagination -->
+<div class="p-md flex items-center justify-between bg-surface-container-low border-t border-outline-variant/30">
+<p class="text-caption text-outline">Showing 1 to 4 of 24 courses</p>
+<div class="flex items-center gap-2">
+<button class="p-1 border border-outline-variant rounded hover:bg-surface-container transition-colors disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center bg-primary text-on-primary rounded font-label-md">1</button>
+<button class="w-8 h-8 flex items-center justify-center hover:bg-surface-container rounded font-label-md text-on-surface-variant transition-colors">2</button>
+<button class="w-8 h-8 flex items-center justify-center hover:bg-surface-container rounded font-label-md text-on-surface-variant transition-colors">3</button>
+<button class="p-1 border border-outline-variant rounded hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+</div>
+</main>
+<script>
+        // Simple micro-interactions
+        document.querySelectorAll('tbody tr').forEach(row => {
+            row.addEventListener('click', (e) => {
+                if (!e.target.closest('button')) {
+                    // Logic for selecting or opening course
+                    console.log('Opening course details...');
+                }
+            });
+        });
+
+        // Search highlight effect
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('scale-[1.01]');
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.classList.remove('scale-[1.01]');
+        });
+    </script>
+</body></html>

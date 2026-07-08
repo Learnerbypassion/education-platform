@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EduFlow | Automated LMS</title>
+<!-- Google Fonts: Hanken Grotesk & Inter -->
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed-variant": "#2f2ebe",
+                        "on-secondary": "#ffffff",
+                        "surface-bright": "#f8f9ff",
+                        "on-primary": "#ffffff",
+                        "surface-container": "#e5eeff",
+                        "surface-dim": "#cbdbf5",
+                        "secondary-fixed": "#e1e0ff",
+                        "primary-fixed-dim": "#c3c0ff",
+                        "on-surface": "#0b1c30",
+                        "on-surface-variant": "#464553",
+                        "error-container": "#ffdad6",
+                        "tertiary": "#003421",
+                        "inverse-on-surface": "#eaf1ff",
+                        "primary-container": "#3730a3",
+                        "on-error": "#ffffff",
+                        "on-tertiary-container": "#2dc68d",
+                        "error": "#ba1a1a",
+                        "surface": "#f8f9ff",
+                        "secondary": "#4648d4",
+                        "background": "#f8f9ff",
+                        "on-primary-fixed-variant": "#3b35a7",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed": "#6ffbbe",
+                        "outline-variant": "#c8c4d5",
+                        "primary": "#1f108e",
+                        "primary-fixed": "#e2dfff",
+                        "surface-tint": "#544fc0",
+                        "on-secondary-fixed": "#07006c",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "surface-container-high": "#dce9ff",
+                        "surface-container-low": "#eff4ff",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-background": "#0b1c30",
+                        "surface-variant": "#d3e4fe",
+                        "inverse-primary": "#c3c0ff",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed-dim": "#c0c1ff",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "on-secondary-container": "#fffbff",
+                        "secondary-container": "#6063ee",
+                        "inverse-surface": "#213145",
+                        "on-primary-container": "#a9a7ff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#002113",
+                        "outline": "#777584",
+                        "tertiary-container": "#004d33",
+                        "on-primary-fixed": "#0f0069"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "64px",
+                        "base": "4px",
+                        "sm": "16px",
+                        "container-max": "1280px",
+                        "gutter": "24px",
+                        "lg": "40px",
+                        "md": "24px",
+                        "xs": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Hanken Grotesk"],
+                        "label-md": ["Inter"],
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "caption": ["Inter"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "title-lg": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .tonal-layer-1 {
+            background-color: #ffffff;
+            box-shadow: 0px 4px 20px rgba(70, 72, 212, 0.04);
+        }
+        .tonal-layer-2:hover {
+            box-shadow: 0px 6px 24px rgba(70, 72, 212, 0.08);
+            transform: translateY(-2px);
+        }
+        .ai-sparkle-border {
+            position: relative;
+            background: white;
+            padding: 1px;
+            border-radius: 1rem;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .ai-sparkle-border::before {
+            content: '';
+            position: absolute;
+            z-index: -1;
+            inset: 0;
+            background: linear-gradient(45deg, #1f108e, #4edea3);
+            opacity: 0.3;
+        }
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-x-hidden">
+<!-- Top Navigation Bar -->
+<nav class="bg-surface border-b border-outline-variant w-full h-16 sticky top-0 z-50 transition-all duration-200 ease-in-out">
+<div class="flex justify-between items-center px-gutter w-full h-full max-w-container-max mx-auto">
+<div class="flex items-center gap-xs">
+<span class="font-headline-md text-headline-md font-bold text-primary">Lumina LMS</span>
+</div>
+<div class="hidden md:flex items-center gap-xl">
+<a class="text-primary font-bold border-b-2 border-primary pb-1 font-body-md text-body-md transition-colors" href="#">Learn</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md" href="#">Teach</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md" href="#">Verify</a>
+</div>
+<div class="flex items-center gap-md">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">help</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A clean, professional portrait of a modern software professional with a friendly smile, set against a blurred office background with cool indigo lighting, captured in a high-resolution, corporate photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4HD4RLaJZPylDNoRj4vwL6Lq-FH8D6CIYmv4JAttf9sGI9uvYwq6PK-WszTAcSJIBFD8_4tzKYcFFL7xmj-dg5cTbzHWN6XGQvxPRc7WcMAQ38Z8BnT5Eeb7Q2jUbCuuGlKPZcVpFY-nalXkFiEG-Qfv3uXRQakXcQlPpA7ZBw3crPIVe95uzMOpRBt6FMkdn3fN0r_Qy_3bVc6O-BuTFTlyD16ngkarMhM9MvzQzhRajpSe9HArMjg"/>
+</div>
+</div>
+</div>
+</nav>
+<main class="max-w-container-max mx-auto px-gutter py-xl">
+<!-- Hero Section -->
+<section class="relative mb-xl lg:mb-xl flex flex-col md:flex-row items-center gap-xl min-h-[614px]">
+<div class="md:w-1/2 flex flex-col gap-md z-10">
+<div class="inline-flex items-center gap-xs px-3 py-1 bg-surface-container rounded-full text-primary font-label-md text-label-md w-fit">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">spark</span>
+                    Next-Gen Education
+                </div>
+<h1 class="font-display-lg text-display-lg text-on-surface leading-tight">
+                    The Future of Learning, <span class="text-primary">Fully Automated.</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-lg">
+                    Scale your institution with AI-driven grading, automated course generation, and verified certification workflows.
+                </p>
+<div class="flex flex-wrap gap-md mt-base">
+<button class="bg-primary text-on-primary px-lg py-sm rounded-lg font-title-lg text-title-lg hover:shadow-lg transition-all duration-300">
+                        Start Learning
+                    </button>
+<button class="bg-surface-container-lowest border border-outline-variant text-primary px-lg py-sm rounded-lg font-title-lg text-title-lg hover:bg-surface-container-low transition-all duration-300">
+                        Become an Instructor
+                    </button>
+</div>
+</div>
+<div class="md:w-1/2 relative">
+<div class="relative w-full aspect-square rounded-xl overflow-hidden tonal-layer-1 ai-sparkle-border">
+<img class="w-full h-full object-cover" data-alt="A sophisticated 3D visualization of a neural network interweaving with digital books and floating holographic interfaces. The aesthetic is clean and futuristic, featuring a professional palette of deep indigo, slate blues, and emerald accents. Soft ambient lighting creates a calm, intelligent atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6XW3sPD5MbaKD9pv89mcglQeTHfLw9TifleqMvpCvLeS6jQjJtG9nd42c36IozOaH-FxY2WyV09QIG8DOt5UGWULFR74Wipzy11N-KeS2Ene-bsBFGXLGmahu9Az6FFNCdSC2uQ5Ys_mhuzI6TqfRHhVOiNo638d_KyMTVeRbrkJT-vMkFH8HWYOGkFnMRdlmOs1M8BEtg91HpsBsEslcIF4_EacSa1HqT6ZzdvwfqsO5RnJAQ_hmNg"/>
+<!-- Float Overlay Card -->
+<div class="absolute bottom-md left-md glass-morphism p-md rounded-xl max-w-[240px] flex items-center gap-sm">
+<div class="w-12 h-12 bg-tertiary-fixed-dim rounded-full flex items-center justify-center text-on-tertiary-fixed">
+<span class="material-symbols-outlined">trending_up</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface-variant">Efficiency</div>
+<div class="font-title-lg text-title-lg text-on-surface">+94%</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Features Grid (Asymmetric Bento Style) -->
+<section class="mb-xl">
+<div class="text-center mb-lg">
+<h2 class="font-headline-lg text-headline-lg mb-xs">Enterprise-Grade Learning</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Everything you need to run a digital academy at scale.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-md">
+<!-- Large Feature -->
+<div class="md:col-span-7 tonal-layer-1 p-lg rounded-xl flex flex-col justify-between tonal-layer-2 transition-all">
+<div>
+<span class="material-symbols-outlined text-primary text-4xl mb-sm">library_books</span>
+<h3 class="font-headline-md text-headline-md mb-sm">Course Creation</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md">Deploy interactive content in minutes. Our AI assistant helps you structure modules, generate quizzes, and curate resources automatically based on your learning objectives.</p>
+</div>
+<div class="w-full h-40 bg-surface-container-low rounded-lg overflow-hidden">
+<img class="w-full h-full object-cover opacity-80" data-alt="A minimalist UI mockup of a professional dashboard showing a course builder interface. The layout is clean with slate-colored lines, showing progress bars, drag-and-drop modules, and a vibrant indigo action button. The lighting is bright and airy, suggesting a modern workspace." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAu3jjfta5GxzW1VhtJ9TQYd7ntp3eIfTvv3n72WCgj84cUhiNk3Rnl-PQkv1DfSOgTi_Xbj1SAy8o1chH6dqf91zfLU8vHyMfZrg7lJGtFZKzEP-cr1Jtv9VmtnkYg5_WVpM2gMaWpqKC21DrTbhZqhhZUGOChdI1aP27NJK0wO5w1lmKI24-0_eNZYUZ1zE4KIdG1IMaJpqwH91ymB5CDMCe1XbgW0Tj10xB712EvDF6s0gNbB13LKg"/>
+</div>
+</div>
+<!-- Small Feature -->
+<div class="md:col-span-5 tonal-layer-1 p-lg rounded-xl tonal-layer-2 transition-all flex flex-col">
+<span class="material-symbols-outlined text-secondary text-4xl mb-sm">code</span>
+<h3 class="font-headline-md text-headline-md mb-sm">GitHub Evaluation</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Automated code reviews and repo health checks for technical courses. Sync students' progress directly from their commits.</p>
+</div>
+<!-- Small Feature -->
+<div class="md:col-span-5 tonal-layer-1 p-lg rounded-xl tonal-layer-2 transition-all flex flex-col">
+<span class="material-symbols-outlined text-tertiary-fixed-dim text-4xl mb-sm">verified_user</span>
+<h3 class="font-headline-md text-headline-md mb-sm">AI Proctoring</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Secure, distraction-free examination environments with behavioral analytics to ensure academic integrity without intrusive monitoring.</p>
+</div>
+<!-- Large Feature -->
+<div class="md:col-span-7 tonal-layer-1 p-lg rounded-xl flex flex-col justify-between tonal-layer-2 transition-all bg-surface-container-lowest">
+<div class="flex gap-md">
+<div class="flex-1">
+<span class="material-symbols-outlined text-primary text-4xl mb-sm">workspace_premium</span>
+<h3 class="font-headline-md text-headline-md mb-sm">Instant Certification</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Issue blockchain-verified certificates immediately upon course completion. Students can share their achievements directly to LinkedIn or their portfolio.</p>
+</div>
+<div class="w-1/3 hidden sm:block">
+<img class="rounded-lg shadow-sm" data-alt="A close-up of a premium digital certificate featuring a minimalist seal and elegant typography in an indigo and white color scheme. The lighting is soft and professional, emphasizing the high-value nature of the credential." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-kj9N_qW1NNfE24PsEUZ-Z7jcvWVFsAp-MeabzcMrHbH18iNRUWunE4Vz0dVmiRER9dJn8GCYYF0i0VMjySxjOyvh8Y24hEstaRX1LmajzmiLaN5aBXJU9rNfEYTDf_LDvHJ7qeEJ3NinYwUgf1vXoWA1FP_3XS4i4-YV8ssQuTuPvpd3srLCZ1rA6ph4OEhaPQaSwAbk6AjmB1R2F04n7ZJ1rgS0FbBg9zJH_cbpDYzKtV1WhB5SXQ"/>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Trending Courses Section -->
+<section class="mb-xl">
+<div class="flex justify-between items-end mb-lg">
+<div>
+<h2 class="font-headline-lg text-headline-lg">Top Trending Courses</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Highly requested skills for the current market.</p>
+</div>
+<button class="text-primary font-bold hover:underline">View All Courses</button>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md">
+<!-- Course Card 1 -->
+<div class="tonal-layer-1 rounded-xl overflow-hidden tonal-layer-2 transition-all group">
+<div class="h-48 w-full relative">
+<img class="w-full h-full object-cover" data-alt="An abstract representation of data science and artificial intelligence, featuring glowing indigo nodes and connecting lines on a clean white background. The aesthetic is high-tech yet minimalist, captured in a clean light-mode studio style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtzyUmbE0yi6EQ044jv7cKJn8ETqjBYRhoRsa0TvwFh9YQsw69D_x6jXN2EalH1bVzTjobr8s6GBs_jijIPJ8q9mSQCQNsHn0UqOarjrF_gxtSZd23mRkbtX93QLAGoDp6t7Ppv6lAxh2sqop5rlD_Xc6L9uyItTJM6QRA_Sdy-Lr6dlhvwTuaBppcCr_IpWec9q3XdzE3EZjVB9FfGnp04vTb74ap4WdtS6sFbBjJLG-VtD4PEfyNhA"/>
+<div class="absolute top-sm left-sm bg-primary text-on-primary px-2 py-1 rounded text-caption font-bold">BEST SELLER</div>
+</div>
+<div class="p-md">
+<h4 class="font-title-lg text-title-lg mb-xs group-hover:text-primary transition-colors">Data Science with AI Agents</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md">Master automated data pipelines and LLM-powered analysis.</p>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-secondary text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md">4.9 (1.2k reviews)</span>
+</div>
+<span class="font-title-lg text-primary">$89.00</span>
+</div>
+</div>
+<div class="w-full bg-surface-container-low h-1 mt-auto">
+<div class="bg-primary h-full w-[85%]"></div>
+</div>
+</div>
+<!-- Course Card 2 -->
+<div class="tonal-layer-1 rounded-xl overflow-hidden tonal-layer-2 transition-all group">
+<div class="h-48 w-full relative">
+<img class="w-full h-full object-cover" data-alt="A minimalist architectural visualization of a modern cloud computing data center. The lighting is dominated by soft slate grays and vibrant indigo accents, focusing on clean lines and structural intelligence. High-end professional photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNrVL0I7JC_Wfcngj1VpUtdP-tyL78_ZcYjCWYDDFX1AfRMjYUl21Li01yT1HP-YqFbPbEZ9qZmkM-SB9VSeziMRQXQ4JXEm4bgILqAXoeSePZ1TheNRH4TGlY96aNgsvE75-exzuKkevGP6l0Ia3OMosdGAk4fKMYepFFBofd3DvmxXQEFTsSKbC_A-xD53qFBMOSgDNqTLCONLGWIScWMYM-eco5MpxfpmQVxE9D69WGXCIg9u30Xg"/>
+</div>
+<div class="p-md">
+<h4 class="font-title-lg text-title-lg mb-xs group-hover:text-primary transition-colors">Cloud Architecture &amp; Security</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md">Learn to design resilient enterprise systems on AWS and GCP.</p>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-secondary text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md">4.8 (850 reviews)</span>
+</div>
+<span class="font-title-lg text-primary">$120.00</span>
+</div>
+</div>
+<div class="w-full bg-surface-container-low h-1 mt-auto">
+<div class="bg-primary h-full w-[40%]"></div>
+</div>
+</div>
+<!-- Course Card 3 -->
+<div class="tonal-layer-1 rounded-xl overflow-hidden tonal-layer-2 transition-all group">
+<div class="h-48 w-full relative">
+<img class="w-full h-full object-cover" data-alt="An elegant arrangement of modern UX design tools and wireframes on a bright, minimalist desk. The color palette uses subtle slate tones with emerald green highlights. The image conveys a sense of creative precision and professional clarity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAC72DeVhw-L_vxcw1R8JiUvvl2QgOWhja-45oHArl2QfchW-WXCj7bGIu1rPgwhNEoyOXJF-ciHsWxfZZ7X9yZvq0kDZLByX4vWSimLrYT_2NpvZhL9SYm_KSarCLATtyDbL8JP4AAioZOHE_N24rPPP4xP3ABSxhOtF8i1JS8r7pPFHy3FNW6VNDDiq-8HhvZaHkyTwrGLYuRkjtc0QgXxqTIk_b0hESw-4QDQxfEyFIMrdAL__dFXA"/>
+</div>
+<div class="p-md">
+<h4 class="font-title-lg text-title-lg mb-xs group-hover:text-primary transition-colors">Advanced UX Research</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md">Deep dive into user psychology and high-fidelity prototyping.</p>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-secondary text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md">5.0 (2k+ reviews)</span>
+</div>
+<span class="font-title-lg text-primary">$75.00</span>
+</div>
+</div>
+<div class="w-full bg-surface-container-low h-1 mt-auto">
+<div class="bg-primary h-full w-[65%]"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Newsletter / CTA -->
+<section class="bg-primary rounded-xl p-lg md:p-xl relative overflow-hidden">
+<div class="absolute top-0 right-0 w-64 h-64 bg-secondary opacity-20 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2"></div>
+<div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-lg">
+<div class="md:w-1/2">
+<h2 class="font-headline-lg text-headline-lg text-on-primary mb-sm">Stay Ahead of the Curve</h2>
+<p class="text-on-primary-container font-body-lg text-body-lg opacity-90">Join 50,000+ learners and instructors. Get weekly insights on automated education and technical curriculum.</p>
+</div>
+<div class="md:w-1/2 w-full max-w-md">
+<form class="flex gap-xs flex-col sm:flex-row">
+<input class="flex-1 bg-on-primary text-on-surface px-md py-sm rounded-lg focus:ring-2 focus:ring-secondary outline-none border-none" placeholder="Your professional email" type="email"/>
+<button class="bg-secondary text-on-secondary px-lg py-sm rounded-lg font-bold hover:scale-105 transition-transform" type="submit">Subscribe</button>
+</form>
+<p class="text-on-primary-container text-caption mt-sm opacity-60">Zero spam. Only high-value content.</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-inverse-surface text-inverse-on-surface py-xl">
+<div class="max-w-container-max mx-auto px-gutter grid grid-cols-1 md:grid-cols-4 gap-xl">
+<div class="col-span-1 md:col-span-1">
+<span class="font-headline-md text-headline-md font-bold text-primary-fixed mb-md block">Lumina LMS</span>
+<p class="text-outline-variant font-body-md text-body-md">Empowering the next generation of global talent through automated, high-fidelity learning experiences.</p>
+</div>
+<div>
+<h5 class="font-title-lg text-title-lg mb-md">Platform</h5>
+<ul class="flex flex-col gap-sm">
+<li><a class="text-outline-variant hover:text-primary-fixed transition-colors" href="#">Browse Courses</a></li>
+<li><a class="text-outline-variant hover:text-primary-fixed transition-colors" href="#">Teaching Tools</a></li>
+<li><a class="text-outline-variant hover:text-primary-fixed transition-colors" href="#">Enterprise</a></li>
+<li><a class="text-outline-variant hover:text-primary-fixed transition-colors" href="#">Certificates</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-title-lg text-title-lg mb-md">Resources</h5>
+<ul class="flex flex-col gap-sm">
+<li><a class="text-outline-variant hover:text-primary-fixed transition-colors" href="#">Documentation</a></li>
+<li><a class="text-outline-variant hover:text-primary-fixed transition-colors" href="#">Help Center</a></li>
+<li><a class="text-outline-variant hover:text-primary-fixed transition-colors" href="#">API Status</a></li>
+<li><a class="text-outline-variant hover:text-primary-fixed transition-colors" href="#">Partners</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-title-lg text-title-lg mb-md">Contact</h5>
+<ul class="flex flex-col gap-sm">
+<li><a class="text-outline-variant hover:text-primary-fixed transition-colors flex items-center gap-xs" href="#">
+<span class="material-symbols-outlined text-[18px]">mail</span> info@eduflow.ai</a>
+</li>
+<li><a class="text-outline-variant hover:text-primary-fixed transition-colors flex items-center gap-xs" href="#">
+<span class="material-symbols-outlined text-[18px]">public</span> Global Headquaters</a>
+</li>
+<li class="mt-md flex gap-md">
+<a class="material-symbols-outlined text-outline-variant hover:text-primary-fixed" href="#">share</a>
+<a class="material-symbols-outlined text-outline-variant hover:text-primary-fixed" href="#">terminal</a>
+</li>
+</ul>
+</div>
+</div>
+<div class="max-w-container-max mx-auto px-gutter mt-xl pt-lg border-t border-outline text-caption text-outline-variant flex flex-col md:flex-row justify-between gap-md">
+<p>© 2024 Lumina Learning Systems Inc. All rights reserved.</p>
+<div class="flex gap-lg">
+<a class="hover:text-primary-fixed" href="#">Privacy Policy</a>
+<a class="hover:text-primary-fixed" href="#">Terms of Service</a>
+<a class="hover:text-primary-fixed" href="#">Cookie Settings</a>
+</div>
+</div>
+</footer>
+<script>
+        // Micro-interactions
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('mousedown', () => {
+                button.classList.add('scale-95');
+            });
+            button.addEventListener('mouseup', () => {
+                button.classList.remove('scale-95');
+            });
+            button.addEventListener('mouseleave', () => {
+                button.classList.remove('scale-95');
+            });
+        });
+        
+        // Navigation scroll effect
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 20) {
+                nav.classList.add('shadow-sm', 'glass-morphism');
+            } else {
+                nav.classList.remove('shadow-sm', 'glass-morphism');
+            }
+        });
+    </script>
+</body></html>

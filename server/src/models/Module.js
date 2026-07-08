@@ -27,6 +27,10 @@ const moduleSchema = new mongoose.Schema(
       type: String,
       default: '', // e.g., "Week 1", "Day 3", "Introduction"
     },
+    week: {
+      type: Number,
+      default: 1,
+    },
   },
   {
     timestamps: true,

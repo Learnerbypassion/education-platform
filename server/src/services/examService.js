@@ -15,6 +15,10 @@ class ExamService {
       totalMarks = Number(examData.totalMarks) || 0;
     }
 
+    if (Number(examData.passingMarks) > totalMarks) {
+      throw ApiError.badRequest(`Passing marks (${examData.passingMarks}) cannot be greater than the total marks of the questions (${totalMarks})`);
+    }
+
     const exam = await Exam.create({ ...examData, totalMarks, createdBy });
 
     if (questions && questions.length > 0) {

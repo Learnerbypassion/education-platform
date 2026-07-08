@@ -25,6 +25,7 @@ const CourseLearn = () => {
   const [certUrl, setCertUrl] = useState(null);
   const [generatingCert, setGeneratingCert] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [expandedWeeks, setExpandedWeeks] = useState({ 1: true });
 
   const fetchCourseData = async () => {
     try {
@@ -126,6 +127,62 @@ const CourseLearn = () => {
     setSidebarOpen(false);
   };
 
+  // Group modules by week and sort weeks
+  const modulesByWeek = {};
+  course?.modules?.forEach(mod => {
+    const w = mod.week || 1;
+    if (!modulesByWeek[w]) {
+      modulesByWeek[w] = [];
+    }
+    modulesByWeek[w].push(mod);
+  });
+  const weeksList = Object.keys(modulesByWeek).map(Number).sort((a, b) => a - b);
+
+  const getWeekProgress = (weekNum) => {
+    const weekMods = modulesByWeek[weekNum] || [];
+    let total = 0;
+    let completed = 0;
+    weekMods.forEach(mod => {
+      total += mod.lessons?.length || 0;
+      completed += mod.lessons?.filter(l => completedIds.has(l._id)).length || 0;
+    });
+    return total > 0 ? Math.round((completed / total) * 100) : 0;
+  };
+
+  const toggleWeek = (weekNum) => {
+    setExpandedWeeks(prev => ({
+      ...prev,
+      [weekNum]: !prev[weekNum]
+    }));
+  };
+
+  const totalCourseLessons = course?.modules?.reduce((acc, mod) => acc + (mod.lessons?.length || 0), 0) || 0;
+  const completedCourseLessons = course?.modules?.reduce((acc, mod) => acc + (mod.lessons?.filter(l => completedIds.has(l._id)).length || 0), 0) || 0;
+  const coursePercent = totalCourseLessons > 0 ? ((completedCourseLessons / totalCourseLessons) * 100).toFixed(2) : '0.00';
+
+  const allLessons = course?.modules?.reduce((acc, mod) => [...acc, ...(mod.lessons || [])], []) || [];
+  const currentLessonIndex = activeLesson ? allLessons.findIndex(l => l._id === activeLesson._id) : -1;
+  const prevLesson = currentLessonIndex > 0 ? allLessons[currentLessonIndex - 1] : null;
+
+  const getEmbedUrl = (lesson) => {
+    if (!lesson) return null;
+    if (lesson.videoEmbedUrl) return lesson.videoEmbedUrl;
+    const urlToParse = lesson.videoUrl || (lesson.title && lesson.title.trim().startsWith('http') ? lesson.title.trim() : null);
+    if (!urlToParse) return null;
+
+    const ytMatch = urlToParse.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/);
+    if (ytMatch) {
+      return `https://www.youtube.com/embed/${ytMatch[1]}`;
+    }
+
+    const vimeoMatch = urlToParse.match(/vimeo\.com\/(\d+)/);
+    if (vimeoMatch) {
+      return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+    }
+
+    return urlToParse.startsWith('http') ? urlToParse : null;
+  };
+
   if (loading) return <div className="flex min-h-screen items-center justify-center"><Loader text="Entering classroom workspace..." /></div>;
   if (!course) return <div className="container" style={{ padding: '4rem 0' }}><h3>Workspace not found</h3></div>;
 
@@ -148,22 +205,64 @@ const CourseLearn = () => {
       />
 
       <div className={`classroom-sidebar ${sidebarOpen ? 'classroom-sidebar-open' : ''}`}>
-        <div className="classroom-sidebar-header">
-          <Link to={`/courses/${id}`} className="classroom-back-btn">← Course Info</Link>
-          <h3>{course.title}</h3>
+        <div className="classroom-sidebar-banner">
+          <div className="classroom-banner-header">
+            <h4>{course.title}</h4>
+            <button className="classroom-search-icon" aria-label="Search">🔍</button>
+          </div>
+          <div className="classroom-banner-progress-wrapper">
+            <div className="classroom-banner-progress-text">{coursePercent}% completed</div>
+            <div className="classroom-banner-progress-bar">
+              <div className="classroom-banner-progress-fill" style={{ width: `${coursePercent}%` }}></div>
+            </div>
+          </div>
         </div>
+
         <div className="classroom-modules-list">
-          <div className="classroom-sidebar-section-title">ALL CHAPTERS</div>
-          {course.modules?.map((mod, idx) => (
-            <button
-              key={mod._id}
-              className={`classroom-chapter-btn ${activeModule?._id === mod._id && !viewingAssessments ? 'chapter-active' : ''}`}
-              onClick={() => handleModuleSelect(mod)}
-            >
-              <span className="chapter-number">CH - {idx + 1 < 10 ? `0${idx + 1}` : idx + 1}</span>
-              <span className="chapter-title">{mod.title}</span>
-            </button>
-          ))}
+          {weeksList.map((weekNum) => {
+            const weekModules = modulesByWeek[weekNum] || [];
+            const weekProgress = getWeekProgress(weekNum);
+            const isExpanded = !!expandedWeeks[weekNum];
+            return (
+              <div key={weekNum} className="classroom-week-group">
+                <button
+                  type="button"
+                  className={`classroom-week-header-btn ${isExpanded ? 'week-expanded' : ''}`}
+                  onClick={() => toggleWeek(weekNum)}
+                >
+                  <div className="classroom-progress-circle">
+                    <span>{weekProgress}%</span>
+                  </div>
+                  <span className="classroom-week-title">Week {weekNum}</span>
+                  <span className="classroom-accordion-indicator">{isExpanded ? '▼' : '▶'}</span>
+                </button>
+
+                {isExpanded && (
+                  <div className="classroom-week-modules-sublist animate-slide-down">
+                    {weekModules.map((mod) => {
+                      const modTotal = mod.lessons?.length || 0;
+                      const modCompleted = mod.lessons?.filter(l => completedIds.has(l._id)).length || 0;
+                      const modProgress = modTotal > 0 ? Math.round((modCompleted / modTotal) * 100) : 0;
+                      const isActive = activeModule?._id === mod._id && !viewingAssessments;
+                      return (
+                        <button
+                          key={mod._id}
+                          className={`classroom-chapter-btn ${isActive ? 'chapter-active' : ''}`}
+                          onClick={() => handleModuleSelect(mod)}
+                        >
+                          <div className="classroom-progress-circle-small">
+                            <span>{modProgress}%</span>
+                          </div>
+                          <span className="chapter-title">{mod.title}</span>
+                          <span className="classroom-play-icon-indicator">▶</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
           
           {(exams.length > 0 || assignments.length > 0) && (
             <>
@@ -172,7 +271,9 @@ const CourseLearn = () => {
                 className={`classroom-chapter-btn ${viewingAssessments ? 'chapter-active' : ''}`}
                 onClick={handleSelectAssessments}
               >
-                <span className="chapter-number">TESTS</span>
+                <div className="classroom-progress-circle-small" style={{ background: '#5b6de0' }}>
+                  <span>📝</span>
+                </div>
                 <span className="chapter-title">Exams & Assignments</span>
               </button>
             </>
@@ -193,20 +294,41 @@ const CourseLearn = () => {
       <div className="classroom-main">
         {activeLesson ? (
           <div className="classroom-viewport animate-page-enter" key={activeLesson._id}>
-            <button className="classroom-back-to-chapter-btn" onClick={() => setActiveLesson(null)}>
-              ← Back to Outline
-            </button>
+            <div className="classroom-viewport-header-row">
+              <button className="classroom-back-to-chapter-btn" style={{ margin: 0 }} onClick={() => setActiveLesson(null)}>
+                ← Back to Outline
+              </button>
+              
+              {prevLesson && (
+                <div className="classroom-prev-lesson-pill-container">
+                  <button className="classroom-prev-lesson-pill" onClick={() => handleLessonSelect(prevLesson)}>
+                    ▲ Lesson {currentLessonIndex}: {prevLesson.title}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="classroom-lesson-details-header">
+              <div className="classroom-lesson-counter">
+                Lesson {currentLessonIndex + 1} of {allLessons.length}
+              </div>
+              <h2 className="classroom-lesson-title">{activeLesson.title}</h2>
+              <div className="classroom-title-underline"></div>
+            </div>
             
             {activeLesson.type === 'video' || activeLesson.type === 'lecture' || activeLesson.type === 'dpp-video' ? (
-              activeLesson.videoEmbedUrl ? (
-                <div className="classroom-player-wrapper">
-                  <iframe src={activeLesson.videoEmbedUrl} title={activeLesson.title} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
-                </div>
-              ) : (
-                <div className="classroom-document-placeholder">
-                  <span>No video URL configured.</span>
-                </div>
-              )
+              (() => {
+                const embedUrl = getEmbedUrl(activeLesson);
+                return embedUrl ? (
+                  <div className="classroom-player-wrapper">
+                    <iframe src={embedUrl} title={activeLesson.title} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+                  </div>
+                ) : (
+                  <div className="classroom-document-placeholder">
+                    <span>No video URL configured.</span>
+                  </div>
+                );
+              })()
             ) : (
               <div className="classroom-document-placeholder">
                 <HiOutlineDocumentText size={48} />
@@ -225,7 +347,6 @@ const CourseLearn = () => {
             )}
             
             <div className="classroom-content-details">
-              <h2>{activeLesson.title}</h2>
               {activeLesson.content && <div className="classroom-markdown-content" dangerouslySetInnerHTML={{ __html: activeLesson.content }} />}
               
               <div className="classroom-action-row">

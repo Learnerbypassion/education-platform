@@ -48,6 +48,7 @@ const createModuleSchema = Joi.object({
   description: Joi.string().max(1000).allow(''),
   order: Joi.number().integer().min(0),
   structureLabel: Joi.string().allow(''),
+  week: Joi.number().integer().min(1),
 });
 
 const createLessonSchema = Joi.object({

@@ -1,20 +1,5 @@
 const Joi = require('joi');
 
-const createExamSchema = Joi.object({
-  courseId: Joi.string().required(),
-  title: Joi.string().trim().min(3).max(200).required(),
-  description: Joi.string().allow(''),
-  duration: Joi.number().integer().min(1).required(),
-  passingMarks: Joi.number().integer().min(0).required(),
-  totalMarks: Joi.number().integer().min(1).required(),
-  maxAttempts: Joi.number().integer().min(1).default(1),
-  isRandomized: Joi.boolean().default(true),
-  showResults: Joi.boolean().default(true),
-  instructions: Joi.string().allow(''),
-  startDate: Joi.date().iso(),
-  endDate: Joi.date().iso(),
-});
-
 const createQuestionSchema = Joi.object({
   type: Joi.string()
     .valid('mcq', 'multiple-correct', 'true-false', 'fill-in-the-blank', 'short-answer')
@@ -31,6 +16,23 @@ const createQuestionSchema = Joi.object({
   marks: Joi.number().min(0).default(1),
   difficulty: Joi.string().valid('easy', 'medium', 'hard'),
   order: Joi.number().integer().min(0),
+});
+
+const createExamSchema = Joi.object({
+  courseId: Joi.string().required(),
+  title: Joi.string().trim().min(3).max(200).required(),
+  description: Joi.string().allow(''),
+  duration: Joi.number().integer().min(1).required(),
+  passingMarks: Joi.number().integer().min(0).required(),
+  totalMarks: Joi.number().integer().min(1).required(),
+  maxAttempts: Joi.number().integer().min(1).default(1),
+  isRandomized: Joi.boolean().default(true),
+  showResults: Joi.boolean().default(true),
+  instructions: Joi.string().allow(''),
+  startDate: Joi.date().iso(),
+  endDate: Joi.date().iso(),
+  isPublished: Joi.boolean().default(false),
+  questions: Joi.array().items(createQuestionSchema).default([]),
 });
 
 const submitExamSchema = Joi.object({

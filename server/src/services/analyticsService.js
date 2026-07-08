@@ -13,7 +13,7 @@ class AnalyticsService {
       Enrollment.countDocuments({ studentId }),
       Enrollment.countDocuments({ studentId, status: 'completed' }),
       Certificate.countDocuments({ studentId }),
-      Submission.find({ studentId }).sort({ studentId }).populate('courseId', 'title').populate('examId', 'title').populate('assignmentId', 'title').sort({ submittedAt: -1 }).limit(5),
+      Submission.find({ studentId }).populate('courseId', 'title').populate('examId', 'title').populate('assignmentId', 'title').sort({ submittedAt: -1 }).limit(5),
     ]);
 
     const recentEnrollments = await Enrollment.find({ studentId })

@@ -19,6 +19,7 @@ const ExamCreate = () => {
   });
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [editingIndex, setEditingIndex] = useState(null);
 
   // Dynamic question builder states
   const [newQ, setNewQ] = useState({
@@ -35,7 +36,39 @@ const ExamCreate = () => {
   const handleAddQuestion = (e) => {
     e.preventDefault();
     if (!newQ.text.trim()) return;
-    setQuestions([...questions, newQ]);
+
+    // Validate MCQ correct answer selection
+    if (newQ.type === 'mcq') {
+      const hasCorrect = newQ.options.some(opt => opt.isCorrect);
+      if (!hasCorrect) {
+        toast.error('Please tick the correct answer checkbox for the MCQ!');
+        return;
+      }
+    }
+
+    // Validate True/False answer selection
+    if (newQ.type === 'true-false' && !newQ.correctAnswer) {
+      toast.error('Please select the correct answer (True or False)!');
+      return;
+    }
+
+    // Validate Fill-in-the-blank answer
+    if (newQ.type === 'fill-in-the-blank' && !newQ.correctAnswer.trim()) {
+      toast.error('Please specify the correct answer keyword!');
+      return;
+    }
+
+    if (editingIndex !== null) {
+      // Update existing question
+      const updated = questions.map((q, idx) => idx === editingIndex ? newQ : q);
+      setQuestions(updated);
+      setEditingIndex(null);
+      toast.success('Question updated successfully!');
+    } else {
+      // Add new question
+      setQuestions([...questions, newQ]);
+      toast.success('Question added to layout outline!');
+    }
     
     // Reset builder form
     setNewQ({
@@ -48,7 +81,35 @@ const ExamCreate = () => {
       correctAnswer: '',
       marks: 10,
     });
-    toast.success('Question added to layout outline!');
+  };
+
+  const handleEditQuestion = (idx) => {
+    setNewQ(questions[idx]);
+    setEditingIndex(idx);
+    toast.success('Question loaded into editor!');
+  };
+
+  const handleDeleteQuestion = (idx) => {
+    if (!window.confirm('Are you sure you want to remove this question?')) return;
+    setQuestions(questions.filter((_, i) => i !== idx));
+    toast.success('Question removed!');
+    if (editingIndex === idx) {
+      setEditingIndex(null);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingIndex(null);
+    setNewQ({
+      type: 'mcq',
+      text: '',
+      options: [
+        { text: '', isCorrect: false },
+        { text: '', isCorrect: false },
+      ],
+      correctAnswer: '',
+      marks: 10,
+    });
   };
 
   const handleOptionChange = (idx, field, value) => {
@@ -72,12 +133,20 @@ const ExamCreate = () => {
       toast.error('Add at least one question to save the exam!');
       return;
     }
+
+    const calculatedTotal = questions.reduce((sum, q) => sum + (Number(q.marks) || 0), 0);
+    if (form.passingMarks > calculatedTotal) {
+      toast.error(`Passing marks (${form.passingMarks}) cannot be greater than the total marks of the questions (${calculatedTotal})! Please adjust your passing marks or add more questions.`);
+      return;
+    }
+
     setLoading(true);
     try {
       await createExam({
         ...form,
         courseId,
         questions,
+        isPublished: true,
       });
       toast.success('Exam generated successfully!');
       navigate(`/dashboard`);
@@ -167,11 +236,58 @@ const ExamCreate = () => {
               </div>
             )}
 
-            <button type="submit" className="btn btn-accent btn-sm mt-md">Add Question to Exam</button>
+            <div className="flex gap-2 mt-md">
+              <button type="submit" className="btn btn-accent btn-sm">
+                {editingIndex !== null ? 'Update Question' : 'Add Question to Exam'}
+              </button>
+              {editingIndex !== null && (
+                <button type="button" className="btn btn-outline btn-sm" onClick={handleCancelEdit}>
+                  Cancel Edit
+                </button>
+              )}
+            </div>
           </form>
 
-          <div className="outline-modules-list" style={{ marginTop: '20px' }}>
-            <h4>Questions Added: {questions.length}</h4>
+          <div className="added-questions-preview mt-lg">
+            <h4 className="border-b pb-xs mb-sm">Added Questions ({questions.length})</h4>
+            {questions.length === 0 ? (
+              <p className="text-slate-400 text-xs">No questions added yet.</p>
+            ) : (
+              <div className="space-y-sm" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {questions.map((q, idx) => (
+                  <div key={idx} className="glass-card p-sm flex justify-between items-start gap-md" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-md)', padding: '12px' }}>
+                    <div style={{ flex: 1 }}>
+                      <div className="text-xs font-semibold text-slate-400 uppercase">
+                        {idx + 1}. {q.type.replace('-', ' ')} (Marks: {q.marks || 1})
+                      </div>
+                      <div className="font-medium text-sm mt-xs text-slate-800 dark:text-slate-200">{q.text}</div>
+                      {q.type === 'mcq' && (
+                        <ul className="list-disc pl-md text-xs mt-xs text-slate-600 dark:text-slate-400">
+                          {q.options.map((opt, oIdx) => (
+                            <li key={oIdx} className={opt.isCorrect ? 'text-brand-600 dark:text-brand-400 font-semibold' : ''}>
+                              {opt.text} {opt.isCorrect && '✓'}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {['true-false', 'fill-in-the-blank'].includes(q.type) && (
+                        <div className="text-xs mt-xs text-brand-600 dark:text-brand-400 font-semibold">
+                          Correct Answer: {q.correctAnswer}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex gap-xs flex-shrink-0">
+                      <button type="button" className="btn btn-ghost btn-xs" style={{ color: 'var(--color-primary-light)' }} onClick={() => handleEditQuestion(idx)}>
+                        Edit
+                      </button>
+                      <button type="button" className="btn btn-ghost btn-xs" style={{ color: '#ef4444' }} onClick={() => handleDeleteQuestion(idx)}>
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

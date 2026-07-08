@@ -16,7 +16,6 @@ router.use('/:courseId/reviews', reviewRouter);
 
 // Public / Optional Auth
 router.get('/', getCourses);
-router.get('/:id', optionalAuth, getCourseById);
 
 // Instructor
 router.post('/', protect, authorize('instructor', 'admin'), uploadSingle('thumbnail'), validate(createCourseSchema), createCourse);
@@ -28,5 +27,8 @@ router.get('/instructor/me', protect, authorize('instructor', 'admin'), getInstr
 // Student
 router.post('/:id/enroll', protect, enrollCourse);
 router.get('/enrolled/me', protect, getEnrolledCourses);
+
+// Get by ID (placed at the bottom to avoid overriding static sub-routes like enrolled/me)
+router.get('/:id', optionalAuth, getCourseById);
 
 module.exports = router;
