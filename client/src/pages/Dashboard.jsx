@@ -6,6 +6,7 @@ import Loader from '../components/common/Loader';
 import CourseCard from '../components/course/CourseCard';
 import { getStudentStats, getInstructorStats, getAdminStats } from '../api/analyticsApi';
 import { getEnrolledCourses, getInstructorCourses, togglePublish } from '../api/courseApi';
+import { getInstructorAttemptRequests, updateAttemptRequestStatus } from '../api/examApi';
 import { HiOutlineBookOpen, HiOutlineAcademicCap, HiOutlineClipboardCheck, HiOutlineUsers, HiOutlineChartBar, HiOutlineDocumentText } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 
@@ -16,6 +17,7 @@ const Dashboard = () => {
 
   const [stats, setStats] = useState(null);
   const [coursesList, setCoursesList] = useState([]);
+  const [attemptRequests, setAttemptRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const handleTogglePublish = async (courseId) => {
@@ -32,6 +34,28 @@ const Dashboard = () => {
     } catch (err) {
       console.error('Failed to toggle course visibility:', err);
       toast.error('Failed to toggle course visibility');
+    }
+  };
+
+  const handleReviewRequest = async (requestId, status) => {
+    const confirmMsg = status === 'approved' 
+      ? 'Approve this request and grant 2 extra attempts?' 
+      : 'Reject this request?';
+    if (!window.confirm(confirmMsg)) return;
+
+    let instructorResponse = '';
+    if (status === 'rejected') {
+      instructorResponse = window.prompt('Enter optional feedback for rejection:') || '';
+    }
+
+    try {
+      await updateAttemptRequestStatus(requestId, { status, instructorResponse });
+      toast.success(`Request ${status} successfully!`);
+      // Refresh list
+      const res = await getInstructorAttemptRequests();
+      setAttemptRequests(res.data.data || []);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to review request');
     }
   };
 
@@ -53,6 +77,9 @@ const Dashboard = () => {
         } else if (tab === 'courses') {
           const res = await getInstructorCourses();
           setCoursesList(res.data.data);
+        } else if (tab === 'exam-requests') {
+          const res = await getInstructorAttemptRequests();
+          setAttemptRequests(res.data.data || []);
         }
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err);
@@ -143,6 +170,94 @@ const Dashboard = () => {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Render Instructor's Attempt Requests
+  if (tab === 'exam-requests' && (isInstructor || isAdmin)) {
+    return (
+      <div className="space-y-8 animate-page-enter">
+        <div className="glass-card p-8">
+          <h1 className="text-4xl font-bold text-slate-900 dark:text-white font-heading">Exam Attempt <span className="gradient-text">requests</span></h1>
+          <p className="mt-3 text-lg text-slate-600 dark:text-slate-300">Approve or reject student requests for extra exam attempts.</p>
+        </div>
+
+        {attemptRequests.length === 0 ? (
+          <div className="glass-card flex flex-col items-center justify-center px-8 py-20 text-center animate-slide-up delay-1">
+            <div className="rounded-full bg-brand-50 p-6 dark:bg-brand-900/40 text-brand-500 mb-6 shadow-glow">
+              <HiOutlineClipboardCheck size={56} />
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white font-heading">No attempt requests</h3>
+            <p className="mt-2 text-slate-500">There are currently no requests for extra exam attempts.</p>
+          </div>
+        ) : (
+          <div className="glass-card overflow-hidden animate-slide-up delay-1 p-0">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-slate-50/80 text-slate-600 dark:bg-slate-800/80 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700">
+                  <tr>
+                    <th className="px-6 py-4 font-bold uppercase tracking-wider">Student</th>
+                    <th className="px-6 py-4 font-bold uppercase tracking-wider">Course / Exam</th>
+                    <th className="px-6 py-4 font-bold uppercase tracking-wider">Reason</th>
+                    <th className="px-6 py-4 font-bold uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 font-bold uppercase tracking-wider text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {attemptRequests.map((reqItem) => (
+                    <tr key={reqItem._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="font-semibold text-slate-900 dark:text-white">{reqItem.studentId?.name}</div>
+                        <div className="text-xs text-slate-500">{reqItem.studentId?.email}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-slate-700 dark:text-slate-200">{reqItem.examId?.title}</div>
+                        <div className="text-xs text-slate-500">{reqItem.courseId?.title}</div>
+                      </td>
+                      <td className="px-6 py-4 text-slate-600 dark:text-slate-300 max-w-xs truncate" title={reqItem.message}>
+                        {reqItem.message || <span className="text-slate-400 italic">No reason provided</span>}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`badge ${
+                          reqItem.status === 'approved' 
+                            ? 'badge-success' 
+                            : reqItem.status === 'rejected' 
+                            ? 'badge-primary' 
+                            : 'badge-info'
+                        }`}>
+                          {reqItem.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        {reqItem.status === 'pending' ? (
+                          <div className="flex justify-end gap-2">
+                            <button
+                              onClick={() => handleReviewRequest(reqItem._id, 'approved')}
+                              className="btn btn-primary btn-sm"
+                            >
+                              Approve (+2)
+                            </button>
+                            <button
+                              onClick={() => handleReviewRequest(reqItem._id, 'rejected')}
+                              className="btn btn-outline btn-sm text-rose-600 border-rose-200 hover:bg-rose-50"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-400">
+                            Reviewed
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

@@ -59,6 +59,10 @@ const errorHandler = (err, req, res, next) => {
     response.errors = error.errors;
   }
 
+  if (error.data) {
+    response.data = error.data;
+  }
+
   if (config.nodeEnv === 'development') {
     response.stack = error.stack;
   }

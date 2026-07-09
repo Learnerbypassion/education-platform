@@ -9,3 +9,7 @@ export const takeExam = (id) => API.get(`/exams/${id}/take`);
 export const submitExam = (id, data) => API.post(`/exams/${id}/submit`, data);
 export const getExamResults = (id) => API.get(`/exams/${id}/results`);
 export const addQuestion = (id, data) => API.post(`/exams/${id}/questions`, data);
+
+export const requestExamAttempt = (id, message) => API.post(`/exams/${id}/request-attempt`, { message });
+export const getInstructorAttemptRequests = () => API.get('/exams/instructor/attempt-requests');
+export const updateAttemptRequestStatus = (requestId, data) => API.patch(`/exams/attempt-requests/${requestId}`, data);

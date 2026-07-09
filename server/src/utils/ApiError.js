@@ -1,9 +1,10 @@
 class ApiError extends Error {
-  constructor(statusCode, message, errors = [], stack = '') {
+  constructor(statusCode, message, errors = [], data = null, stack = '') {
     super(message);
     this.statusCode = statusCode;
     this.message = message;
     this.errors = errors;
+    this.data = data;
     this.success = false;
 
     if (stack) {
@@ -13,8 +14,8 @@ class ApiError extends Error {
     }
   }
 
-  static badRequest(message = 'Bad Request', errors = []) {
-    return new ApiError(400, message, errors);
+  static badRequest(message = 'Bad Request', errors = [], data = null) {
+    return new ApiError(400, message, errors, data);
   }
 
   static unauthorized(message = 'Unauthorized') {

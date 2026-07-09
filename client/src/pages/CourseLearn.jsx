@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getCourseById, updateProgress, getEnrolledCourses, getMySubmissions } from '../api/courseApi';
 import { getAssignments } from '../api/assignmentApi';
-import { getExams } from '../api/examApi';
+import { getExams, requestExamAttempt } from '../api/examApi';
 import { generateCertificate } from '../api/certificateApi';
 import Loader from '../components/common/Loader';
 import toast from 'react-hot-toast';
@@ -119,6 +119,23 @@ const CourseLearn = () => {
       toast.error(err.response?.data?.message || 'Certificate eligibility verification failed. Complete all exams/assignments.');
     } finally {
       setGeneratingCert(false);
+    }
+  };
+
+  const handleRequestAttempt = async (examId) => {
+    const reason = window.prompt('Please enter a brief reason for requesting extra attempts:');
+    if (reason === null) return; // User clicked Cancel
+    if (!reason.trim()) {
+      toast.error('Reason is required to submit a request');
+      return;
+    }
+
+    try {
+      await requestExamAttempt(examId, reason);
+      toast.success('Extra attempt request submitted successfully!');
+      fetchCourseData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to submit request');
     }
   };
 
@@ -366,6 +383,8 @@ const CourseLearn = () => {
             <div className="classroom-cards-list mt-8">
               {exams.map((ex) => {
                 const examSubmission = submissions.find(s => s.examId?._id === ex._id);
+                const hasAttemptsLeft = (ex.attemptsLeft === undefined) || (ex.attemptsLeft > 0);
+                
                 return (
                   <div key={ex._id} className="classroom-material-card">
                     {examSubmission && (
@@ -382,12 +401,46 @@ const CourseLearn = () => {
                         {examSubmission && <span className="material-score">Score: {examSubmission.score} / {examSubmission.totalMarks} ({examSubmission.percentage}%)</span>}
                       </div>
                       <h4 className="material-title">{ex.title}</h4>
-                      <p className="material-desc">Duration: {ex.duration} mins • Passing Score: {ex.passingMarks} / {ex.totalMarks}</p>
+                      <p className="material-desc">
+                        Duration: {ex.duration} mins • Passing Score: {ex.passingMarks} / {ex.totalMarks}
+                        <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
+                          Attempts: {ex.attemptsUsed ?? 0} / {ex.totalAllowedAttempts ?? ex.maxAttempts} used • {ex.attemptsLeft ?? ex.maxAttempts} left
+                        </span>
+                      </p>
                     </div>
-                    <div className="material-card-right">
-                      <Link to={`/exams/${ex._id}/take`} className="btn btn-primary btn-sm">
-                        {examSubmission ? 'Retake Exam' : 'Start Exam'}
-                      </Link>
+                    <div className="material-card-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+                      {hasAttemptsLeft ? (
+                        <Link to={`/exams/${ex._id}/take`} className="btn btn-primary btn-sm">
+                          {ex.attemptsUsed > 0 ? 'Retake Exam' : 'Start Exam'}
+                        </Link>
+                      ) : (
+                        <>
+                          {ex.requestStatus === 'pending' ? (
+                            <span style={{ fontSize: '0.75rem', fontWeight: '600', padding: '4px 10px', borderRadius: '9999px', background: '#fef3c7', color: '#d97706', border: '1px solid #fde68a' }}>
+                              Request Pending
+                            </span>
+                          ) : ex.requestStatus === 'rejected' ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                              <span style={{ fontSize: '0.75rem', fontWeight: '600', padding: '4px 10px', borderRadius: '9999px', background: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca' }}>
+                                Request Rejected
+                              </span>
+                              <button
+                                onClick={() => handleRequestAttempt(ex._id)}
+                                style={{ fontSize: '0.7rem', color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+                              >
+                                Re-request Attempts
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => handleRequestAttempt(ex._id)}
+                              className="btn btn-outline btn-sm"
+                            >
+                              Request Extra Attempts
+                            </button>
+                          )}
+                        </>
+                      )}
                     </div>
                   </div>
                 );

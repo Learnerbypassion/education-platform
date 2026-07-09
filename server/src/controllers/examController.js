@@ -20,6 +20,24 @@ const createExam = asyncHandler(async (req, res) => {
 // @access  Private
 const getExams = asyncHandler(async (req, res) => {
   const exams = await Exam.find({ courseId: req.params.courseId });
+
+  if (req.user.role === 'student') {
+    const examsWithAttemptStatus = await Promise.all(
+      exams.map(async (exam) => {
+        const attemptStatus = await examService.getAttemptStatus(exam._id, req.user._id);
+        return {
+          ...exam.toObject(),
+          attemptsUsed: attemptStatus.attemptsUsed,
+          totalAllowedAttempts: attemptStatus.totalAllowedAttempts,
+          attemptsLeft: attemptStatus.attemptsLeft,
+          hasPendingRequest: attemptStatus.hasPendingRequest,
+          requestStatus: attemptStatus.requestStatus,
+        };
+      })
+    );
+    return ApiResponse.success(res, 'Exams fetched', examsWithAttemptStatus);
+  }
+
   ApiResponse.success(res, 'Exams fetched', exams);
 });
 
@@ -107,7 +125,133 @@ const addQuestion = asyncHandler(async (req, res) => {
   ApiResponse.created(res, 'Question added', question);
 });
 
+// @desc    Request extra exam attempts
+// @route   POST /api/exams/:id/request-attempt
+// @access  Private/Student
+const requestAttempt = asyncHandler(async (req, res) => {
+  const exam = await Exam.findById(req.params.id);
+  if (!exam) throw ApiError.notFound('Exam not found');
+
+  if (!exam.isPublished) {
+    throw ApiError.forbidden('Exam is not published');
+  }
+
+  const Enrollment = require('../models/Enrollment');
+  const enrollment = await Enrollment.findOne({
+    studentId: req.user._id,
+    courseId: exam.courseId,
+  });
+  if (!enrollment) {
+    throw ApiError.forbidden('You must be enrolled in this course to request attempts');
+  }
+
+  const status = await examService.getAttemptStatus(exam._id, req.user._id);
+
+  if (status.attemptsLeft > 0) {
+    throw ApiError.badRequest('You still have attempts remaining for this exam');
+  }
+
+  if (status.hasPendingRequest) {
+    throw ApiError.badRequest('You already have a pending request for this exam');
+  }
+
+  const Course = require('../models/Course');
+  const course = await Course.findById(exam.courseId);
+  if (!course) throw ApiError.notFound('Associated course not found');
+
+  const ExamAttemptRequest = require('../models/ExamAttemptRequest');
+  const request = await ExamAttemptRequest.create({
+    examId: exam._id,
+    courseId: exam.courseId,
+    studentId: req.user._id,
+    instructorId: course.creatorId,
+    message: req.body.message || '',
+    status: 'pending',
+    requestedAttempts: 2,
+    grantedAttempts: 0,
+  });
+
+  // Create notification for instructor
+  const { createNotification } = require('../utils/notificationHelper');
+  createNotification(
+    course.creatorId,
+    'exam-schedule',
+    'New Exam Attempt Request 🏆',
+    `${req.user.name} requested extra attempts for "${exam.title}".`,
+    `/dashboard?tab=exam-requests`
+  ).catch(console.error);
+
+  ApiResponse.created(res, 'Attempt extension requested successfully', request);
+});
+
+// @desc    Get exam attempt requests (Instructor)
+// @route   GET /api/exams/instructor/attempt-requests
+// @access  Private/Instructor
+const getInstructorAttemptRequests = asyncHandler(async (req, res) => {
+  const ExamAttemptRequest = require('../models/ExamAttemptRequest');
+  const requests = await ExamAttemptRequest.find({ instructorId: req.user._id })
+    .populate('studentId', 'name email profileImage')
+    .populate('examId', 'title maxAttempts')
+    .populate('courseId', 'title')
+    .sort({ createdAt: -1 });
+
+  ApiResponse.success(res, 'Exam attempt requests fetched', requests);
+});
+
+// @desc    Approve or reject exam attempt request
+// @route   PATCH /api/exams/attempt-requests/:requestId
+// @access  Private/Instructor
+const updateAttemptRequestStatus = asyncHandler(async (req, res) => {
+  const { status, instructorResponse } = req.body;
+  if (!['approved', 'rejected'].includes(status)) {
+    throw ApiError.badRequest('Status must be approved or rejected');
+  }
+
+  const ExamAttemptRequest = require('../models/ExamAttemptRequest');
+  const request = await ExamAttemptRequest.findById(req.params.requestId);
+  if (!request) throw ApiError.notFound('Request not found');
+
+  // Verify ownership
+  const Course = require('../models/Course');
+  const course = await Course.findById(request.courseId);
+  if (!course) throw ApiError.notFound('Course not found');
+
+  if (course.creatorId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    throw ApiError.forbidden('Not authorized to review this request');
+  }
+
+  if (request.status !== 'pending') {
+    throw ApiError.badRequest('This request has already been reviewed');
+  }
+
+  request.status = status;
+  request.instructorResponse = instructorResponse || '';
+  request.reviewedBy = req.user._id;
+  request.reviewedAt = new Date();
+  request.grantedAttempts = status === 'approved' ? 2 : 0;
+
+  await request.save();
+
+  const Exam = require('../models/Exam');
+  const exam = await Exam.findById(request.examId);
+
+  // Notify student
+  const { createNotification } = require('../utils/notificationHelper');
+  createNotification(
+    request.studentId,
+    'exam-schedule',
+    status === 'approved' ? 'Attempt Request Approved! 🎉' : 'Attempt Request Rejected ❌',
+    status === 'approved'
+      ? `Your request for extra attempts in "${exam.title}" has been approved. +2 attempts granted.`
+      : `Your request for extra attempts in "${exam.title}" has been rejected.`,
+    `/dashboard`
+  ).catch(console.error);
+
+  ApiResponse.success(res, `Request ${status} successfully`, request);
+});
+
 module.exports = {
   createExam, getExams, getExam, takeExam,
   submitExam, getExamResults, updateExam, deleteExam, addQuestion,
+  requestAttempt, getInstructorAttemptRequests, updateAttemptRequestStatus,
 };

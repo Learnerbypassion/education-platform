@@ -22,6 +22,7 @@ const Sidebar = () => {
     { to: '/dashboard', icon: <HiOutlineHome />, label: 'Dashboard' },
     { to: '/course/create', icon: <HiOutlinePlus />, label: 'Create Course' },
     { to: '/dashboard?tab=courses', icon: <HiOutlineBookOpen />, label: 'My Courses' },
+    { to: '/dashboard?tab=exam-requests', icon: <HiOutlineClipboardList />, label: 'Attempt Requests' },
     { to: '/dashboard?tab=analytics', icon: <HiOutlineChartBar />, label: 'Analytics' },
   ];
 
@@ -30,6 +31,7 @@ const Sidebar = () => {
     { to: '/admin', icon: <HiOutlineCog />, label: 'Admin Panel' },
     { to: '/admin?tab=users', icon: <HiOutlineUsers />, label: 'Users' },
     { to: '/admin?tab=courses', icon: <HiOutlineBookOpen />, label: 'All Courses' },
+    { to: '/dashboard?tab=exam-requests', icon: <HiOutlineClipboardList />, label: 'Attempt Requests' },
     { to: '/dashboard?tab=analytics', icon: <HiOutlineChartBar />, label: 'Analytics' },
   ];
 

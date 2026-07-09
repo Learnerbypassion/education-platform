@@ -142,10 +142,21 @@ const ExamCreate = () => {
 
     setLoading(true);
     try {
+      // Clean up options before sending
+      const cleanedQuestions = questions.map(q => {
+        if (q.type !== 'mcq' && q.type !== 'multiple-correct') {
+          return { ...q, options: [] };
+        }
+        return {
+          ...q,
+          options: q.options.filter(opt => opt.text.trim() !== '')
+        };
+      });
+
       await createExam({
         ...form,
         courseId,
-        questions,
+        questions: cleanedQuestions,
         isPublished: true,
       });
       toast.success('Exam generated successfully!');

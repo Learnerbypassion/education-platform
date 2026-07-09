@@ -2,6 +2,7 @@ const Exam = require('../models/Exam');
 const Question = require('../models/Question');
 const Submission = require('../models/Submission');
 const ApiError = require('../utils/ApiError');
+const { createNotification } = require('../utils/notificationHelper');
 
 class ExamService {
   /**
@@ -74,13 +75,15 @@ class ExamService {
     }
 
     // Check max attempts before loading exam
-    const attemptCount = await Submission.countDocuments({
-      examId,
-      studentId,
-      type: 'exam',
-    });
-    if (attemptCount >= exam.maxAttempts) {
-      throw ApiError.badRequest(`Maximum attempts (${exam.maxAttempts}) reached for this exam`);
+    const status = await this.getAttemptStatus(examId, studentId);
+    if (status.attemptsLeft <= 0) {
+      throw ApiError.badRequest('Maximum attempts reached for this exam', [], {
+        attemptsUsed: status.attemptsUsed,
+        totalAllowedAttempts: status.totalAllowedAttempts,
+        attemptsLeft: status.attemptsLeft,
+        canRequestAttempt: !status.hasPendingRequest,
+        requestStatus: status.requestStatus,
+      });
     }
 
     let questions = await Question.find({ examId }).sort({ order: 1 });
@@ -132,14 +135,15 @@ class ExamService {
     }
 
     // Check max attempts
-    const attemptCount = await Submission.countDocuments({
-      examId,
-      studentId,
-      type: 'exam',
-    });
-
-    if (attemptCount >= exam.maxAttempts) {
-      throw ApiError.badRequest(`Maximum attempts (${exam.maxAttempts}) reached for this exam`);
+    const status = await this.getAttemptStatus(examId, studentId);
+    if (status.attemptsLeft <= 0) {
+      throw ApiError.badRequest('Maximum attempts reached for this exam', [], {
+        attemptsUsed: status.attemptsUsed,
+        totalAllowedAttempts: status.totalAllowedAttempts,
+        attemptsLeft: status.attemptsLeft,
+        canRequestAttempt: !status.hasPendingRequest,
+        requestStatus: status.requestStatus,
+      });
     }
 
     // Fetch questions
@@ -205,7 +209,7 @@ class ExamService {
       totalMarks: exam.totalMarks,
       percentage: Math.round(percentage * 100) / 100,
       isPassed,
-      attemptNumber: attemptCount + 1,
+      attemptNumber: status.attemptsUsed + 1,
       timeSpent,
       submittedAt: new Date(),
       gradedAt: new Date(),
@@ -221,6 +225,62 @@ class ExamService {
     ).catch(console.error);
 
     return submission;
+  }
+
+  /**
+   * Helper to retrieve attempt statistics and request statuses for a student
+   */
+  async getAttemptStatus(examId, studentId) {
+    const exam = await Exam.findById(examId);
+    if (!exam) throw ApiError.notFound('Exam not found');
+
+    const attemptsUsed = await Submission.countDocuments({
+      examId,
+      studentId,
+      type: 'exam',
+    });
+
+    const ExamAttemptRequest = require('../models/ExamAttemptRequest');
+
+    const approvedRequests = await ExamAttemptRequest.find({
+      examId,
+      studentId,
+      status: 'approved',
+    });
+
+    const extraAttempts = approvedRequests.reduce(
+      (sum, r) => sum + (r.grantedAttempts || 0),
+      0
+    );
+
+    const pendingRequest = await ExamAttemptRequest.findOne({
+      examId,
+      studentId,
+      status: 'pending',
+    });
+
+    const latestRejectedRequest = await ExamAttemptRequest.findOne({
+      examId,
+      studentId,
+      status: 'rejected',
+    }).sort({ updatedAt: -1 });
+
+    const totalAllowedAttempts = exam.maxAttempts + extraAttempts;
+    const attemptsLeft = Math.max(totalAllowedAttempts - attemptsUsed, 0);
+
+    return {
+      attemptsUsed,
+      baseMaxAttempts: exam.maxAttempts,
+      extraAttempts,
+      totalAllowedAttempts,
+      attemptsLeft,
+      hasPendingRequest: Boolean(pendingRequest),
+      requestStatus: pendingRequest
+        ? 'pending'
+        : latestRejectedRequest
+        ? 'rejected'
+        : null,
+    };
   }
 
   /**
