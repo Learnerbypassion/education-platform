@@ -39,8 +39,8 @@ class CertificateService {
       );
     }
 
-    // 3. Check all assignments for this course are passed
-    const assignments = await Assignment.find({ courseId });
+    // 3. Check all published assignments for this course are passed
+    const assignments = await Assignment.find({ courseId, isPublished: true });
     if (assignments.length > 0) {
       for (const assignment of assignments) {
         const passedSubmission = await Submission.findOne({
@@ -57,8 +57,8 @@ class CertificateService {
       }
     }
 
-    // 4. Check all exams for this course are passed
-    const exams = await Exam.find({ courseId });
+    // 4. Check all published exams for this course are passed
+    const exams = await Exam.find({ courseId, isPublished: true });
     if (exams.length > 0) {
       for (const exam of exams) {
         const passedSubmission = await Submission.findOne({

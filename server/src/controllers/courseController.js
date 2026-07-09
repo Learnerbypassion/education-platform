@@ -82,7 +82,7 @@ const togglePublish = asyncHandler(async (req, res) => {
   const course = await Course.findById(req.params.id);
   if (!course) throw ApiError.notFound('Course not found');
 
-  if (course.creatorId.toString() !== req.user._id.toString()) {
+  if (course.creatorId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
     throw ApiError.forbidden('Not authorized');
   }
 

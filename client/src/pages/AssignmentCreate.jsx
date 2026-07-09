@@ -104,7 +104,7 @@ const AssignmentCreate = () => {
     setNewQ({ ...newQ, options: updatedOptions });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, publishOnSubmit = true) => {
     e.preventDefault();
     setLoading(true);
 
@@ -112,6 +112,7 @@ const AssignmentCreate = () => {
       ...form,
       courseId: isEdit ? undefined : courseId,
       questions: form.type === 'mcq' ? questions : [],
+      isPublished: publishOnSubmit,
     };
 
     try {
@@ -120,7 +121,7 @@ const AssignmentCreate = () => {
         toast.success('Assignment updated successfully!');
       } else {
         await createAssignment({ ...submissionData, courseId });
-        toast.success('Assignment created successfully!');
+        toast.success(publishOnSubmit ? 'Assignment published successfully!' : 'Assignment saved as draft!');
       }
       navigate('/dashboard');
     } catch (err) {
@@ -258,9 +259,14 @@ const AssignmentCreate = () => {
             />
           </div>
 
-          <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading}>
-            {loading ? 'Saving...' : isEdit ? 'Update Assignment' : 'Create Assignment'}
-          </button>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button type="submit" className="btn btn-primary btn-lg" style={{ flex: 1 }} disabled={loading}>
+              {loading ? 'Saving...' : isEdit ? 'Update & Publish' : 'Create & Publish'}
+            </button>
+            <button type="button" className="btn btn-outline btn-lg" disabled={loading} onClick={(e) => handleSubmit(e, false)}>
+              Save as Draft
+            </button>
+          </div>
         </form>
 
         {form.type === 'mcq' && (

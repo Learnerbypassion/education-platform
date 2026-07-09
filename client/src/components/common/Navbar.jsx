@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { useAuth } from '../../hooks/useAuth';
@@ -8,6 +8,7 @@ import { HiOutlineMenu, HiOutlineBell, HiOutlineSearch, HiMoon, HiSun, HiOutline
 import { FaGraduationCap } from 'react-icons/fa';
 import { getInitials } from '../../utils/helpers';
 import { useTheme } from '../../context/ThemeContext';
+import { getNotifications, markAsRead, markAllAsRead } from '../../api/notificationApi';
 
 const Navbar = ({ showSidebarToggle = false }) => {
   const { user, isAuthenticated } = useAuth();
@@ -16,9 +17,81 @@ const Navbar = ({ showSidebarToggle = false }) => {
   const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Notification state
+  const [notifications, setNotifications] = useState([]);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef(null);
+
   const handleLogout = () => {
     dispatch(logout());
     navigate('/');
+  };
+
+  // Fetch notifications when authenticated
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const fetchNotifications = async () => {
+      try {
+        const res = await getNotifications();
+        setNotifications(res.data.data?.notifications || []);
+      } catch {
+        // Silently fail — bell icon just won't show a count
+      }
+    };
+    fetchNotifications();
+    // Poll every 60 seconds
+    const interval = setInterval(fetchNotifications, 60000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setNotifOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  const handleNotifClick = async (notif) => {
+    try {
+      if (!notif.isRead) {
+        await markAsRead(notif._id);
+        setNotifications((prev) =>
+          prev.map((n) => (n._id === notif._id ? { ...n, isRead: true } : n))
+        );
+      }
+      if (notif.link) {
+        setNotifOpen(false);
+        navigate(notif.link);
+      }
+    } catch {
+      // Silently fail
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await markAllAsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    } catch {
+      // Silently fail
+    }
+  };
+
+  const formatTimeAgo = (dateStr) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
   };
 
   return (
@@ -65,9 +138,72 @@ const Navbar = ({ showSidebarToggle = false }) => {
 
           {isAuthenticated ? (
             <>
-              <button className="hidden sm:flex rounded-2xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition hover:border-brand-500 hover:text-brand-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" aria-label="Notifications">
-                <HiOutlineBell size={18} />
-              </button>
+              {/* Notification Bell with Dropdown */}
+              <div className="relative hidden sm:block" ref={notifRef}>
+                <button
+                  className="rounded-2xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition hover:border-brand-500 hover:text-brand-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                  aria-label="Notifications"
+                  onClick={() => setNotifOpen(!notifOpen)}
+                >
+                  <HiOutlineBell size={18} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-md">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {notifOpen && (
+                  <div className="absolute right-0 top-12 z-50 w-80 rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900" style={{ maxHeight: '420px' }}>
+                    <div className="flex items-center justify-between border-b border-slate-200/70 px-4 py-3 dark:border-slate-700">
+                      <h4 className="text-sm font-semibold text-slate-900 dark:text-white">Notifications</h4>
+                      {unreadCount > 0 && (
+                        <button
+                          onClick={handleMarkAllRead}
+                          className="text-xs font-medium text-brand-600 hover:text-brand-700 transition"
+                        >
+                          Mark all read
+                        </button>
+                      )}
+                    </div>
+                    <div style={{ maxHeight: '340px', overflowY: 'auto' }}>
+                      {notifications.length === 0 ? (
+                        <div className="px-4 py-8 text-center text-sm text-slate-400">
+                          No notifications yet
+                        </div>
+                      ) : (
+                        notifications.slice(0, 20).map((notif) => (
+                          <button
+                            key={notif._id}
+                            onClick={() => handleNotifClick(notif)}
+                            className={`flex w-full text-left gap-3 px-4 py-3 transition hover:bg-slate-50 dark:hover:bg-slate-800 border-b border-slate-100 dark:border-slate-800 last:border-0 ${
+                              !notif.isRead ? 'bg-brand-50/40 dark:bg-brand-950/20' : ''
+                            }`}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                                  {notif.title}
+                                </span>
+                                {!notif.isRead && (
+                                  <span className="h-2 w-2 rounded-full bg-brand-500 flex-shrink-0" />
+                                )}
+                              </div>
+                              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
+                                {notif.message}
+                              </p>
+                              <span className="mt-1 text-[10px] text-slate-400">
+                                {formatTimeAgo(notif.createdAt)}
+                              </span>
+                            </div>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="hidden sm:flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-1.5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-accent font-bold text-white shadow-[0_2px_8px_rgba(99,102,241,0.25)] select-none">
                   {user?.profileImage ? <img src={user.profileImage} alt={user.name} className="h-full w-full rounded-full object-cover" /> : getInitials(user?.name)}

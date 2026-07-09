@@ -3,6 +3,8 @@ const ApiResponse = require('../utils/ApiResponse');
 const ApiError = require('../utils/ApiError');
 const Assignment = require('../models/Assignment');
 const Submission = require('../models/Submission');
+const Enrollment = require('../models/Enrollment');
+const Course = require('../models/Course');
 
 // @desc    Create assignment
 // @route   POST /api/assignments
@@ -16,7 +18,22 @@ const createAssignment = asyncHandler(async (req, res) => {
 // @route   GET /api/assignments/course/:courseId
 // @access  Private
 const getAssignments = asyncHandler(async (req, res) => {
-  const assignments = await Assignment.find({ courseId: req.params.courseId });
+  const { courseId } = req.params;
+  const isInstructorOrAdmin = ['instructor', 'admin'].includes(req.user.role);
+
+  if (isInstructorOrAdmin) {
+    // Instructors/admins see all assignments (including drafts)
+    const assignments = await Assignment.find({ courseId });
+    return ApiResponse.success(res, 'Assignments fetched', assignments);
+  }
+
+  // Students: must be enrolled and only see published assignments
+  const enrollment = await Enrollment.findOne({ studentId: req.user._id, courseId });
+  if (!enrollment) {
+    throw ApiError.forbidden('You must be enrolled in this course');
+  }
+
+  const assignments = await Assignment.find({ courseId, isPublished: true });
   ApiResponse.success(res, 'Assignments fetched', assignments);
 });
 
@@ -26,6 +43,34 @@ const getAssignments = asyncHandler(async (req, res) => {
 const getAssignment = asyncHandler(async (req, res) => {
   const assignment = await Assignment.findById(req.params.id);
   if (!assignment) throw ApiError.notFound('Assignment not found');
+
+  const isInstructorOrAdmin = ['instructor', 'admin'].includes(req.user.role);
+
+  if (!isInstructorOrAdmin) {
+    // Students: must be enrolled and assignment must be published
+    if (!assignment.isPublished) {
+      throw ApiError.notFound('Assignment not found');
+    }
+
+    const enrollment = await Enrollment.findOne({
+      studentId: req.user._id,
+      courseId: assignment.courseId,
+    });
+    if (!enrollment) {
+      throw ApiError.forbidden('You must be enrolled in this course');
+    }
+
+    // Strip correct answers from MCQ questions for students
+    const sanitized = assignment.toObject();
+    if (sanitized.questions && sanitized.questions.length > 0) {
+      sanitized.questions = sanitized.questions.map((q) => {
+        const { correctAnswer, ...rest } = q;
+        return rest;
+      });
+    }
+    return ApiResponse.success(res, 'Assignment details', sanitized);
+  }
+
   ApiResponse.success(res, 'Assignment details', assignment);
 });
 
@@ -57,7 +102,30 @@ const submitAssignment = asyncHandler(async (req, res) => {
   const assignment = await Assignment.findById(req.params.id);
   if (!assignment) throw ApiError.notFound('Assignment not found');
 
-  // Check attempt limit
+  // 1. Check if assignment is published
+  if (!assignment.isPublished) {
+    throw ApiError.forbidden('This assignment is not published yet');
+  }
+
+  // 2. Check enrollment
+  const enrollment = await Enrollment.findOne({
+    studentId: req.user._id,
+    courseId: assignment.courseId,
+  });
+  if (!enrollment) {
+    throw ApiError.forbidden('You must be enrolled in this course');
+  }
+
+  // 3. Check due date (end of day)
+  if (assignment.dueDate) {
+    const deadline = new Date(assignment.dueDate);
+    deadline.setHours(23, 59, 59, 999);
+    if (new Date() > deadline) {
+      throw ApiError.badRequest('Assignment due date has passed');
+    }
+  }
+
+  // 4. Check attempt limit
   const attemptCount = await Submission.countDocuments({
     assignmentId: req.params.id,
     studentId: req.user._id,

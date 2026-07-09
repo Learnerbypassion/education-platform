@@ -32,7 +32,7 @@ const createExamSchema = Joi.object({
   startDate: Joi.date().iso(),
   endDate: Joi.date().iso(),
   isPublished: Joi.boolean().default(false),
-  questions: Joi.array().items(createQuestionSchema).default([]),
+  questions: Joi.array().items(createQuestionSchema).min(1).required(),
 });
 
 const submitExamSchema = Joi.object({

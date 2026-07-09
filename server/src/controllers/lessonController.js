@@ -113,6 +113,15 @@ const updateProgress = asyncHandler(async (req, res) => {
   const lesson = await Lesson.findById(req.params.id);
   if (!lesson) throw ApiError.notFound('Lesson not found');
 
+  // Verify student is enrolled in this course
+  const enrollment = await Enrollment.findOne({
+    studentId: req.user._id,
+    courseId: lesson.courseId,
+  });
+  if (!enrollment) {
+    throw ApiError.forbidden('You must be enrolled in this course');
+  }
+
   const { percentComplete, watchTime } = req.body;
   const isCompleted = percentComplete >= 90;
 
@@ -132,24 +141,25 @@ const updateProgress = asyncHandler(async (req, res) => {
 
   // Update enrollment completed lessons and recalculate progress percentage
   if (isCompleted) {
-    const enrollment = await Enrollment.findOneAndUpdate(
-      { studentId: req.user._id, courseId: lesson.courseId },
-      { $addToSet: { completedLessons: lesson._id }, lastAccessedAt: new Date() },
-      { new: true }
+    const alreadyCompleted = enrollment.completedLessons?.some(
+      (id) => id.toString() === lesson._id.toString()
     );
 
-    if (enrollment) {
-      const totalLessons = await Lesson.countDocuments({ courseId: lesson.courseId });
-      const completedCount = enrollment.completedLessons.length;
-      const progressPercent = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
-      
-      enrollment.progress = progressPercent;
-      if (progressPercent === 100) {
-        enrollment.status = 'completed';
-        enrollment.completedAt = new Date();
-      }
-      await enrollment.save();
+    if (!alreadyCompleted) {
+      enrollment.completedLessons = [...(enrollment.completedLessons || []), lesson._id];
     }
+    enrollment.lastAccessedAt = new Date();
+
+    const totalLessons = await Lesson.countDocuments({ courseId: lesson.courseId });
+    const completedCount = enrollment.completedLessons.length;
+    const progressPercent = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+    
+    enrollment.progress = progressPercent;
+    if (progressPercent === 100) {
+      enrollment.status = 'completed';
+      enrollment.completedAt = new Date();
+    }
+    await enrollment.save();
   }
 
   ApiResponse.success(res, 'Progress updated', progress);

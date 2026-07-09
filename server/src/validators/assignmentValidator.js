@@ -19,7 +19,29 @@ const createAssignmentSchema = Joi.object({
   dueDate: Joi.date().iso(),
   maxAttempts: Joi.number().integer().min(1).default(1),
   instructions: Joi.string().allow(''),
+  isPublished: Joi.boolean().default(false),
 });
+
+const updateAssignmentSchema = Joi.object({
+  title: Joi.string().trim().min(3).max(200),
+  description: Joi.string().allow(''),
+  type: Joi.string().valid('mcq', 'file-submission', 'coding', 'github-project'),
+  questions: Joi.array().items(
+    Joi.object({
+      questionText: Joi.string().required(),
+      options: Joi.array().items(Joi.string()),
+      correctAnswer: Joi.string(),
+      marks: Joi.number().min(0),
+    })
+  ),
+  totalMarks: Joi.number().min(0),
+  passingMarks: Joi.number().min(0),
+  dueDate: Joi.date().iso(),
+  maxAttempts: Joi.number().integer().min(1),
+  instructions: Joi.string().allow(''),
+  isPublished: Joi.boolean(),
+  moduleId: Joi.string().allow(''),
+}).min(1);
 
 const submitAssignmentSchema = Joi.object({
   answers: Joi.array().items(
@@ -34,5 +56,6 @@ const submitAssignmentSchema = Joi.object({
 
 module.exports = {
   createAssignmentSchema,
+  updateAssignmentSchema,
   submitAssignmentSchema,
 };
