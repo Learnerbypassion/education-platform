@@ -65,6 +65,7 @@ const certificateSchema = new mongoose.Schema(
 );
 
 // Indexes
+certificateSchema.index({ studentId: 1, courseId: 1 }, { unique: true });
 certificateSchema.index({ certificateId: 1 }, { unique: true });
 certificateSchema.index({ studentId: 1 });
 certificateSchema.index({ courseId: 1 });

@@ -48,7 +48,7 @@ const lessonSchema = new mongoose.Schema(
       {
         name: String,
         url: String,
-        type: String, // pdf, docx, ppt, zip
+        type: { type: String }, // pdf, docx, ppt, zip
         size: Number,
       },
     ],

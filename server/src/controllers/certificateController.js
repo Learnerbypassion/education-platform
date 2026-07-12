@@ -26,9 +26,27 @@ const getMyCertificates = asyncHandler(async (req, res) => {
 // @access  Private
 const getCertificate = asyncHandler(async (req, res) => {
   const certificate = await Certificate.findById(req.params.id);
+  const ApiError = require('../utils/ApiError');
   if (!certificate) {
-    throw require('../utils/ApiError').notFound('Certificate not found');
+    throw ApiError.notFound('Certificate not found');
   }
+
+  const Course = require('../models/Course');
+  const course = await Course.findById(certificate.courseId);
+
+  const studentId = certificate.studentId?.toString();
+  const isOwner = studentId === req.user._id.toString();
+  const isAdmin = req.user.role === 'admin';
+  let isInstructorOwner = false;
+
+  if (req.user.role === 'instructor' && course) {
+    isInstructorOwner = course.creatorId.toString() === req.user._id.toString();
+  }
+
+  if (!isOwner && !isAdmin && !isInstructorOwner) {
+    throw ApiError.forbidden('You are not authorized to access this certificate');
+  }
+
   ApiResponse.success(res, 'Certificate details', certificate);
 });
 

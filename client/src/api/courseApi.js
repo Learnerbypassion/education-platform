@@ -37,5 +37,6 @@ export const createLesson = (moduleId, data) => {
 };
 export const updateLesson = (id, data) => API.put(`/lessons/${id}`, data);
 export const deleteLesson = (id) => API.delete(`/lessons/${id}`);
+export const startLesson = (id) => API.post(`/lessons/${id}/start`);
 export const updateProgress = (id, data) => API.post(`/lessons/${id}/progress`, data);
 export const getMySubmissions = () => API.get('/submissions/me');

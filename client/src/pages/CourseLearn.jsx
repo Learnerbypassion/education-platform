@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getCourseById, updateProgress, getEnrolledCourses, getMySubmissions } from '../api/courseApi';
+import { getCourseById, updateProgress, getEnrolledCourses, getMySubmissions, startLesson } from '../api/courseApi';
 import { getAssignments } from '../api/assignmentApi';
 import { getExams, requestExamAttempt } from '../api/examApi';
 import { generateCertificate } from '../api/certificateApi';
@@ -8,6 +8,7 @@ import Loader from '../components/common/Loader';
 import toast from 'react-hot-toast';
 import { HiOutlineBookOpen, HiOutlineChevronRight, HiOutlinePlay, HiOutlineDocumentText, HiOutlineQuestionMarkCircle, HiOutlineAcademicCap, HiOutlineMenu, HiOutlineX } from 'react-icons/hi';
 import './CourseLearn.css';
+import DOMPurify from 'dompurify';
 
 const CourseLearn = () => {
   const { id } = useParams();
@@ -139,9 +140,14 @@ const CourseLearn = () => {
     }
   };
 
-  const handleLessonSelect = (lesson) => {
+  const handleLessonSelect = async (lesson) => {
     setActiveLesson(lesson);
     setSidebarOpen(false);
+    try {
+      await startLesson(lesson._id);
+    } catch (err) {
+      console.error('Failed to start lesson', err);
+    }
   };
 
   // Group modules by week and sort weeks
@@ -364,7 +370,7 @@ const CourseLearn = () => {
             )}
             
             <div className="classroom-content-details">
-              {activeLesson.content && <div className="classroom-markdown-content" dangerouslySetInnerHTML={{ __html: activeLesson.content }} />}
+              {activeLesson.content && <div className="classroom-markdown-content" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(activeLesson.content) }} />}
               
               <div className="classroom-action-row">
                 <button onClick={handleMarkComplete} disabled={completedIds.has(activeLesson._id)} className={`btn ${completedIds.has(activeLesson._id) ? 'btn-outline' : 'btn-primary'} btn-lg`}>

@@ -41,14 +41,56 @@ const getExams = asyncHandler(async (req, res) => {
   ApiResponse.success(res, 'Exams fetched', exams);
 });
 
-// @desc    Get exam by ID (for instructor — includes answers)
+// @desc    Get exam by ID
 // @route   GET /api/exams/:id
-// @access  Private/Instructor
+// @access  Private
 const getExam = asyncHandler(async (req, res) => {
   const exam = await Exam.findById(req.params.id);
   if (!exam) throw ApiError.notFound('Exam not found');
+
+  const Course = require('../models/Course');
+  const course = await Course.findById(exam.courseId);
+  if (!course) throw ApiError.notFound('Associated course not found');
+
+  let hasFullAccess = false;
+  if (req.user.role === 'admin') {
+    hasFullAccess = true;
+  } else if (req.user.role === 'instructor') {
+    if (course.creatorId.toString() !== req.user._id.toString()) {
+      throw ApiError.forbidden('Not authorized to access this exam');
+    }
+    hasFullAccess = true;
+  } else if (req.user.role === 'student') {
+    if (!exam.isPublished) {
+      throw ApiError.notFound('Exam not found');
+    }
+    const Enrollment = require('../models/Enrollment');
+    const enrollment = await Enrollment.findOne({ studentId: req.user._id, courseId: course._id });
+    if (!enrollment) {
+      throw ApiError.forbidden('You must be enrolled in this course');
+    }
+  } else {
+    throw ApiError.forbidden('Not authorized');
+  }
+
   const questions = await Question.find({ examId: exam._id }).sort({ order: 1 });
-  ApiResponse.success(res, 'Exam details', { ...exam.toObject(), questions });
+
+  if (hasFullAccess) {
+    return ApiResponse.success(res, 'Exam details', { ...exam.toObject(), questions });
+  }
+
+  const sanitizedQuestions = questions.map((question) => ({
+    _id: question._id,
+    type: question.type,
+    text: question.text,
+    marks: question.marks,
+    options: question.options?.map((option) => ({
+      _id: option._id,
+      text: option.text,
+    })),
+  }));
+
+  ApiResponse.success(res, 'Exam details', { ...exam.toObject(), questions: sanitizedQuestions });
 });
 
 // @desc    Start / get exam for student (no correct answers)

@@ -32,46 +32,46 @@ class CertificateService {
       throw ApiError.badRequest('Not enrolled in this course');
     }
 
-    // 2. Check course progress is 100%
-    if (enrollment.progress < 100) {
-      throw ApiError.badRequest(
-        `Course progress is ${enrollment.progress}%. You must complete 100% of the course to earn a certificate.`
-      );
+    // 2. Check all lessons are completed
+    const Lesson = require('../models/Lesson');
+    const Progress = require('../models/Progress');
+    const allLessons = await Lesson.find({ courseId });
+    for (const lesson of allLessons) {
+      const prog = await Progress.findOne({ studentId, lessonId: lesson._id });
+      if (!prog || prog.percentComplete < 100) {
+        throw ApiError.badRequest(`You must complete all lessons before earning a certificate. Lesson "${lesson.title}" is incomplete.`);
+      }
     }
 
     // 3. Check all published assignments for this course are passed
     const assignments = await Assignment.find({ courseId, isPublished: true });
-    if (assignments.length > 0) {
-      for (const assignment of assignments) {
-        const passedSubmission = await Submission.findOne({
-          assignmentId: assignment._id,
-          studentId,
-          type: 'assignment',
-          isPassed: true,
-        });
-        if (!passedSubmission) {
-          throw ApiError.badRequest(
-            `You must pass all assignments before earning a certificate. Assignment "${assignment.title}" is not yet passed.`
-          );
-        }
+    for (const assignment of assignments) {
+      const passedSubmission = await Submission.findOne({
+        assignmentId: assignment._id,
+        studentId,
+        type: 'assignment',
+        isPassed: true,
+      });
+      if (!passedSubmission) {
+        throw ApiError.badRequest(
+          `You must pass all assignments before earning a certificate. Assignment "${assignment.title}" is not yet passed.`
+        );
       }
     }
 
     // 4. Check all published exams for this course are passed
     const exams = await Exam.find({ courseId, isPublished: true });
-    if (exams.length > 0) {
-      for (const exam of exams) {
-        const passedSubmission = await Submission.findOne({
-          examId: exam._id,
-          studentId,
-          type: 'exam',
-          isPassed: true,
-        });
-        if (!passedSubmission) {
-          throw ApiError.badRequest(
-            `You must pass all exams before earning a certificate. Exam "${exam.title}" is not yet passed.`
-          );
-        }
+    for (const exam of exams) {
+      const passedSubmission = await Submission.findOne({
+        examId: exam._id,
+        studentId,
+        type: 'exam',
+        isPassed: true,
+      });
+      if (!passedSubmission) {
+        throw ApiError.badRequest(
+          `You must pass all exams before earning a certificate. Exam "${exam.title}" is not yet passed.`
+        );
       }
     }
 
@@ -118,38 +118,46 @@ class CertificateService {
       qrCodeBuffer,
     });
 
-    // Save certificate
-    const certificate = await Certificate.create({
-      studentId,
-      courseId,
-      certificateId,
-      studentName: student.name,
-      courseName: course.title,
-      instructorName: course.creatorId.name,
-      completionDate: new Date(),
-      qrCode: verifyUrl,
-      pdfUrl,
-      grade,
-      score: bestSubmission ? bestSubmission.percentage : 0,
-    });
-
-    // Try sending email (safely wrapped)
+    // Save certificate gracefully
     try {
-      await emailService.sendCertificateEmail(student, certificate);
-    } catch (err) {
-      console.error(`❌ Certificate email failed: ${err.message}`);
+      const certificate = await Certificate.create({
+        studentId,
+        courseId,
+        certificateId,
+        studentName: student.name,
+        courseName: course.title,
+        instructorName: course.creatorId.name,
+        completionDate: new Date(),
+        qrCode: verifyUrl,
+        pdfUrl,
+        grade,
+        score: bestSubmission ? bestSubmission.percentage : 0,
+      });
+
+      // Try sending email (safely wrapped)
+      try {
+        await emailService.sendCertificateEmail(student, certificate);
+      } catch (err) {
+        console.error(`❌ Certificate email failed: ${err.message}`);
+      }
+
+      // Create notification
+      createNotification(
+        studentId,
+        'certificate-issued',
+        'Certificate Earned! 🎉',
+        `Congratulations! You've earned a certificate for completing "${course.title}".`,
+        `/certificates/${certificate._id}`
+      ).catch(console.error);
+
+      return certificate;
+    } catch (error) {
+      if (error.code === 11000) {
+        return Certificate.findOne({ studentId, courseId });
+      }
+      throw error;
     }
 
-    // Create notification
-    createNotification(
-      studentId,
-      'certificate-issued',
-      'Certificate Earned! 🎉',
-      `Congratulations! You've earned a certificate for completing "${course.title}".`,
-      `/certificates/${certificate._id}`
-    ).catch(console.error);
-
-    return certificate;
   }
 
   /**
@@ -222,20 +230,17 @@ class CertificateService {
     const certificate = await Certificate.findOne({ certificateId });
 
     if (!certificate) {
-      return { isValid: false, message: 'Certificate not found' };
+      return { valid: false, status: 'not-found' };
     }
 
     return {
-      isValid: certificate.isValid,
-      certificate: {
-        certificateId: certificate.certificateId,
-        studentName: certificate.studentName,
-        courseName: certificate.courseName,
-        instructorName: certificate.instructorName,
-        completionDate: certificate.completionDate,
-        grade: certificate.grade,
-        type: certificate.type,
-      },
+      valid: true,
+      certificateId: certificate.certificateId,
+      studentName: certificate.studentName,
+      courseName: certificate.courseName,
+      instructorName: certificate.instructorName,
+      completionDate: certificate.completionDate,
+      status: 'valid',
     };
   }
 }

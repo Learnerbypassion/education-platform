@@ -38,6 +38,12 @@ const progressSchema = new mongoose.Schema(
       type: Number, // video timestamp in seconds
       default: 0,
     },
+    startedAt: {
+      type: Date,
+    },
+    lastActivityAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,

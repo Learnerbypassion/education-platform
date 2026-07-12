@@ -56,7 +56,7 @@ const assignmentSchema = new mongoose.Schema(
       {
         name: String,
         url: String,
-        type: String,
+        type: { type: String },
       },
     ],
     isPublished: {

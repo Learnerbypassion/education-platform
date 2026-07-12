@@ -5,6 +5,7 @@ const Lesson = require('../models/Lesson');
 const Progress = require('../models/Progress');
 const Enrollment = require('../models/Enrollment');
 const { parseVideoUrl } = require('../utils/videoParser');
+const sanitizeLessonContent = require('../utils/sanitizeLessonContent');
 
 // @desc    Create lesson
 // @route   POST /api/lessons/:moduleId
@@ -18,6 +19,10 @@ const createLesson = asyncHandler(async (req, res) => {
     courseId: req.body.courseId,
     order: req.body.order ?? count,
   };
+
+  if (lessonData.content) {
+    lessonData.content = sanitizeLessonContent(lessonData.content);
+  }
 
   // Parse video URL
   if (lessonData.videoUrl) {
@@ -89,6 +94,10 @@ const updateLesson = asyncHandler(async (req, res) => {
     }
   }
 
+  if (req.body.content !== undefined) {
+    req.body.content = sanitizeLessonContent(req.body.content);
+  }
+
   const lesson = await Lesson.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
@@ -106,14 +115,13 @@ const deleteLesson = asyncHandler(async (req, res) => {
   ApiResponse.success(res, 'Lesson deleted');
 });
 
-// @desc    Mark lesson as complete / update progress
-// @route   POST /api/lessons/:id/progress
+// @desc    Start a lesson progress
+// @route   POST /api/lessons/:id/start
 // @access  Private/Student
-const updateProgress = asyncHandler(async (req, res) => {
+const startLesson = asyncHandler(async (req, res) => {
   const lesson = await Lesson.findById(req.params.id);
   if (!lesson) throw ApiError.notFound('Lesson not found');
 
-  // Verify student is enrolled in this course
   const enrollment = await Enrollment.findOne({
     studentId: req.user._id,
     courseId: lesson.courseId,
@@ -122,47 +130,100 @@ const updateProgress = asyncHandler(async (req, res) => {
     throw ApiError.forbidden('You must be enrolled in this course');
   }
 
-  const { percentComplete, watchTime } = req.body;
-  const isCompleted = percentComplete >= 90;
-
   const progress = await Progress.findOneAndUpdate(
-    { studentId: req.user._id, lessonId: req.params.id },
     {
       studentId: req.user._id,
-      lessonId: req.params.id,
-      courseId: lesson.courseId,
-      percentComplete: percentComplete || 0,
-      watchTime: watchTime || 0,
-      isCompleted,
-      ...(isCompleted ? { completedAt: new Date() } : {}),
+      lessonId: lesson._id,
     },
-    { upsert: true, new: true }
+    {
+      $setOnInsert: {
+        studentId: req.user._id,
+        lessonId: lesson._id,
+        courseId: lesson.courseId,
+        startedAt: new Date(),
+        percentComplete: 0,
+      },
+      $set: {
+        lastActivityAt: new Date(),
+      },
+    },
+    {
+      new: true,
+      upsert: true,
+    }
   );
 
-  // Update enrollment completed lessons and recalculate progress percentage
-  if (isCompleted) {
-    const alreadyCompleted = enrollment.completedLessons?.some(
-      (id) => id.toString() === lesson._id.toString()
-    );
+  ApiResponse.success(res, 'Lesson started', progress);
+});
 
-    if (!alreadyCompleted) {
-      enrollment.completedLessons = [...(enrollment.completedLessons || []), lesson._id];
-    }
-    enrollment.lastAccessedAt = new Date();
+// @desc    Mark lesson as complete / update progress
+// @route   POST /api/lessons/:id/progress
+// @access  Private/Student
+const updateProgress = asyncHandler(async (req, res) => {
+  const lesson = await Lesson.findById(req.params.id);
+  if (!lesson) throw ApiError.notFound('Lesson not found');
 
-    const totalLessons = await Lesson.countDocuments({ courseId: lesson.courseId });
-    const completedCount = enrollment.completedLessons.length;
-    const progressPercent = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
-    
-    enrollment.progress = progressPercent;
-    if (progressPercent === 100) {
-      enrollment.status = 'completed';
-      enrollment.completedAt = new Date();
-    }
-    await enrollment.save();
+  const enrollment = await Enrollment.findOne({
+    studentId: req.user._id,
+    courseId: lesson.courseId,
+  });
+  if (!enrollment) {
+    throw ApiError.forbidden('You must be enrolled in this course');
   }
+
+  let progress = await Progress.findOne({ studentId: req.user._id, lessonId: req.params.id });
+  if (!progress || !progress.startedAt) {
+    throw ApiError.badRequest('You must start the lesson first');
+  }
+
+  if (progress.percentComplete === 100 && progress.completedAt) {
+    return ApiResponse.success(res, 'Progress updated', progress);
+  }
+
+  const getMinimumRequiredSeconds = (lessonDoc) => {
+    const duration = Number(lessonDoc.durationSeconds || lessonDoc.duration * 60); // duration might be in minutes
+    if (!Number.isFinite(duration) || duration <= 0) {
+      return 60;
+    }
+    return Math.max(15, Math.min(Math.ceil(duration * 0.7), 1800));
+  };
+
+  const elapsedSeconds = (Date.now() - progress.startedAt.getTime()) / 1000;
+  const minimumRequiredSeconds = getMinimumRequiredSeconds(lesson);
+
+  if (elapsedSeconds < minimumRequiredSeconds) {
+    throw ApiError.badRequest('This lesson cannot be completed yet. Minimum reading/watch time not met.');
+  }
+
+  progress.percentComplete = 100;
+  progress.isCompleted = true;
+  progress.completedAt = new Date();
+  progress.lastActivityAt = new Date();
+  await progress.save();
+
+  // Update enrollment completed lessons
+  const alreadyCompleted = enrollment.completedLessons?.some(
+    (id) => id.toString() === lesson._id.toString()
+  );
+
+  if (!alreadyCompleted) {
+    enrollment.completedLessons = [...(enrollment.completedLessons || []), lesson._id];
+  }
+  enrollment.lastAccessedAt = new Date();
+
+  const totalLessons = await Lesson.countDocuments({ courseId: lesson.courseId, isFree: { $ne: true } }); // Count required lessons? wait, previously we counted all.
+  const actualTotalLessons = await Lesson.countDocuments({ courseId: lesson.courseId });
+  const completedCount = enrollment.completedLessons.length;
+  const progressPercent = actualTotalLessons > 0 ? Math.round((completedCount / actualTotalLessons) * 100) : 0;
+  
+  enrollment.progress = progressPercent;
+  if (progressPercent === 100) {
+    enrollment.status = 'completed';
+    enrollment.completedAt = new Date();
+  }
+  await enrollment.save();
 
   ApiResponse.success(res, 'Progress updated', progress);
 });
 
-module.exports = { createLesson, getLessons, updateLesson, deleteLesson, updateProgress };
+module.exports = { createLesson, getLessons, updateLesson, deleteLesson, startLesson, updateProgress };

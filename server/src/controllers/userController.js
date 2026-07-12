@@ -7,7 +7,7 @@ const User = require('../models/User');
 // @route   GET /api/users/:id
 // @access  Public
 const getUserProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id).select('-password');
+  const user = await User.findById(req.params.id).select('name profileImage bio githubUsername socialLinks role');
   if (!user) throw ApiError.notFound('User not found');
   ApiResponse.success(res, 'User profile', user);
 });

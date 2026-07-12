@@ -140,14 +140,41 @@ const submitAssignment = asyncHandler(async (req, res) => {
 
   // Auto-grade MCQ assignments
   if (assignment.type === 'mcq' && assignment.questions.length > 0) {
-    gradedAnswers = (req.body.answers || []).map((answer) => {
+    if (!Array.isArray(req.body.answers)) {
+      throw ApiError.badRequest('Answers must be an array');
+    }
+    if (req.body.answers.length > assignment.questions.length) {
+      throw ApiError.badRequest('Number of answers exceeds number of questions');
+    }
+    const questionIds = req.body.answers.map((a) => String(a.questionId));
+    if (new Set(questionIds).size !== questionIds.length) {
+      throw ApiError.badRequest('Duplicate question answers are not allowed');
+    }
+    const mongoose = require('mongoose');
+
+    for (const answer of req.body.answers) {
+      if (!answer.questionId || !mongoose.Types.ObjectId.isValid(answer.questionId)) {
+        throw ApiError.badRequest('Invalid question ID');
+      }
       const question = assignment.questions.id(answer.questionId);
-      const isCorrect = question && answer.selectedOption === question.correctAnswer;
-      if (isCorrect) score += question.marks || 1;
-      return { ...answer, isCorrect };
-    });
+      if (!question) {
+        throw ApiError.badRequest(`Question ${answer.questionId} does not belong to this assignment`);
+      }
+      if (!answer.selectedOption || typeof answer.selectedOption !== 'string') {
+        throw ApiError.badRequest(`Invalid answer payload for question ${question._id}`);
+      }
+      if (question.options && question.options.length > 0) {
+        if (!question.options.includes(answer.selectedOption)) {
+          throw ApiError.badRequest(`Invalid option submitted for question ${question._id}`);
+        }
+      }
+      const isCorrect = answer.selectedOption === question.correctAnswer;
+      if (isCorrect) score += Number(question.marks) || 1;
+      gradedAnswers.push({ questionId: answer.questionId, selectedOption: answer.selectedOption, isCorrect });
+    }
   }
 
+  score = Math.min(score, assignment.totalMarks);
   const totalMarks = assignment.totalMarks;
   const percentage = totalMarks > 0 ? (score / totalMarks) * 100 : 0;
 
@@ -199,10 +226,18 @@ const gradeSubmission = asyncHandler(async (req, res) => {
   const assignment = await Assignment.findById(req.params.id);
   if (!assignment) throw ApiError.notFound('Assignment not found');
 
-  const submission = await Submission.findById(req.params.submissionId);
-  if (!submission) throw ApiError.notFound('Submission not found');
+  const submission = await Submission.findOne({
+    _id: req.params.submissionId,
+    assignmentId: req.params.id,
+  });
+  if (!submission) throw ApiError.notFound('Submission does not belong to this assignment');
 
-  submission.score = Number(score) || 0;
+  const numericScore = Number(score) || 0;
+  if (numericScore < 0 || numericScore > assignment.totalMarks) {
+    throw ApiError.badRequest(`Grade must be between 0 and ${assignment.totalMarks}`);
+  }
+
+  submission.score = numericScore;
   submission.feedback = feedback || '';
   if (isPassed !== undefined) {
     submission.isPassed = isPassed;

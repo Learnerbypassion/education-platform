@@ -147,54 +147,100 @@ class ExamService {
     }
 
     // Fetch questions
+    const mongoose = require('mongoose');
     const questions = await Question.find({ examId });
     const questionMap = new Map(questions.map((q) => [q._id.toString(), q]));
 
     // Grade answers
     let score = 0;
-    const gradedAnswers = answers.map((answer) => {
-      const question = questionMap.get(answer.questionId);
-      if (!question) return { ...answer, isCorrect: false };
+    const gradedAnswers = [];
+
+    if (!Array.isArray(answers)) {
+      throw ApiError.badRequest('Answers must be an array');
+    }
+
+    if (answers.length > questions.length) {
+      throw ApiError.badRequest('Number of answers exceeds number of questions');
+    }
+
+    const questionIds = answers.map((a) => String(a.questionId));
+    if (new Set(questionIds).size !== questionIds.length) {
+      throw ApiError.badRequest('Duplicate question answers are not allowed');
+    }
+
+    for (const answer of answers) {
+      if (!answer.questionId || !mongoose.Types.ObjectId.isValid(answer.questionId)) {
+        throw ApiError.badRequest('Invalid question ID');
+      }
+
+      const question = questionMap.get(String(answer.questionId));
+      if (!question) {
+        throw ApiError.badRequest(`Question ${answer.questionId} does not belong to this exam`);
+      }
 
       let isCorrect = false;
 
       switch (question.type) {
         case 'mcq': {
+          if (!answer.selectedOption || typeof answer.selectedOption !== 'string') {
+            throw ApiError.badRequest(`Invalid answer payload for question ${question._id}`);
+          }
+          const optionExists = question.options.some((o) => o.text === answer.selectedOption);
+          if (!optionExists) {
+             throw ApiError.badRequest(`Invalid option submitted for question ${question._id}`);
+          }
           const correctOption = question.options.find((o) => o.isCorrect);
           isCorrect = correctOption && answer.selectedOption === correctOption.text;
+          gradedAnswers.push({ questionId: answer.questionId, selectedOption: answer.selectedOption, isCorrect });
           break;
         }
         case 'multiple-correct': {
-          const correctTexts = question.options
-            .filter((o) => o.isCorrect)
-            .map((o) => o.text)
-            .sort();
-          const selectedTexts = (answer.selectedOptions || []).sort();
+          if (!Array.isArray(answer.selectedOptions)) {
+            throw ApiError.badRequest(`Invalid answer payload for question ${question._id}`);
+          }
+          const allOptionsValid = answer.selectedOptions.every(opt => question.options.some((o) => o.text === opt));
+          if (!allOptionsValid) {
+            throw ApiError.badRequest(`Invalid options submitted for question ${question._id}`);
+          }
+          const correctTexts = [...new Set(question.options.filter((o) => o.isCorrect).map((o) => o.text))].sort();
+          const selectedTexts = [...new Set(answer.selectedOptions)].sort();
           isCorrect =
             correctTexts.length === selectedTexts.length &&
             correctTexts.every((t, i) => t === selectedTexts[i]);
+          gradedAnswers.push({ questionId: answer.questionId, selectedOptions: answer.selectedOptions, isCorrect });
           break;
         }
         case 'true-false': {
-          isCorrect =
-            answer.selectedOption?.toLowerCase() ===
-            question.correctAnswer?.toLowerCase();
+          if (!answer.selectedOption || typeof answer.selectedOption !== 'string') {
+            throw ApiError.badRequest(`Invalid answer payload for question ${question._id}`);
+          }
+          const submittedVal = answer.selectedOption.toLowerCase();
+          if (submittedVal !== 'true' && submittedVal !== 'false') {
+             throw ApiError.badRequest(`Invalid option submitted for question ${question._id}`);
+          }
+          isCorrect = submittedVal === question.correctAnswer?.toLowerCase();
+          gradedAnswers.push({ questionId: answer.questionId, selectedOption: answer.selectedOption, isCorrect });
           break;
         }
         case 'fill-in-the-blank': {
-          isCorrect =
-            answer.textAnswer?.trim().toLowerCase() ===
-            question.correctAnswer?.trim().toLowerCase();
+          if (typeof answer.textAnswer !== 'string') {
+            throw ApiError.badRequest(`Invalid answer payload for question ${question._id}`);
+          }
+          isCorrect = answer.textAnswer.trim().toLowerCase() === question.correctAnswer?.trim().toLowerCase();
+          gradedAnswers.push({ questionId: answer.questionId, textAnswer: answer.textAnswer, isCorrect });
           break;
         }
         default:
           isCorrect = false;
+          gradedAnswers.push({ questionId: answer.questionId, isCorrect: false });
       }
 
-      if (isCorrect) score += question.marks;
+      if (isCorrect) {
+        score += Number(question.marks) || 1;
+      }
+    }
 
-      return { ...answer, isCorrect };
-    });
+    score = Math.min(score, exam.totalMarks);
 
     const percentage = exam.totalMarks > 0 ? (score / exam.totalMarks) * 100 : 0;
     const isPassed = score >= exam.passingMarks;

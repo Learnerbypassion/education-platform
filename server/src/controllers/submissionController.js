@@ -21,12 +21,29 @@ const getMySubmissions = asyncHandler(async (req, res) => {
 const getSubmission = asyncHandler(async (req, res) => {
   const submission = await Submission.findById(req.params.id)
     .populate('studentId', 'name email')
-    .populate('courseId', 'title')
+    .populate('courseId', 'title creatorId')
     .populate('examId', 'title')
     .populate('assignmentId', 'title');
 
+  const ApiError = require('../utils/ApiError');
   if (!submission) {
-    throw require('../utils/ApiError').notFound('Submission not found');
+    throw ApiError.notFound('Submission not found');
+  }
+
+  const Course = require('../models/Course');
+  const course = await Course.findById(submission.courseId?._id || submission.courseId);
+
+  const studentId = submission.studentId?._id?.toString() || submission.studentId?.toString();
+  const isOwner = studentId === req.user._id.toString();
+  const isAdmin = req.user.role === 'admin';
+  let isInstructorOwner = false;
+
+  if (req.user.role === 'instructor' && course) {
+    isInstructorOwner = course.creatorId.toString() === req.user._id.toString();
+  }
+
+  if (!isOwner && !isAdmin && !isInstructorOwner) {
+    throw ApiError.forbidden('You are not authorized to access this submission');
   }
 
   ApiResponse.success(res, 'Submission details', submission);
