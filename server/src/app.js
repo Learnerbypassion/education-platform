@@ -8,7 +8,7 @@ const errorHandler = require('./middleware/errorHandler');
 const session = require('express-session');
 const passport = require('./config/passport');
 const { apiLimiter } = require('./middleware/rateLimiter');
-
+const dns = require("dns");
 // Route imports
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -25,7 +25,7 @@ const searchRoutes = require('./routes/searchRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 
 const app = express();
-
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
 // ─── Global Middleware ───────────────────────────────────
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors(corsOptions));

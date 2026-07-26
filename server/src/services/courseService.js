@@ -12,15 +12,24 @@ class CourseService {
    * Create a new course.
    */
   async createCourse(data, creatorId) {
-    const course = await Course.create({ ...data, creatorId });
+    const isPublished = data.isPublished !== undefined ? (data.isPublished === 'true' || data.isPublished === true) : true;
+    const course = await Course.create({ ...data, isPublished, creatorId });
     return course;
   }
 
   /**
-   * Get all published courses with filters.
+   * Get all published courses with filters (and draft courses for instructor/admin).
    */
-  async getCourses(filters = {}, page = 1, limit = 12) {
-    const query = { isPublished: true };
+  async getCourses(filters = {}, page = 1, limit = 12, user = null) {
+    let query = {};
+    if (user && (user.role === 'instructor' || user.role === 'admin')) {
+      query.$or = [
+        { isPublished: true },
+        { creatorId: user._id }
+      ];
+    } else {
+      query.isPublished = true;
+    }
 
     if (filters.category) query.category = filters.category;
     if (filters.difficulty) query.difficulty = filters.difficulty;
@@ -117,7 +126,7 @@ class CourseService {
 
     const existing = await Enrollment.findOne({ studentId, courseId });
     if (existing) {
-      throw ApiError.conflict('Already enrolled in this course');
+      return existing;
     }
 
     const enrollment = await Enrollment.create({ studentId, courseId });

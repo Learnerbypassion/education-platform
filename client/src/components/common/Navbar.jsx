@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { useAuth } from '../../hooks/useAuth';
 import { logout } from '../../store/slices/authSlice';
@@ -8,12 +8,14 @@ import { HiOutlineMenu, HiOutlineBell, HiOutlineSearch, HiMoon, HiSun, HiOutline
 import { FaGraduationCap } from 'react-icons/fa';
 import { getInitials } from '../../utils/helpers';
 import { useTheme } from '../../context/ThemeContext';
-import { getNotifications, markAsRead, markAllAsRead } from '../../api/notificationApi';
+import BrandLogo from './BrandLogo';
+import './Navbar.css';
 
 const Navbar = ({ showSidebarToggle = false }) => {
   const { user, isAuthenticated } = useAuth();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -95,53 +97,46 @@ const Navbar = ({ showSidebarToggle = false }) => {
   };
 
   return (
-    <nav className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/80 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/80" id="main-navbar">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-3">
+    <nav className="navbar" id="main-navbar">
+      <div className="navbar-inner">
+        <div className="navbar-left">
           {isAuthenticated && showSidebarToggle && (
             <button
-              className="rounded-2xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition hover:border-brand-500 hover:text-brand-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 lg:block hidden"
+              className="navbar-sidebar-toggle-btn"
               onClick={() => dispatch(toggleSidebar())}
               aria-label="Toggle sidebar"
             >
               <HiOutlineMenu size={20} />
             </button>
           )}
-          <Link to="/" className="flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-white">
-            <span className="rounded-2xl bg-brand-600 p-2 text-white">
-              <FaGraduationCap size={16} />
-            </span>
-            <span>
-              Edu<span className="text-brand-600">Platform</span>
-            </span>
-          </Link>
+          <BrandLogo size="md" />
         </div>
 
-        <div className="hidden items-center gap-6 md:flex">
-          <Link to="/courses" className="text-sm font-medium text-slate-600 transition hover:text-brand-600 dark:text-slate-300">Explore</Link>
+        <div className="navbar-center">
+          <Link to="/courses" className={`navbar-link ${location.pathname === '/courses' ? 'navbar-link-active' : ''}`}>Explore</Link>
           {isAuthenticated && (
-            <Link to="/dashboard" className="text-sm font-medium text-slate-600 transition hover:text-brand-600 dark:text-slate-300">Dashboard</Link>
+            <Link to="/dashboard" className={`navbar-link ${location.pathname === '/dashboard' ? 'navbar-link-active' : ''}`}>Dashboard</Link>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="navbar-right">
           <button
             onClick={toggleTheme}
-            className="rounded-2xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition hover:border-brand-500 hover:text-brand-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+            className="btn-icon-nav"
             aria-label="Toggle theme"
           >
             {theme === 'light' ? <HiMoon size={18} /> : <HiSun size={18} />}
           </button>
-          <button className="hidden sm:flex rounded-2xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition hover:border-brand-500 hover:text-brand-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" onClick={() => navigate('/courses')} aria-label="Search">
+          <button className="btn-icon-nav" onClick={() => navigate('/courses')} aria-label="Search">
             <HiOutlineSearch size={18} />
           </button>
 
           {isAuthenticated ? (
             <>
               {/* Notification Bell with Dropdown */}
-              <div className="relative hidden sm:block" ref={notifRef}>
+              <div className="relative" ref={notifRef}>
                 <button
-                  className="rounded-2xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition hover:border-brand-500 hover:text-brand-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                  className="btn-icon-nav"
                   aria-label="Notifications"
                   onClick={() => setNotifOpen(!notifOpen)}
                 >
@@ -154,19 +149,19 @@ const Navbar = ({ showSidebarToggle = false }) => {
                 </button>
 
                 {notifOpen && (
-                  <div className="absolute right-0 top-12 z-50 w-80 rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900" style={{ maxHeight: '420px' }}>
-                    <div className="flex items-center justify-between border-b border-slate-200/70 px-4 py-3 dark:border-slate-700">
-                      <h4 className="text-sm font-semibold text-slate-900 dark:text-white">Notifications</h4>
+                  <div className="navbar-notif-dropdown">
+                    <div className="navbar-notif-header">
+                      <h4>Notifications</h4>
                       {unreadCount > 0 && (
                         <button
                           onClick={handleMarkAllRead}
-                          className="text-xs font-medium text-brand-600 hover:text-brand-700 transition"
+                          className="navbar-notif-btn-read"
                         >
                           Mark all read
                         </button>
                       )}
                     </div>
-                    <div style={{ maxHeight: '340px', overflowY: 'auto' }}>
+                    <div className="navbar-notif-list">
                       {notifications.length === 0 ? (
                         <div className="px-4 py-8 text-center text-sm text-slate-400">
                           No notifications yet
@@ -176,8 +171,8 @@ const Navbar = ({ showSidebarToggle = false }) => {
                           <button
                             key={notif._id}
                             onClick={() => handleNotifClick(notif)}
-                            className={`flex w-full text-left gap-3 px-4 py-3 transition hover:bg-slate-50 dark:hover:bg-slate-800 border-b border-slate-100 dark:border-slate-800 last:border-0 ${
-                              !notif.isRead ? 'bg-brand-50/40 dark:bg-brand-950/20' : ''
+                            className={`navbar-notif-item ${
+                              !notif.isRead ? 'navbar-notif-item-unread' : ''
                             }`}
                           >
                             <div className="flex-1 min-w-0">
@@ -186,7 +181,7 @@ const Navbar = ({ showSidebarToggle = false }) => {
                                   {notif.title}
                                 </span>
                                 {!notif.isRead && (
-                                  <span className="h-2 w-2 rounded-full bg-brand-500 flex-shrink-0" />
+                                  <span className="navbar-notif-dot" />
                                 )}
                               </div>
                               <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
@@ -204,68 +199,19 @@ const Navbar = ({ showSidebarToggle = false }) => {
                 )}
               </div>
 
-              <div className="hidden sm:flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-1.5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-accent font-bold text-white shadow-[0_2px_8px_rgba(99,102,241,0.25)] select-none">
+              <div className="navbar-user-pill">
+                <div className="navbar-avatar-circle">
                   {user?.profileImage ? <img src={user.profileImage} alt={user.name} className="h-full w-full rounded-full object-cover" /> : getInitials(user?.name)}
                 </div>
-                <button onClick={handleLogout} className="px-2 text-sm font-medium text-slate-600 hover:text-brand-600 dark:text-slate-300 transition">
+                <button onClick={handleLogout} className="navbar-user-btn-logout">
                   Logout
                 </button>
               </div>
             </>
           ) : (
-            <div className="hidden sm:flex items-center gap-2">
-              <Link to="/login" className="rounded-2xl px-3 py-2 text-sm font-medium text-slate-600 hover:text-brand-600 dark:text-slate-300 transition">Login</Link>
-              <Link to="/register" className="btn btn-primary">Sign Up</Link>
-            </div>
-          )}
-
-          {/* Mobile hamburger */}
-          <button
-            className="md:hidden rounded-2xl border border-slate-200 bg-white p-2.5 text-slate-700 shadow-sm transition hover:border-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle mobile menu"
-          >
-            {mobileMenuOpen ? <HiOutlineX size={20} /> : <HiOutlineMenu size={20} />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile dropdown menu */}
-      <div
-        className={`md:hidden overflow-hidden border-t border-slate-200/70 bg-white/95 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/95 transition-all duration-300 ease-in-out ${mobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
-      >
-        <div className="mx-auto max-w-7xl space-y-1 px-4 py-3">
-          <Link to="/courses" onClick={() => setMobileMenuOpen(false)} className="block rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
-            Explore Courses
-          </Link>
-          {isAuthenticated && (
-            <>
-              <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="block rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
-                Dashboard
-              </Link>
-              <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="block rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
-                Profile
-              </Link>
-              {showSidebarToggle && (
-                <button
-                  onClick={() => { setMobileMenuOpen(false); dispatch(toggleSidebar()); }}
-                  className="block w-full text-left rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                >
-                  Sidebar Menu
-                </button>
-              )}
-              <div className="border-t border-slate-200/70 pt-2 dark:border-slate-800">
-                <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="block w-full text-left rounded-xl px-3 py-2.5 text-sm font-medium text-rose-600 transition hover:bg-rose-50 dark:hover:bg-rose-950/30">
-                  Logout
-                </button>
-              </div>
-            </>
-          )}
-          {!isAuthenticated && (
-            <div className="flex gap-2 pt-2 border-t border-slate-200/70 dark:border-slate-800">
-              <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="btn btn-outline flex-1 text-center">Login</Link>
-              <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="btn btn-primary flex-1 text-center">Sign Up</Link>
+            <div className="navbar-auth-btns">
+              <Link to="/login" className="navbar-btn-login">Login</Link>
+              <Link to="/register" className="navbar-btn-signup">Sign Up</Link>
             </div>
           )}
         </div>

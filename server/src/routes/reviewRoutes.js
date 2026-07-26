@@ -8,6 +8,6 @@ const router = express.Router({ mergeParams: true });
 router
   .route('/')
   .get(getReviews)
-  .post(protect, authorize('student'), addReview);
+  .post(protect, authorize('student', 'instructor', 'admin'), addReview);
 
 module.exports = router;

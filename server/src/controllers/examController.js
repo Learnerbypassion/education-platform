@@ -5,7 +5,6 @@ const examService = require('../services/examService');
 const Exam = require('../models/Exam');
 const Question = require('../models/Question');
 const Submission = require('../models/Submission');
-
 // @desc    Create exam
 // @route   POST /api/exams
 // @access  Private/Instructor
@@ -13,7 +12,7 @@ const createExam = asyncHandler(async (req, res) => {
   const { questions, ...examData } = req.body;
   const exam = await examService.createExam(examData, questions, req.user._id);
   ApiResponse.created(res, 'Exam created', exam);
-});
+  });
 
 // @desc    Get exams for a course
 // @route   GET /api/exams/course/:courseId
@@ -97,7 +96,7 @@ const getExam = asyncHandler(async (req, res) => {
 // @route   GET /api/exams/:id/take
 // @access  Private/Student
 const takeExam = asyncHandler(async (req, res) => {
-  const result = await examService.getExamForStudent(req.params.id, req.user._id);
+  const result = await examService.getExamForStudent(req.params.id, req.user._id, req.user.role);
   ApiResponse.success(res, 'Exam loaded', result);
 });
 
@@ -113,7 +112,8 @@ const submitExam = asyncHandler(async (req, res) => {
     req.user._id,
     exam.courseId,
     req.body.answers,
-    req.body.timeSpent
+    req.body.timeSpent,
+    req.user.role
   );
 
   ApiResponse.created(res, 'Exam submitted', submission);

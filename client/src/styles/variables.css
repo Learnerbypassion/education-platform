@@ -1,119 +1,142 @@
 /* ══════════════════════════════════════════════════
-   EduPlatform — CSS Design Tokens
+   EduPlatform — World-Class Premium Design Tokens
    ══════════════════════════════════════════════════ */
 
 :root {
-  /* ─── Brand Colors ──────────────────────────── */
-  --color-primary: #6b7aff;
-  --color-primary-light: #b2c0ff;
-  --color-primary-dark: #3e46c7;
-  --color-primary-glow: rgba(107, 122, 255, 0.25);
+  /* ─── Brand Colors (Electric Indigo & Cyber Rose) ─ */
+  --color-primary: #6366f1;
+  --color-primary-light: #a5b4fc;
+  --color-primary-dark: #4f46e5;
+  --color-primary-glow: rgba(99, 102, 241, 0.22);
+  --color-primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
 
   --color-accent: #f43f5e;
-  --color-accent-light: #fb7185;
-  --color-accent-dark: #be123c;
-  --color-accent-glow: rgba(244, 63, 94, 0.25);
+  --color-accent-light: #fda4af;
+  --color-accent-dark: #e11d48;
+  --color-accent-glow: rgba(244, 63, 94, 0.2);
 
   --color-success: #10b981;
-  --color-success-light: #34d399;
+  --color-success-light: #6ee7b7;
   --color-warning: #f59e0b;
-  --color-warning-dark: #b45309;
-  --color-info: #3b82f6;
+  --color-warning-dark: #d97706;
 
-  /* ─── Light Theme Background ─────────────────── */
+  /* ─── Light Theme Surfaces ─────────────────────── */
   --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  --bg-tertiary: #f1f5f9;
+  --bg-secondary: #f8f9fc;
+  --bg-tertiary: #f1f3f9;
   --bg-card: rgba(255, 255, 255, 0.85);
+  --bg-card-hover: rgba(255, 255, 255, 0.95);
   --bg-glass: rgba(255, 255, 255, 0.65);
-  --bg-hover: rgba(107, 122, 255, 0.05);
-  --bg-input: rgba(0, 0, 0, 0.03);
-  --bg-overlay: rgba(255, 255, 255, 0.7);
+  --bg-hover: rgba(99, 102, 241, 0.06);
+  --bg-input: rgba(15, 23, 42, 0.03);
+  --bg-overlay: rgba(15, 23, 42, 0.5);
 
   /* ─── Text Colors ───────────────────────────── */
   --text-primary: #0f172a;
-  --text-secondary: #334155;
+  --text-secondary: #475569;
   --text-muted: #64748b;
   --text-inverse: #ffffff;
 
   /* ─── Borders ───────────────────────────────── */
-  --border-color: rgba(0, 0, 0, 0.08);
-  --border-light: rgba(0, 0, 0, 0.04);
+  --border-color: rgba(226, 232, 240, 0.85);
+  --border-light: rgba(241, 245, 249, 0.6);
+  --border-hairline: rgba(0, 0, 0, 0.06);
   --border-focus: var(--color-primary);
 
-  /* ─── Shadows ───────────────────────────────── */
-  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.15);
-  --shadow-glow: 0 0 24px var(--color-primary-glow);
-  --shadow-accent-glow: 0 0 24px var(--color-accent-glow);
+  /* ─── Shadows (Layered Depth) ───────────────── */
+  --shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 2px 8px -2px rgba(15, 23, 42, 0.04), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
+  --shadow-md: 0 8px 24px -4px rgba(15, 23, 42, 0.06), 0 2px 8px -1px rgba(15, 23, 42, 0.03);
+  --shadow-lg: 0 20px 48px -12px rgba(15, 23, 42, 0.12), 0 4px 16px -2px rgba(15, 23, 42, 0.04);
+  --shadow-glow: 0 0 32px -4px var(--color-primary-glow);
+  --shadow-accent-glow: 0 0 32px -4px var(--color-accent-glow);
 
-  /* ─── Spacing ───────────────────────────────── */
-  --space-xs: 0.25rem;
-  --space-sm: 0.5rem;
-  --space-md: 1rem;
-  --space-lg: 1.5rem;
-  --space-xl: 2rem;
-  --space-2xl: 3rem;
-  --space-3xl: 4rem;
+  /* ─── Spacing (4px Base sub-grid) ───────────── */
+  --space-xs: 0.25rem;  /* 4px */
+  --space-sm: 0.5rem;   /* 8px */
+  --space-md: 0.75rem;  /* 12px */
+  --space-base: 1rem;   /* 16px */
+  --space-lg: 1.5rem;   /* 24px */
+  --space-xl: 2rem;     /* 32px */
+  --space-2xl: 3rem;    /* 48px */
+  --space-3xl: 4.5rem;  /* 72px */
 
-  /* ─── Border Radius ─────────────────────────── */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
+  /* ─── Border Radius (Dynamic Curves) ────────── */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
   --radius-xl: 32px;
   --radius-full: 9999px;
 
-  /* ─── Typography ────────────────────────────── */
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-heading: 'Outfit', 'Inter', sans-serif;
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-md: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
-  --font-size-3xl: 2rem;
-  --font-size-4xl: 2.5rem;
-  --font-size-5xl: 3.5rem;
+  /* ─── Typography Scales ─────────────────────── */
+  --font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Plus Jakarta Sans', 'Sora', 'Outfit', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 
-  /* ─── Z-Index ───────────────────────────────── */
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-md: 0.9375rem;  /* 15px */
+  --font-size-base: 1rem;     /* 16px */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.375rem;   /* 22px */
+  --font-size-2xl: 1.875rem;  /* 30px */
+  --font-size-3xl: 2.5rem;    /* 40px */
+  --font-size-4xl: 3.75rem;   /* 60px */
+
+  /* ─── Z-Index Hierarchy ─────────────────────── */
   --z-dropdown: 100;
   --z-sticky: 200;
   --z-modal: 300;
   --z-toast: 400;
 
-  /* ─── Transitions ───────────────────────────── */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* ─── Transitions (Spring Physics Easings) ───── */
+  --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-base: 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow: 400ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-spring: 500ms cubic-bezier(0.175, 0.885, 0.32, 1.15);
 
-  /* ─── Layout ────────────────────────────────── */
+  /* ─── Layout Standards ──────────────────────── */
   --sidebar-width: 280px;
   --navbar-height: 72px;
-  --max-width: 1280px;
+  --max-width: 1400px;
+  --glass-blur: 24px;
 }
 
 html[data-theme='dark'] {
-  /* ─── Dark Theme Background ─────────────────── */
-  --bg-primary: #0f1123;
-  --bg-secondary: #171936;
-  --bg-tertiary: #1f2249;
-  --bg-card: rgba(23, 25, 54, 0.65);
-  --bg-glass: rgba(23, 25, 54, 0.45);
-  --bg-hover: rgba(107, 122, 255, 0.1);
-  --bg-input: rgba(255, 255, 255, 0.05);
-  --bg-overlay: rgba(0, 0, 0, 0.7);
+  /* ─── Dark Theme Surfaces (Obsidian Engine) ─── */
+  --bg-primary: #07080a;
+  --bg-secondary: #0f1117;
+  --bg-tertiary: #161922;
+  --bg-card: rgba(18, 20, 29, 0.75);
+  --bg-card-hover: rgba(25, 28, 40, 0.85);
+  --bg-glass: rgba(15, 17, 23, 0.65);
+  --bg-hover: rgba(129, 140, 248, 0.12);
+  --bg-input: rgba(255, 255, 255, 0.04);
+  --bg-overlay: rgba(0, 0, 0, 0.85);
 
-  /* ─── Text Colors ───────────────────────────── */
+  /* ─── Brand Colors (Dark Boost) ─────────────── */
+  --color-primary: #818cf8;
+  --color-primary-light: #c7d2fe;
+  --color-primary-dark: #6366f1;
+  --color-primary-glow: rgba(129, 140, 248, 0.32);
+
+  /* ─── Text Colors (Dark High-Contrast) ──────── */
   --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-  --text-inverse: #0f1123;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-inverse: #07080a;
 
-  /* ─── Borders ───────────────────────────────── */
+  /* ─── Borders (Hairline Precision) ──────────── */
   --border-color: rgba(255, 255, 255, 0.08);
-  --border-light: rgba(255, 255, 255, 0.15);
+  --border-light: rgba(255, 255, 255, 0.04);
+  --border-hairline: rgba(255, 255, 255, 0.08);
   --border-focus: var(--color-primary);
+
+  /* ─── Dark Shadows ──────────────────────────── */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 4px 12px -2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 12px 32px -4px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 24px 60px -12px rgba(0, 0, 0, 0.8);
 }
+

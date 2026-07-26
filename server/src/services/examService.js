@@ -49,41 +49,47 @@ class ExamService {
    * Checks enrollment, publish status, dates, and attempts.
    * Removes correct answers from questions.
    */
-  async getExamForStudent(examId, studentId) {
+  async getExamForStudent(examId, studentId, userRole = 'student') {
     const exam = await Exam.findById(examId);
     if (!exam) throw ApiError.notFound('Exam not found');
 
-    // Check if exam is published
-    if (!exam.isPublished) {
+    const Course = require('../models/Course');
+    const course = await Course.findById(exam.courseId);
+    const isCreatorOrAdmin = userRole === 'admin' || (course && course.creatorId.toString() === studentId.toString());
+
+    // Check if exam is published (allow creator/admin to preview)
+    if (!exam.isPublished && !isCreatorOrAdmin) {
       throw ApiError.badRequest('This exam is not yet published');
     }
 
-    // Check date constraints (only if dates exist)
-    const now = new Date();
-    if (exam.startDate && now < exam.startDate) {
-      throw ApiError.badRequest(`This exam starts on ${exam.startDate.toLocaleDateString()}`);
-    }
-    if (exam.endDate && now > exam.endDate) {
-      throw ApiError.badRequest('This exam has expired');
-    }
+    // Check date constraints (only if dates exist and user is regular student)
+    if (!isCreatorOrAdmin) {
+      const now = new Date();
+      if (exam.startDate && now < exam.startDate) {
+        throw ApiError.badRequest(`This exam starts on ${exam.startDate.toLocaleDateString()}`);
+      }
+      if (exam.endDate && now > exam.endDate) {
+        throw ApiError.badRequest('This exam has expired');
+      }
 
-    // Check enrollment
-    const Enrollment = require('../models/Enrollment');
-    const enrollment = await Enrollment.findOne({ studentId, courseId: exam.courseId });
-    if (!enrollment) {
-      throw ApiError.forbidden('You must be enrolled in this course to take this exam');
-    }
+      // Check enrollment
+      const Enrollment = require('../models/Enrollment');
+      const enrollment = await Enrollment.findOne({ studentId, courseId: exam.courseId });
+      if (!enrollment) {
+        throw ApiError.forbidden('You must be enrolled in this course to take this exam');
+      }
 
-    // Check max attempts before loading exam
-    const status = await this.getAttemptStatus(examId, studentId);
-    if (status.attemptsLeft <= 0) {
-      throw ApiError.badRequest('Maximum attempts reached for this exam', [], {
-        attemptsUsed: status.attemptsUsed,
-        totalAllowedAttempts: status.totalAllowedAttempts,
-        attemptsLeft: status.attemptsLeft,
-        canRequestAttempt: !status.hasPendingRequest,
-        requestStatus: status.requestStatus,
-      });
+      // Check max attempts before loading exam
+      const status = await this.getAttemptStatus(examId, studentId);
+      if (status.attemptsLeft <= 0) {
+        throw ApiError.badRequest('Maximum attempts reached for this exam', [], {
+          attemptsUsed: status.attemptsUsed,
+          totalAllowedAttempts: status.totalAllowedAttempts,
+          attemptsLeft: status.attemptsLeft,
+          canRequestAttempt: !status.hasPendingRequest,
+          requestStatus: status.requestStatus,
+        });
+      }
     }
 
     let questions = await Question.find({ examId }).sort({ order: 1 });
@@ -109,41 +115,47 @@ class ExamService {
   /**
    * Submit and auto-grade an exam.
    */
-  async submitExam(examId, studentId, courseId, answers, timeSpent) {
+  async submitExam(examId, studentId, courseId, answers, timeSpent, userRole = 'student') {
     const exam = await Exam.findById(examId);
     if (!exam) throw ApiError.notFound('Exam not found');
 
-    // Check if exam is published
-    if (!exam.isPublished) {
-      throw ApiError.badRequest('This exam is not yet published');
-    }
+    const Course = require('../models/Course');
+    const course = await Course.findById(exam.courseId);
+    const isCreatorOrAdmin = userRole === 'admin' || (course && course.creatorId.toString() === studentId.toString());
 
-    // Check date constraints (only if dates exist)
-    const now = new Date();
-    if (exam.startDate && now < exam.startDate) {
-      throw ApiError.badRequest(`This exam starts on ${exam.startDate.toLocaleDateString()}`);
-    }
-    if (exam.endDate && now > exam.endDate) {
-      throw ApiError.badRequest('This exam has expired');
-    }
+    if (!isCreatorOrAdmin) {
+      // Check if exam is published
+      if (!exam.isPublished) {
+        throw ApiError.badRequest('This exam is not yet published');
+      }
 
-    // Check enrollment
-    const Enrollment = require('../models/Enrollment');
-    const enrollment = await Enrollment.findOne({ studentId, courseId: exam.courseId });
-    if (!enrollment) {
-      throw ApiError.forbidden('You must be enrolled in this course to submit this exam');
-    }
+      // Check date constraints (only if dates exist)
+      const now = new Date();
+      if (exam.startDate && now < exam.startDate) {
+        throw ApiError.badRequest(`This exam starts on ${exam.startDate.toLocaleDateString()}`);
+      }
+      if (exam.endDate && now > exam.endDate) {
+        throw ApiError.badRequest('This exam has expired');
+      }
 
-    // Check max attempts
-    const status = await this.getAttemptStatus(examId, studentId);
-    if (status.attemptsLeft <= 0) {
-      throw ApiError.badRequest('Maximum attempts reached for this exam', [], {
-        attemptsUsed: status.attemptsUsed,
-        totalAllowedAttempts: status.totalAllowedAttempts,
-        attemptsLeft: status.attemptsLeft,
-        canRequestAttempt: !status.hasPendingRequest,
-        requestStatus: status.requestStatus,
-      });
+      // Check enrollment
+      const Enrollment = require('../models/Enrollment');
+      const enrollment = await Enrollment.findOne({ studentId, courseId: exam.courseId });
+      if (!enrollment) {
+        throw ApiError.forbidden('You must be enrolled in this course to submit this exam');
+      }
+
+      // Check max attempts
+      const status = await this.getAttemptStatus(examId, studentId);
+      if (status.attemptsLeft <= 0) {
+        throw ApiError.badRequest('Maximum attempts reached for this exam', [], {
+          attemptsUsed: status.attemptsUsed,
+          totalAllowedAttempts: status.totalAllowedAttempts,
+          attemptsLeft: status.attemptsLeft,
+          canRequestAttempt: !status.hasPendingRequest,
+          requestStatus: status.requestStatus,
+        });
+      }
     }
 
     // Fetch questions
@@ -245,6 +257,9 @@ class ExamService {
     const percentage = exam.totalMarks > 0 ? (score / exam.totalMarks) * 100 : 0;
     const isPassed = score >= exam.passingMarks;
 
+    const previousSubmissionsCount = await Submission.countDocuments({ studentId, examId, type: 'exam' });
+    const attemptNumber = previousSubmissionsCount + 1;
+
     const submission = await Submission.create({
       studentId,
       examId,
@@ -255,7 +270,7 @@ class ExamService {
       totalMarks: exam.totalMarks,
       percentage: Math.round(percentage * 100) / 100,
       isPassed,
-      attemptNumber: status.attemptsUsed + 1,
+      attemptNumber,
       timeSpent,
       submittedAt: new Date(),
       gradedAt: new Date(),

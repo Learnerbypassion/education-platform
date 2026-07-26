@@ -1,39 +1,167 @@
-.create-exam-page { padding-bottom: var(--space-3xl); }
+/* ─── Instructor Exam Creation Studio Styling ────────── */
+.create-exam-page {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 5rem 1.5rem;
+  position: relative;
+}
+
+.create-exam-header-banner {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 1.75rem;
+  padding: 2rem 2.5rem;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.03);
+}
+
+.dark .create-exam-header-banner {
+  background: rgba(10, 12, 20, 0.85);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+}
 
 .create-exam-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-2xl);
-  margin-top: var(--space-xl);
+  grid-template-columns: 1fr 1.1fr;
+  gap: 2.25rem;
+  margin-top: 2rem;
+  align-items: start;
 }
 
 .create-exam-form {
-  padding: var(--space-2xl);
+  padding: 2.25rem;
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
-  height: fit-content;
+  gap: 1.75rem;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 2rem;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.04);
+}
+
+.dark .create-exam-form {
+  background: rgba(10, 12, 20, 0.85);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
 }
 
 .create-exam-question-builder {
-  padding: var(--space-xl);
+  padding: 2.25rem;
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: 1.75rem;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 2rem;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.04);
+}
+
+.dark .create-exam-question-builder {
+  background: rgba(10, 12, 20, 0.85);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
 }
 
 .builder-options-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: 0.875rem;
 }
 
 .builder-option-row {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: 0.75rem;
 }
 
-@media (max-width: 900px) {
+.builder-option-row .option-letter-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+  font-weight: 850;
+  font-size: 0.8125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dark .builder-option-row .option-letter-badge {
+  background: rgba(165, 180, 252, 0.1);
+  color: #a5b4fc;
+}
+
+.builder-option-row .correct-toggle-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.5rem 0.875rem;
+  border-radius: 0.875rem;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: rgba(248, 250, 252, 0.8);
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #64748b;
+  cursor: pointer;
+  user-select: none;
+  transition: all 200ms ease;
+  flex-shrink: 0;
+}
+
+.dark .builder-option-row .correct-toggle-badge {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: #94a3b8;
+}
+
+.correct-toggle-badge.is-active {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35) !important;
+}
+
+html[data-theme='dark'] .correct-toggle-badge.is-active {
+  background: linear-gradient(135deg, #10b981, #047857) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4) !important;
+}
+
+.added-question-card {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: all 200ms ease;
+}
+
+.dark .added-question-card {
+  background: rgba(15, 18, 30, 0.7);
+  border-color: rgba(255, 255, 255, 0.07);
+}
+
+.added-question-card:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.04);
+}
+
+@media (max-width: 1024px) {
   .create-exam-layout { grid-template-columns: 1fr; }
+  .create-exam-header-banner { padding: 1.5rem; }
+  .create-exam-form, .create-exam-question-builder { padding: 1.75rem; }
 }

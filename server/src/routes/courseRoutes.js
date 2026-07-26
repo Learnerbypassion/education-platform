@@ -15,7 +15,7 @@ const reviewRouter = require('./reviewRoutes');
 router.use('/:courseId/reviews', reviewRouter);
 
 // Public / Optional Auth
-router.get('/', getCourses);
+router.get('/', optionalAuth, getCourses);
 
 // Instructor
 router.post('/', protect, authorize('instructor', 'admin'), uploadSingle('thumbnail'), validate(createCourseSchema), createCourse);

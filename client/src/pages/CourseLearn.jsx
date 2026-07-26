@@ -6,7 +6,21 @@ import { getExams, requestExamAttempt } from '../api/examApi';
 import { generateCertificate } from '../api/certificateApi';
 import Loader from '../components/common/Loader';
 import toast from 'react-hot-toast';
-import { HiOutlineBookOpen, HiOutlineChevronRight, HiOutlinePlay, HiOutlineDocumentText, HiOutlineQuestionMarkCircle, HiOutlineAcademicCap, HiOutlineMenu, HiOutlineX } from 'react-icons/hi';
+import { 
+  HiOutlineBookOpen, 
+  HiOutlineChevronRight, 
+  HiOutlineChevronDown, 
+  HiOutlinePlay, 
+  HiOutlineDocumentText, 
+  HiOutlineAcademicCap, 
+  HiOutlineMenu, 
+  HiOutlineX,
+  HiOutlineArrowLeft,
+  HiOutlineCloudDownload,
+  HiOutlineCheckCircle,
+  HiOutlineClipboardList,
+  HiOutlineSparkles
+} from 'react-icons/hi';
 import './CourseLearn.css';
 import DOMPurify from 'dompurify';
 
@@ -17,7 +31,6 @@ const CourseLearn = () => {
   const [exams, setExams] = useState([]);
   const [activeLesson, setActiveLesson] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [progress, setProgress] = useState([]);
   const [completedIds, setCompletedIds] = useState(new Set());
   const [submissions, setSubmissions] = useState([]);
   const [activeModule, setActiveModule] = useState(null);
@@ -54,8 +67,9 @@ const CourseLearn = () => {
       if (enrollmentObj) {
         setCompletedIds(new Set(enrollmentObj.completedLessons || []));
       }
-    } catch {
-      toast.error('Failed to load course contents');
+    } catch (err) {
+      console.error('Failed to load course contents:', err);
+      toast.error(`Failed to load course contents: ${err.message || 'Unknown Error'}`);
     } finally {
       setLoading(false);
     }
@@ -125,7 +139,7 @@ const CourseLearn = () => {
 
   const handleRequestAttempt = async (examId) => {
     const reason = window.prompt('Please enter a brief reason for requesting extra attempts:');
-    if (reason === null) return; // User clicked Cancel
+    if (reason === null) return;
     if (!reason.trim()) {
       toast.error('Reason is required to submit a request');
       return;
@@ -181,7 +195,7 @@ const CourseLearn = () => {
 
   const totalCourseLessons = course?.modules?.reduce((acc, mod) => acc + (mod.lessons?.length || 0), 0) || 0;
   const completedCourseLessons = course?.modules?.reduce((acc, mod) => acc + (mod.lessons?.filter(l => completedIds.has(l._id)).length || 0), 0) || 0;
-  const coursePercent = totalCourseLessons > 0 ? ((completedCourseLessons / totalCourseLessons) * 100).toFixed(2) : '0.00';
+  const coursePercent = totalCourseLessons > 0 ? ((completedCourseLessons / totalCourseLessons) * 100).toFixed(1) : '0.0';
 
   const allLessons = course?.modules?.reduce((acc, mod) => [...acc, ...(mod.lessons || [])], []) || [];
   const currentLessonIndex = activeLesson ? allLessons.findIndex(l => l._id === activeLesson._id) : -1;
@@ -206,22 +220,22 @@ const CourseLearn = () => {
     return urlToParse.startsWith('http') ? urlToParse : null;
   };
 
-  if (loading) return <div className="flex min-h-screen items-center justify-center"><Loader text="Entering classroom workspace..." /></div>;
+  if (loading) return <div className="flex min-h-screen items-center justify-center bg-[#06070c]"><Loader text="Entering classroom workspace..." /></div>;
   if (!course) return <div className="container" style={{ padding: '4rem 0' }}><h3>Workspace not found</h3></div>;
 
   return (
     <div className="classroom-page">
-      {/* Mobile sidebar toggle button */}
+      {/* Mobile sidebar outline toggle button */}
       <button
         className="classroom-mobile-toggle"
         onClick={() => setSidebarOpen(!sidebarOpen)}
         aria-label="Toggle course outline"
       >
         {sidebarOpen ? <HiOutlineX size={20} /> : <HiOutlineMenu size={20} />}
-        <span>{sidebarOpen ? 'Close' : 'Outline'}</span>
+        <span>{sidebarOpen ? 'Close Drawer' : 'Course Outline'}</span>
       </button>
 
-      {/* Mobile overlay */}
+      {/* Mobile drawer backdrop overlay */}
       <div
         className={`classroom-overlay ${sidebarOpen ? 'classroom-overlay-active' : ''}`}
         onClick={() => setSidebarOpen(false)}
@@ -231,10 +245,12 @@ const CourseLearn = () => {
         <div className="classroom-sidebar-banner">
           <div className="classroom-banner-header">
             <h4>{course.title}</h4>
-            <button className="classroom-search-icon" aria-label="Search">🔍</button>
           </div>
           <div className="classroom-banner-progress-wrapper">
-            <div className="classroom-banner-progress-text">{coursePercent}% completed</div>
+            <div className="classroom-banner-progress-text">
+              <span>Overall Progress</span>
+              <span>{coursePercent}%</span>
+            </div>
             <div className="classroom-banner-progress-bar">
               <div className="classroom-banner-progress-fill" style={{ width: `${coursePercent}%` }}></div>
             </div>
@@ -257,11 +273,13 @@ const CourseLearn = () => {
                     <span>{weekProgress}%</span>
                   </div>
                   <span className="classroom-week-title">Week {weekNum}</span>
-                  <span className="classroom-accordion-indicator">{isExpanded ? '▼' : '▶'}</span>
+                  <span className="classroom-accordion-indicator">
+                    {isExpanded ? <HiOutlineChevronDown size={14} /> : <HiOutlineChevronRight size={14} />}
+                  </span>
                 </button>
 
                 {isExpanded && (
-                  <div className="classroom-week-modules-sublist animate-slide-down">
+                  <div className="classroom-week-modules-sublist">
                     {weekModules.map((mod) => {
                       const modTotal = mod.lessons?.length || 0;
                       const modCompleted = mod.lessons?.filter(l => completedIds.has(l._id)).length || 0;
@@ -277,7 +295,9 @@ const CourseLearn = () => {
                             <span>{modProgress}%</span>
                           </div>
                           <span className="chapter-title">{mod.title}</span>
-                          <span className="classroom-play-icon-indicator">▶</span>
+                          <span className="classroom-accordion-indicator">
+                            <HiOutlineChevronRight size={12} />
+                          </span>
                         </button>
                       );
                     })}
@@ -289,12 +309,12 @@ const CourseLearn = () => {
           
           {(exams.length > 0 || assignments.length > 0) && (
             <>
-              <div className="classroom-sidebar-section-title" style={{ marginTop: '1.5rem' }}>ASSESSMENTS</div>
+              <div className="classroom-sidebar-section-title">ASSESSMENTS</div>
               <button
                 className={`classroom-chapter-btn ${viewingAssessments ? 'chapter-active' : ''}`}
                 onClick={handleSelectAssessments}
               >
-                <div className="classroom-progress-circle-small" style={{ background: '#5b6de0' }}>
+                <div className="classroom-progress-circle-small">
                   <span>📝</span>
                 </div>
                 <span className="chapter-title">Exams & Assignments</span>
@@ -305,10 +325,10 @@ const CourseLearn = () => {
 
         <div className="classroom-sidebar-footer">
           {certUrl ? (
-            <Link to={certUrl} className="btn btn-accent btn-lg w-full">View Certificate 🏆</Link>
+            <Link to={certUrl} className="btn-detail-primary text-center block w-full py-3 font-extrabold shadow-lg">View Certificate 🏆</Link>
           ) : (
-            <button onClick={handleGenerateCertificate} disabled={generatingCert} className="btn btn-primary btn-lg w-full">
-              {generatingCert ? 'Checking...' : 'Claim Certificate 🎓'}
+            <button onClick={handleGenerateCertificate} disabled={generatingCert} className="btn-detail-primary w-full py-3 font-extrabold shadow-lg">
+              {generatingCert ? 'Checking Eligibility...' : 'Claim Certificate 🎓'}
             </button>
           )}
         </div>
@@ -318,16 +338,14 @@ const CourseLearn = () => {
         {activeLesson ? (
           <div className="classroom-viewport animate-page-enter" key={activeLesson._id}>
             <div className="classroom-viewport-header-row">
-              <button className="classroom-back-to-chapter-btn" style={{ margin: 0 }} onClick={() => setActiveLesson(null)}>
-                ← Back to Outline
+              <button className="classroom-back-to-chapter-btn" onClick={() => setActiveLesson(null)}>
+                <HiOutlineArrowLeft size={18} /> Back to Chapter Outline
               </button>
               
               {prevLesson && (
-                <div className="classroom-prev-lesson-pill-container">
-                  <button className="classroom-prev-lesson-pill" onClick={() => handleLessonSelect(prevLesson)}>
-                    ▲ Lesson {currentLessonIndex}: {prevLesson.title}
-                  </button>
-                </div>
+                <button className="classroom-prev-lesson-pill" onClick={() => handleLessonSelect(prevLesson)}>
+                  ← Lesson {currentLessonIndex}: {prevLesson.title}
+                </button>
               )}
             </div>
 
@@ -348,20 +366,19 @@ const CourseLearn = () => {
                   </div>
                 ) : (
                   <div className="classroom-document-placeholder">
-                    <span>No video URL configured.</span>
+                    <span className="text-slate-400 dark:text-slate-500 font-bold text-sm">No video stream URL configured for this lesson.</span>
                   </div>
                 );
               })()
             ) : (
               <div className="classroom-document-placeholder">
-                <HiOutlineDocumentText size={48} />
-                <span>Text / Document Material Workspace</span>
+                <HiOutlineDocumentText size={56} className="text-indigo-500" />
+                <span className="text-slate-900 dark:text-white text-base font-extrabold">Document Material & Learning Content</span>
                 {activeLesson.attachments && activeLesson.attachments.length > 0 && (
-                  <div className="classroom-attachment-downloads mt-4">
-                    <strong>Attachments:</strong>
+                  <div className="classroom-attachment-downloads mt-2">
                     {activeLesson.attachments.map((file, fIdx) => (
-                      <a key={fIdx} href={file.url} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline mt-2 block">
-                        Download {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                      <a key={fIdx} href={file.url} target="_blank" rel="noopener noreferrer" className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl text-xs font-bold inline-flex items-center gap-2 shadow-md transition-all duration-300">
+                        <HiOutlineCloudDownload size={16} /> Download {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
                       </a>
                     ))}
                   </div>
@@ -370,10 +387,14 @@ const CourseLearn = () => {
             )}
             
             <div className="classroom-content-details">
-              {activeLesson.content && <div className="classroom-markdown-content" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(activeLesson.content) }} />}
+              {activeLesson.content && <div className="classroom-markdown-content mt-2" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(activeLesson.content) }} />}
               
               <div className="classroom-action-row">
-                <button onClick={handleMarkComplete} disabled={completedIds.has(activeLesson._id)} className={`btn ${completedIds.has(activeLesson._id) ? 'btn-outline' : 'btn-primary'} btn-lg`}>
+                <button onClick={handleMarkComplete} disabled={completedIds.has(activeLesson._id)} className={`px-6 py-3 rounded-xl font-extrabold text-sm transition-all duration-300 ${
+                  completedIds.has(activeLesson._id) 
+                    ? 'bg-slate-100 text-slate-400 dark:bg-white/5 dark:text-slate-500 border border-slate-200 dark:border-white/5 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 shadow-md active:scale-95'
+                }`}>
                   {completedIds.has(activeLesson._id) ? 'Completed ✓' : 'Mark as Complete'}
                 </button>
               </div>
@@ -383,7 +404,7 @@ const CourseLearn = () => {
           <div className="classroom-chapter-outline-view animate-page-enter">
             <div className="classroom-chapter-header">
               <h2>Course Assessments</h2>
-              <p>Practice tests, assessments, and coding projects</p>
+              <p>Practice tests, graded exams, and assignments for verification</p>
             </div>
             
             <div className="classroom-cards-list mt-8">
@@ -397,42 +418,42 @@ const CourseLearn = () => {
                       <div className="card-completed-badge">✓</div>
                     )}
                     <div className="material-card-left">
-                      <div className="material-card-icon-box" style={{ background: 'rgba(91, 109, 224, 0.1)', color: 'var(--color-primary)' }}>
+                      <div className="material-card-icon-box">
                         🏆
                       </div>
                     </div>
                     <div className="material-card-center">
                       <div className="material-meta">
-                        <span className="material-type-tag">Practice Exam</span>
+                        <span className="material-type-tag">Exam Assessment</span>
                         {examSubmission && <span className="material-score">Score: {examSubmission.score} / {examSubmission.totalMarks} ({examSubmission.percentage}%)</span>}
                       </div>
                       <h4 className="material-title">{ex.title}</h4>
                       <p className="material-desc">
                         Duration: {ex.duration} mins • Passing Score: {ex.passingMarks} / {ex.totalMarks}
-                        <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
+                        <span className="block text-[11px] text-slate-400 font-semibold mt-1">
                           Attempts: {ex.attemptsUsed ?? 0} / {ex.totalAllowedAttempts ?? ex.maxAttempts} used • {ex.attemptsLeft ?? ex.maxAttempts} left
                         </span>
                       </p>
                     </div>
-                    <div className="material-card-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+                    <div className="material-card-right flex flex-col items-end gap-2">
                       {hasAttemptsLeft ? (
-                        <Link to={`/exams/${ex._id}/take`} className="btn btn-primary btn-sm">
+                        <Link to={`/exams/${ex._id}/take`} className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl text-xs font-bold transition-all duration-300 shadow-md active:scale-95">
                           {ex.attemptsUsed > 0 ? 'Retake Exam' : 'Start Exam'}
                         </Link>
                       ) : (
                         <>
                           {ex.requestStatus === 'pending' ? (
-                            <span style={{ fontSize: '0.75rem', fontWeight: '600', padding: '4px 10px', borderRadius: '9999px', background: '#fef3c7', color: '#d97706', border: '1px solid #fde68a' }}>
+                            <span className="px-3 py-1 rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/20 text-xs font-bold">
                               Request Pending
                             </span>
                           ) : ex.requestStatus === 'rejected' ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                              <span style={{ fontSize: '0.75rem', fontWeight: '600', padding: '4px 10px', borderRadius: '9999px', background: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca' }}>
+                            <div className="flex flex-col items-end gap-1.5">
+                              <span className="px-3 py-1 rounded-lg bg-rose-500/10 text-rose-500 border border-rose-500/20 text-xs font-bold">
                                 Request Rejected
                               </span>
                               <button
                                 onClick={() => handleRequestAttempt(ex._id)}
-                                style={{ fontSize: '0.7rem', color: '#4f46e5', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+                                className="text-[11px] font-bold text-indigo-500 hover:text-indigo-400 underline"
                               >
                                 Re-request Attempts
                               </button>
@@ -440,7 +461,7 @@ const CourseLearn = () => {
                           ) : (
                             <button
                               onClick={() => handleRequestAttempt(ex._id)}
-                              className="btn btn-outline btn-sm"
+                              className="px-4 py-2 border border-indigo-500/30 text-indigo-500 hover:bg-indigo-500/10 rounded-xl text-xs font-bold transition-all"
                             >
                               Request Extra Attempts
                             </button>
@@ -460,7 +481,7 @@ const CourseLearn = () => {
                       <div className="card-completed-badge">✓</div>
                     )}
                     <div className="material-card-left">
-                      <div className="material-card-icon-box" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
+                      <div className="material-card-icon-box">
                         📝
                       </div>
                     </div>
@@ -472,7 +493,7 @@ const CourseLearn = () => {
                       <p className="material-desc">Passing Marks: {ass.passingMarks} / {ass.totalMarks}</p>
                     </div>
                     <div className="material-card-right">
-                      <Link to={`/assignments/${ass._id}/view`} className="btn btn-outline btn-sm">
+                      <Link to={`/assignments/${ass._id}/view`} className="px-5 py-2.5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl text-xs font-bold text-center block transition-all duration-300">
                         {assSubmission ? 'View Submission' : 'Submit Assignment'}
                       </Link>
                     </div>
@@ -485,10 +506,10 @@ const CourseLearn = () => {
           <div className="classroom-chapter-outline-view animate-page-enter">
             <div className="classroom-chapter-header">
               <h2>{activeModule.title}</h2>
-              <p>Section Module Course Outline Workspace</p>
+              <p>Module Outline & Learning Materials</p>
             </div>
 
-            <div className="classroom-tabs-bar mt-6">
+            <div className="classroom-tabs-bar">
               {['All', 'Lectures', 'DPPs', 'Notes', 'DPP PDFs', 'DPP Videos'].map((tabName) => (
                 <button
                   key={tabName}
@@ -502,7 +523,7 @@ const CourseLearn = () => {
 
             <div className="classroom-cards-list mt-8">
               {getFilteredLessons().length === 0 ? (
-                <div className="classroom-empty-materials text-center py-12 text-slate-400">
+                <div className="classroom-empty-materials text-center py-20 text-slate-400 dark:text-slate-500 font-medium">
                   <p>No materials available in this section under "{activeTab}"</p>
                 </div>
               ) : (
@@ -540,12 +561,12 @@ const CourseLearn = () => {
                       
                       <div className="material-card-right flex flex-col gap-2">
                         {isVideoType ? (
-                          <button className="btn btn-primary btn-sm" onClick={() => handleLessonSelect(les)}>
-                            Watch
+                          <button className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl text-xs font-bold transition-all duration-300 shadow-md" onClick={() => handleLessonSelect(les)}>
+                            Watch Lesson
                           </button>
                         ) : (
-                          <button className="btn btn-primary btn-sm" onClick={() => handleLessonSelect(les)}>
-                            Notes & more
+                          <button className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl text-xs font-bold transition-all duration-300 shadow-md" onClick={() => handleLessonSelect(les)}>
+                            Open Notes
                           </button>
                         )}
 
@@ -554,10 +575,10 @@ const CourseLearn = () => {
                             href={les.attachments[0].url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="btn btn-outline btn-sm"
+                            className="px-4 py-2 border border-slate-200/80 text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/[0.04] rounded-xl text-xs font-bold text-center transition-all duration-300"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            PDF Document
+                            PDF Attachment
                           </a>
                         )}
                       </div>
@@ -569,7 +590,7 @@ const CourseLearn = () => {
           </div>
         ) : (
           <div className="classroom-empty">
-            <HiOutlineBookOpen size={48} />
+            <HiOutlineBookOpen size={56} className="text-indigo-500 animate-bounce" />
             <p>Select a chapter from the outline drawer to begin learning</p>
           </div>
         )}
