@@ -1,39 +1,214 @@
-.explore-page { padding: var(--space-2xl) 0; }
+/* ══════════════════════════════════════════════════
+   EduPlatform — Premium Stripe/Linear Course Explore
+   ══════════════════════════════════════════════════ */
 
-.explore-header { margin-bottom: var(--space-2xl); }
-
-.explore-filters {
-  display: flex;
-  gap: var(--space-md);
-  padding: var(--space-lg);
-  margin-bottom: var(--space-2xl);
+.explore-badge-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  color: var(--color-primary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.25rem 0.875rem;
+  border-radius: 9999px;
+  backdrop-filter: blur(12px);
 }
 
-.explore-search {
-  flex: 1;
+html[data-theme='dark'] .explore-badge-top {
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: var(--color-primary-light);
+}
+
+/* Premium Filter Control Bar */
+.explore-filter-bar {
+  position: relative;
+  z-index: 100 !important;
+  overflow: visible !important;
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(99, 102, 241, 0.12);
+  padding: 1.25rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.03);
+  transition: border-color 400ms ease, box-shadow 400ms ease;
+}
+
+html[data-theme='dark'] .explore-filter-bar {
+  background: rgba(9, 9, 14, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 10px 40px -15px rgba(0, 0, 0, 0.4);
+}
+
+.explore-filter-bar:hover {
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
+html[data-theme='dark'] .explore-filter-bar:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Search input container & input field */
+.explore-search-wrapper {
   position: relative;
 }
-.explore-search-icon {
+
+.explore-search-input {
+  width: 100%;
+  height: 3rem;
+  padding-left: 2.75rem;
+  padding-right: 1.25rem;
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0.875rem;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 350ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html[data-theme='dark'] .explore-search-input {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.explore-search-input::placeholder {
+  color: var(--text-muted);
+  font-weight: 450;
+}
+
+.explore-search-input:focus {
+  outline: none;
+  background: #ffffff;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+html[data-theme='dark'] .explore-search-input:focus {
+  background: rgba(9, 9, 14, 0.8);
+  border-color: var(--color-primary-light);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.explore-search-icon-pos {
+  pointer-events: none;
   position: absolute;
-  left: 0.85rem;
+  left: 1rem;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-muted);
-  font-size: 1.1rem;
+  transition: color 350ms ease;
 }
-.explore-search .input-field { padding-left: 2.6rem; }
-.explore-filters select { max-width: 200px; }
 
-.explore-grid { margin-bottom: var(--space-2xl); }
+.explore-search-input:focus + .explore-search-icon-pos {
+  color: var(--color-primary);
+}
 
-.explore-pagination {
+html[data-theme='dark'] .explore-search-input:focus + .explore-search-icon-pos {
+  color: var(--color-primary-light);
+}
+
+/* Dropdown Filters */
+.explore-select-filter {
+  width: 100%;
+  height: 3rem;
+  padding: 0 2.5rem 0 1.25rem;
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0.875rem;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  transition: all 350ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.explore-select-filter::-ms-expand {
+  display: none;
+}
+
+html[data-theme='dark'] .explore-select-filter {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.explore-select-filter:focus {
+  outline: none;
+  background-color: #ffffff;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+html[data-theme='dark'] .explore-select-filter:focus {
+  background-color: rgba(9, 9, 14, 0.8);
+  border-color: var(--color-primary-light);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+/* Premium Pagination Capsule Buttons */
+.explore-pagination-capsule {
   display: flex;
+  align-items: center;
   justify-content: center;
-  gap: var(--space-sm);
-  margin-top: var(--space-xl);
+  gap: 0.5rem;
 }
 
-@media (max-width: 768px) {
-  .explore-filters { flex-direction: column; }
-  .explore-filters select { max-width: 100%; }
+.pagination-btn-premium {
+  height: 2.5rem;
+  min-width: 2.5rem;
+  padding: 0 0.875rem;
+  font-size: 0.85rem;
+  font-weight: 650;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 350ms cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+}
+
+.pagination-btn-premium.active {
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  color: #ffffff;
+  border: 1px solid transparent;
+  box-shadow: 0 8px 20px -4px rgba(99, 102, 241, 0.4);
+}
+
+html[data-theme='dark'] .pagination-btn-premium.active {
+  background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+  box-shadow: 0 8px 25px -4px rgba(99, 102, 241, 0.6);
+}
+
+.pagination-btn-premium.inactive {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  color: var(--text-secondary);
+}
+
+html[data-theme='dark'] .pagination-btn-premium.inactive {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+}
+
+.pagination-btn-premium.inactive:hover {
+  background: rgba(99, 102, 241, 0.06);
+  border-color: rgba(99, 102, 241, 0.2);
+  color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+html[data-theme='dark'] .pagination-btn-premium.inactive:hover {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: var(--color-primary-light);
 }

@@ -23,7 +23,8 @@ const getCourses = asyncHandler(async (req, res) => {
   const result = await courseService.getCourses(
     { category, difficulty, search },
     parseInt(page) || 1,
-    parseInt(limit) || 12
+    parseInt(limit) || 12,
+    req.user
   );
   ApiResponse.paginated(res, 'Courses fetched', result.courses, result.pagination);
 });

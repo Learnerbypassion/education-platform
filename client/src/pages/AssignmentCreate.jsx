@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { createAssignment, updateAssignment, getAssignment } from '../api/assignmentApi';
 import { getCourseById } from '../api/courseApi';
 import toast from 'react-hot-toast';
+import CustomSelect from '../components/common/CustomSelect';
 import './ExamCreate.css'; // Reuse exam create styles for layout
 
 const AssignmentCreate = () => {
@@ -166,35 +167,33 @@ const AssignmentCreate = () => {
           <div className="grid grid-2">
             <div className="input-group">
               <label htmlFor="assign-type">Assignment Type</label>
-              <select
+              <CustomSelect
                 id="assign-type"
-                className="input-field"
+                name="type"
                 value={form.type}
                 onChange={(e) => setForm({ ...form, type: e.target.value })}
-                required
-              >
-                <option value="file-submission">File Submission</option>
-                <option value="coding">Coding (ZIP + Repository)</option>
-                <option value="github-project">GitHub Project</option>
-                <option value="mcq">MCQ Quiz Sheet</option>
-              </select>
+                options={[
+                  { value: 'file-submission', label: 'File Submission' },
+                  { value: 'coding', label: 'Coding (ZIP + Repository)' },
+                  { value: 'github-project', label: 'GitHub Project' },
+                  { value: 'mcq', label: 'MCQ Quiz Sheet' },
+                ]}
+              />
             </div>
 
             <div className="input-group">
               <label htmlFor="assign-module">Associated Module (Optional)</label>
-              <select
+              <CustomSelect
                 id="assign-module"
-                className="input-field"
+                name="moduleId"
                 value={form.moduleId}
                 onChange={(e) => setForm({ ...form, moduleId: e.target.value })}
-              >
-                <option value="">None</option>
-                {modules.map((mod) => (
-                  <option key={mod._id} value={mod._id}>
-                    {mod.title}
-                  </option>
-                ))}
-              </select>
+                options={[
+                  { value: '', label: 'None' },
+                  ...modules.map((mod) => ({ value: mod._id, label: mod.title })),
+                ]}
+                placeholder="None"
+              />
             </div>
           </div>
 

@@ -41,13 +41,13 @@ const Sidebar = () => {
     <>
       {/* Overlay with fade transition */}
       <div
-        className={`fixed inset-0 z-20 bg-slate-950/40 backdrop-blur-sm lg:hidden transition-opacity duration-300 ${sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        className={`fixed inset-0 z-20 bg-slate-950/20 backdrop-blur-sm lg:hidden transition-opacity duration-300 ${sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
         onClick={close}
       />
       <aside
         className={`
-          fixed left-0 top-[72px] z-50 h-[calc(100vh-72px)] w-72 border-r border-slate-200/70 bg-white/95 p-4 backdrop-blur-xl transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] dark:border-slate-800 dark:bg-slate-950/95
-          lg:sticky lg:top-[96px] lg:h-[calc(100vh-120px)] lg:rounded-3xl lg:border lg:bg-white lg:dark:bg-slate-900/70
+          fixed left-0 top-[72px] z-50 h-[calc(100vh-72px)] w-72 border-r border-slate-200/50 bg-white/60 p-4 backdrop-blur-xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] dark:border-white/[0.04] dark:bg-slate-950/40
+          lg:sticky lg:top-[96px] lg:h-[calc(100vh-120px)] lg:rounded-3xl lg:border lg:bg-white/40 lg:dark:bg-slate-900/30 lg:shadow-sm
           ${sidebarOpen 
             ? 'translate-x-0 lg:w-72 lg:opacity-100 lg:px-4 lg:ml-0' 
             : '-translate-x-full lg:translate-x-0 lg:w-0 lg:opacity-0 lg:overflow-hidden lg:px-0 lg:border-none lg:-ml-6'
@@ -56,30 +56,35 @@ const Sidebar = () => {
         id="main-sidebar"
       >
         <div className="w-[254px] lg:w-64">
-          <div className="mb-4 flex items-center justify-between lg:hidden">
-            <span className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Navigation</span>
-            <button className="rounded-2xl p-2 text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800" onClick={close}>
+          <div className="mb-5 flex items-center justify-between lg:hidden">
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Navigation</span>
+            <button className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-white/[0.04] transition-colors" onClick={close}>
               <HiOutlineX size={18} />
             </button>
           </div>
-          <nav className="space-y-1">
-          {links.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              className={({ isActive }) =>
-                `flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isActive ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'}`
-              }
-              onClick={close}
-            >
-              <span className="text-base">{link.icon}</span>
-              <span>{link.label}</span>
-            </NavLink>
-          ))}
-        </nav>
-        <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600 transition hover:border-brand-300 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-300">
-            <NavLink to="/verify" className="flex items-center gap-3" onClick={close}>
-              <HiOutlineDocumentText />
+          <nav className="space-y-1.5">
+            {links.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 ${
+                    isActive 
+                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/25' 
+                      : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-900/80 dark:hover:text-white'
+                  }`
+                }
+                onClick={close}
+              >
+                <span className="text-lg">{link.icon}</span>
+                <span>{link.label}</span>
+              </NavLink>
+            ))}
+          </nav>
+          
+          <div className="mt-6 rounded-xl border border-slate-200/90 bg-white/70 p-4 text-sm font-bold text-slate-700 transition-all duration-200 hover:border-indigo-400 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-300 shadow-sm backdrop-blur-md">
+            <NavLink to="/verify" className="flex items-center gap-3 text-slate-700 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-indigo-400 transition-colors" onClick={close}>
+              <HiOutlineDocumentText size={18} className="text-indigo-500" />
               <span>Verify Certificate</span>
             </NavLink>
           </div>

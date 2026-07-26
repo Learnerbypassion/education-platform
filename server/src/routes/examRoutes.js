@@ -16,11 +16,11 @@ router.post('/', protect, authorize('instructor', 'admin'), checkCourseOwnership
 router.get('/instructor/attempt-requests', protect, authorize('instructor', 'admin'), getInstructorAttemptRequests);
 router.patch('/attempt-requests/:requestId', protect, authorize('instructor', 'admin'), updateAttemptRequestStatus);
 
-// Students
-router.post('/:id/request-attempt', protect, authorize('student'), requestAttempt);
-router.get('/:id/take', protect, authorize('student'), takeExam);
-router.post('/:id/submit', protect, authorize('student'), validate(submitExamSchema), submitExam);
-router.get('/:id/results', protect, authorize('student'), getExamResults);
+// Students, Instructors & Admins
+router.post('/:id/request-attempt', protect, authorize('student', 'instructor', 'admin'), requestAttempt);
+router.get('/:id/take', protect, authorize('student', 'instructor', 'admin'), takeExam);
+router.post('/:id/submit', protect, authorize('student', 'instructor', 'admin'), validate(submitExamSchema), submitExam);
+router.get('/:id/results', protect, authorize('student', 'instructor', 'admin'), getExamResults);
 
 // General & Shared
 router.get('/course/:courseId', protect, getExams);
