@@ -4,20 +4,19 @@ import { useDispatch } from 'react-redux';
 import { useAuth } from '../../hooks/useAuth';
 import { logout } from '../../store/slices/authSlice';
 import { toggleSidebar } from '../../store/slices/uiSlice';
-import { HiOutlineMenu, HiOutlineBell, HiOutlineSearch, HiMoon, HiSun, HiOutlineX } from 'react-icons/hi';
-import { FaGraduationCap } from 'react-icons/fa';
+import { HiOutlineMenu, HiOutlineBell, HiOutlineSearch, HiMoon, HiSun } from 'react-icons/hi';
 import { getInitials } from '../../utils/helpers';
 import { useTheme } from '../../context/ThemeContext';
 import BrandLogo from './BrandLogo';
+import { getNotifications, markAsRead, markAllAsRead } from '../../api/notificationApi';
 import './Navbar.css';
 
-const Navbar = ({ showSidebarToggle = false }) => {
+const Navbar = () => {
   const { user, isAuthenticated } = useAuth();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Notification state
   const [notifications, setNotifications] = useState([]);
@@ -37,11 +36,10 @@ const Navbar = ({ showSidebarToggle = false }) => {
         const res = await getNotifications();
         setNotifications(res.data.data?.notifications || []);
       } catch {
-        // Silently fail — bell icon just won't show a count
+        // Silently fail
       }
     };
     fetchNotifications();
-    // Poll every 60 seconds
     const interval = setInterval(fetchNotifications, 60000);
     return () => clearInterval(interval);
   }, [isAuthenticated]);
@@ -100,15 +98,14 @@ const Navbar = ({ showSidebarToggle = false }) => {
     <nav className="navbar" id="main-navbar">
       <div className="navbar-inner">
         <div className="navbar-left">
-          {isAuthenticated && showSidebarToggle && (
-            <button
-              className="navbar-sidebar-toggle-btn"
-              onClick={() => dispatch(toggleSidebar())}
-              aria-label="Toggle sidebar"
-            >
-              <HiOutlineMenu size={20} />
-            </button>
-          )}
+          <button
+            className="navbar-sidebar-toggle-btn cursor-pointer"
+            onClick={() => dispatch(toggleSidebar())}
+            aria-label="Toggle Navigation Sidebar"
+            title="Navigation Sidebar"
+          >
+            <HiOutlineMenu size={20} />
+          </button>
           <BrandLogo size="md" />
         </div>
 

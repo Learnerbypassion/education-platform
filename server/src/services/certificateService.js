@@ -23,6 +23,24 @@ class CertificateService {
     // Check if certificate already exists
     const existing = await Certificate.findOne({ studentId, courseId });
     if (existing) {
+      // Regenerate PDF to ensure disk file always has the latest design template
+      try {
+        const verifyUrl = `${config.clientUrl}/verify/${existing.certificateId}`;
+        const qrCodeBuffer = await generateQRBuffer(verifyUrl);
+        const pdfUrl = await this.generatePDF({
+          certificateId: existing.certificateId,
+          studentName: existing.studentName,
+          courseName: existing.courseName,
+          instructorName: existing.instructorName,
+          completionDate: new Date(existing.completionDate),
+          grade: existing.grade,
+          qrCodeBuffer,
+        });
+        existing.pdfUrl = pdfUrl;
+        await existing.save();
+      } catch (err) {
+        console.error('Failed to regenerate existing certificate PDF:', err);
+      }
       return existing;
     }
 
@@ -172,49 +190,64 @@ class CertificateService {
 
       const filename = `${certificateId}.pdf`;
       const filepath = path.join(uploadsDir, filename);
-      const doc = new PDFDocument({ layout: 'landscape', size: 'A4', margin: 50 });
+      const doc = new PDFDocument({ layout: 'landscape', size: 'A4', margin: 40 });
 
       const stream = fs.createWriteStream(filepath);
       doc.pipe(stream);
 
-      // Border
-      doc.rect(20, 20, doc.page.width - 40, doc.page.height - 40).stroke('#1a1a2e');
-      doc.rect(30, 30, doc.page.width - 60, doc.page.height - 60).stroke('#e94560');
+      // Canvas background: Pure White
+      doc.rect(0, 0, doc.page.width, doc.page.height).fill('#ffffff');
 
-      // Header
-      doc.fontSize(16).fillColor('#666').text('EDUPLATFORM', 0, 60, { align: 'center' });
-      doc.moveDown(0.5);
-      doc.fontSize(36).fillColor('#1a1a2e').text('Certificate of Completion', 0, 90, { align: 'center' });
+      // Outer Gold Frame
+      doc.rect(20, 20, doc.page.width - 40, doc.page.height - 40).lineWidth(3).stroke('#d4af37');
+      // Inner Navy Frame
+      doc.rect(28, 28, doc.page.width - 56, doc.page.height - 56).lineWidth(1).stroke('#1e293b');
 
-      // Decorative line
-      doc.moveTo(200, 140).lineTo(doc.page.width - 200, 140).stroke('#e94560');
+      // Institution Header
+      doc.fontSize(13).font('Helvetica-Bold').fillColor('#b8860b').text('EDUPLATFORM ACADEMY OF TECHNOLOGY', 0, 55, { align: 'center' });
+      doc.fontSize(9).font('Helvetica').fillColor('#64748b').text('OFFICIAL ACCREDITED ACADEMIC CREDENTIAL', 0, 72, { align: 'center' });
 
-      // Body
-      doc.moveDown(2);
-      doc.fontSize(14).fillColor('#444').text('This is to certify that', 0, 170, { align: 'center' });
-      doc.moveDown(0.5);
-      doc.fontSize(28).fillColor('#1a1a2e').text(studentName, 0, 200, { align: 'center' });
-      doc.moveDown(0.5);
-      doc.fontSize(14).fillColor('#444').text('has successfully completed the course', 0, 245, { align: 'center' });
-      doc.moveDown(0.5);
-      doc.fontSize(22).fillColor('#e94560').text(`"${courseName}"`, 0, 275, { align: 'center' });
-      doc.moveDown(1);
-      doc.fontSize(12).fillColor('#666').text(`Grade: ${grade}`, 0, 320, { align: 'center' });
+      // Title
+      doc.fontSize(32).font('Times-Bold').fillColor('#0f172a').text('Certificate of Completion', 0, 100, { align: 'center' });
 
-      // Footer details
+      // Gold Accent Divider Line
+      doc.moveTo(doc.page.width / 2 - 120, 140).lineTo(doc.page.width / 2 + 120, 140).lineWidth(1.5).stroke('#d4af37');
+
+      // Body preamble
+      doc.fontSize(12).font('Helvetica').fillColor('#475569').text('THIS IS TO CERTIFY THAT', 0, 165, { align: 'center' });
+      
+      // Recipient Name
+      doc.fontSize(28).font('Times-BoldItalic').fillColor('#1e1b4b').text(studentName, 0, 190, { align: 'center' });
+      
+      // Body statement
+      doc.fontSize(12).font('Helvetica').fillColor('#475569').text('has successfully completed the coursework and examination requirements for', 0, 235, { align: 'center' });
+      
+      // Course Name
+      doc.fontSize(20).font('Times-Bold').fillColor('#0f172a').text(`"${courseName}"`, 0, 260, { align: 'center' });
+      
+      // Performance Grade
+      doc.fontSize(11).font('Helvetica-Bold').fillColor('#15803d').text(`Standing Grade: ${grade}`, 0, 295, { align: 'center' });
+
+      // Date Format
       const dateStr = completionDate.toLocaleDateString('en-US', {
         year: 'numeric', month: 'long', day: 'numeric',
       });
 
-      doc.fontSize(11).fillColor('#444');
-      doc.text(`Date: ${dateStr}`, 100, doc.page.height - 130);
-      doc.text(`Instructor: ${instructorName}`, 100, doc.page.height - 110);
-      doc.text(`Certificate ID: ${certificateId}`, 100, doc.page.height - 90);
+      // Signature Column Left
+      doc.moveTo(90, doc.page.height - 110).lineTo(250, doc.page.height - 110).lineWidth(1).stroke('#94a3b8');
+      doc.fontSize(12).font('Times-Italic').fillColor('#0f172a').text(instructorName, 90, doc.page.height - 125, { width: 160, align: 'center' });
+      doc.fontSize(9).font('Helvetica-Bold').fillColor('#64748b').text('FACULTY CHAIR & INSTRUCTOR', 90, doc.page.height - 100, { width: 160, align: 'center' });
 
-      // QR Code
+      // Date Column Middle
+      doc.moveTo(320, doc.page.height - 110).lineTo(480, doc.page.height - 110).lineWidth(1).stroke('#94a3b8');
+      doc.fontSize(11).font('Helvetica').fillColor('#0f172a').text(dateStr, 320, doc.page.height - 125, { width: 160, align: 'center' });
+      doc.fontSize(9).font('Helvetica-Bold').fillColor('#64748b').text('DATE OF ISSUANCE', 320, doc.page.height - 100, { width: 160, align: 'center' });
+
+      // QR Code Right
       if (qrCodeBuffer) {
-        doc.image(qrCodeBuffer, doc.page.width - 180, doc.page.height - 160, { width: 100 });
+        doc.image(qrCodeBuffer, doc.page.width - 165, doc.page.height - 150, { width: 85 });
       }
+      doc.fontSize(8).font('Helvetica-Bold').fillColor('#4338ca').text(`ID: ${certificateId}`, doc.page.width - 195, doc.page.height - 54, { width: 145, align: 'center' });
 
       doc.end();
 
