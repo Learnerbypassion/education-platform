@@ -12,9 +12,10 @@ import {
   HiOutlinePrinter,
   HiOutlineShare,
   HiOutlineCheckCircle,
-  HiOutlineSparkles
+  HiOutlineSparkles,
+  HiOutlineDownload
 } from 'react-icons/hi';
-import { formatDate } from '../utils/helpers';
+import { formatDate, getMediaUrl } from '../utils/helpers';
 import './VerifyCertificate.css';
 
 const VerifyCertificate = () => {
@@ -163,7 +164,34 @@ const VerifyCertificate = () => {
                   </span>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex gap-3 flex-wrap">
+                  {result.certificate.pdfUrl && (
+                    <button 
+                      type="button" 
+                      className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold flex items-center gap-2 transition-all shadow-md cursor-pointer"
+                      onClick={async () => {
+                        try {
+                          const fullUrl = getMediaUrl(result.certificate.pdfUrl);
+                          const res = await fetch(fullUrl);
+                          if (!res.ok) throw new Error('Download failed');
+                          const blob = await res.blob();
+                          const blobUrl = window.URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = blobUrl;
+                          a.download = `Certificate_${result.certificate.certificateId}.pdf`;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          window.URL.revokeObjectURL(blobUrl);
+                          toast.success('Certificate PDF downloaded!');
+                        } catch {
+                          window.open(getMediaUrl(result.certificate.pdfUrl), '_blank');
+                        }
+                      }}
+                    >
+                      <HiOutlineDownload size={16} /> Download PDF
+                    </button>
+                  )}
                   <button 
                     type="button" 
                     className="px-5 py-2.5 rounded-xl border-2 border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 text-xs font-extrabold hover:bg-indigo-50 dark:hover:bg-indigo-500/20 flex items-center gap-2 transition-all shadow-sm cursor-pointer"

@@ -93,3 +93,14 @@ export const getCourseThumbnail = (course) => {
   return 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80';
 };
 
+export const getMediaUrl = (urlPath) => {
+  if (!urlPath) return '';
+  if (urlPath.startsWith('http://') || urlPath.startsWith('https://')) {
+    return urlPath;
+  }
+  const apiURL = import.meta.env.VITE_API_URL || '';
+  const baseURL = apiURL.replace(/\/api\/?$/, '').replace(/\/$/, '') || 'http://localhost:5000';
+  const cleanPath = urlPath.startsWith('/') ? urlPath : `/${urlPath}`;
+  return `${baseURL}${cleanPath}`;
+};
+

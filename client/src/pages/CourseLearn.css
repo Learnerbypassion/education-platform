@@ -498,7 +498,9 @@
   box-shadow: 0 35px 80px -15px rgba(0, 0, 0, 0.7), 0 0 50px rgba(99, 102, 241, 0.2);
 }
 
-.classroom-player-wrapper iframe {
+.classroom-player-wrapper iframe,
+.classroom-player-wrapper .yt-player-container,
+.classroom-player-wrapper .yt-player-container iframe {
   position: absolute;
   top: 0;
   left: 0;

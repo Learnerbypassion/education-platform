@@ -23,7 +23,7 @@ const BrandLogo = ({ size = 'md', showText = true, variant = 'auto', className =
     : 'text-slate-900 dark:text-white';
 
   return (
-    <Link to={isAuthenticated ? "/dashboard" : "/"} className={`inline-flex items-center gap-2.5 group cursor-pointer select-none no-underline ${className}`}>
+    <Link to="/" className={`inline-flex items-center gap-2.5 group cursor-pointer select-none no-underline ${className}`}>
       {/* Modern SaaS Geometric Icon Badge */}
       <div className={`relative flex items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 p-[1.5px] shadow-md shadow-indigo-500/25 group-hover:shadow-indigo-500/40 group-hover:scale-105 transition-all duration-300 ${iconSizes[size]}`}>
         <div className="w-full h-full bg-slate-900/20 dark:bg-slate-950/40 rounded-[10px] backdrop-blur-sm flex items-center justify-center p-1.5">

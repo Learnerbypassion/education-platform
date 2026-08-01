@@ -47,6 +47,27 @@ const getCertificate = asyncHandler(async (req, res) => {
     throw ApiError.forbidden('You are not authorized to access this certificate');
   }
 
+  // Refresh PDF file on disk to guarantee it matches current white diploma template
+  try {
+    const config = require('../config/env');
+    const { generateQRBuffer } = require('../utils/qrGenerator');
+    const verifyUrl = `${config.clientUrl}/verify/${certificate.certificateId}`;
+    const qrCodeBuffer = await generateQRBuffer(verifyUrl);
+    const pdfUrl = await certificateService.generatePDF({
+      certificateId: certificate.certificateId,
+      studentName: certificate.studentName,
+      courseName: certificate.courseName,
+      instructorName: certificate.instructorName,
+      completionDate: new Date(certificate.completionDate),
+      grade: certificate.grade,
+      qrCodeBuffer,
+    });
+    certificate.pdfUrl = pdfUrl;
+    await certificate.save();
+  } catch (err) {
+    console.error('Failed to sync certificate PDF:', err);
+  }
+
   ApiResponse.success(res, 'Certificate details', certificate);
 });
 

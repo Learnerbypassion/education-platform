@@ -144,12 +144,6 @@ const faqItems = [
 ];
 
 const Home = () => {
-  const { isAuthenticated } = useAuth();
-
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
   const [activeTab, setActiveTab] = useState('student');
   const [heroTab, setHeroTab] = useState('studentView');
   const [openFaq, setOpenFaq] = useState(null);
