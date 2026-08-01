@@ -2,6 +2,8 @@ const asyncHandler = require('../utils/asyncHandler');
 const ApiResponse = require('../utils/ApiResponse');
 const ApiError = require('../utils/ApiError');
 const Lesson = require('../models/Lesson');
+const Module = require('../models/Module');
+const Course = require('../models/Course');
 const Progress = require('../models/Progress');
 const Enrollment = require('../models/Enrollment');
 const { parseVideoUrl } = require('../utils/videoParser');
@@ -11,6 +13,16 @@ const sanitizeLessonContent = require('../utils/sanitizeLessonContent');
 // @route   POST /api/lessons/:moduleId
 // @access  Private/Instructor
 const createLesson = asyncHandler(async (req, res) => {
+  const mod = await Module.findById(req.params.moduleId);
+  if (!mod) throw ApiError.notFound('Module not found');
+
+  const course = await Course.findById(mod.courseId);
+  if (!course) throw ApiError.notFound('Course not found');
+
+  if (course.creatorId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    throw ApiError.forbidden('Not authorized to add lessons to this course');
+  }
+
   const count = await Lesson.countDocuments({ moduleId: req.params.moduleId });
 
   const lessonData = {
@@ -86,6 +98,16 @@ const getLessons = asyncHandler(async (req, res) => {
 // @route   PUT /api/lessons/:id
 // @access  Private/Instructor
 const updateLesson = asyncHandler(async (req, res) => {
+  const lesson = await Lesson.findById(req.params.id);
+  if (!lesson) throw ApiError.notFound('Lesson not found');
+
+  const course = await Course.findById(lesson.courseId);
+  if (!course) throw ApiError.notFound('Associated course not found');
+
+  if (course.creatorId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    throw ApiError.forbidden('Not authorized to update lessons in this course');
+  }
+
   if (req.body.videoUrl) {
     const parsed = parseVideoUrl(req.body.videoUrl);
     if (parsed) {
@@ -98,20 +120,28 @@ const updateLesson = asyncHandler(async (req, res) => {
     req.body.content = sanitizeLessonContent(req.body.content);
   }
 
-  const lesson = await Lesson.findByIdAndUpdate(req.params.id, req.body, {
+  const updatedLesson = await Lesson.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
   });
-  if (!lesson) throw ApiError.notFound('Lesson not found');
-  ApiResponse.success(res, 'Lesson updated', lesson);
+  ApiResponse.success(res, 'Lesson updated', updatedLesson);
 });
 
 // @desc    Delete lesson
 // @route   DELETE /api/lessons/:id
 // @access  Private/Instructor
 const deleteLesson = asyncHandler(async (req, res) => {
-  const lesson = await Lesson.findByIdAndDelete(req.params.id);
+  const lesson = await Lesson.findById(req.params.id);
   if (!lesson) throw ApiError.notFound('Lesson not found');
+
+  const course = await Course.findById(lesson.courseId);
+  if (!course) throw ApiError.notFound('Associated course not found');
+
+  if (course.creatorId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    throw ApiError.forbidden('Not authorized to delete lessons in this course');
+  }
+
+  await Lesson.findByIdAndDelete(req.params.id);
   ApiResponse.success(res, 'Lesson deleted');
 });
 

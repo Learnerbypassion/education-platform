@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link, useSearchParams } from 'react-router-dom'
 import { createCourse, getCourseById, updateCourse, createModule, createLesson, deleteModule, deleteLesson, togglePublish } from '../api/courseApi';
 import { generateCourseDescription, generateLessonSummary } from '../api/aiApi';
 import toast from 'react-hot-toast';
+import { useAuth } from '../hooks/useAuth';
 import CustomSelect from '../components/common/CustomSelect';
 import { CATEGORIES, DIFFICULTIES, STRUCTURE_TYPES } from '../utils/constants';
 import { 
@@ -29,6 +30,7 @@ import './CourseCreate.css';
 const CourseCreate = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const isEdit = !!id;
 
@@ -143,6 +145,14 @@ const CourseCreate = () => {
         try {
           const res = await getCourseById(id);
           const c = res.data.data;
+          const creatorId = c.creatorId?._id || c.creatorId;
+          const isOwner = user?._id && creatorId && user._id.toString() === creatorId.toString();
+          if (!isOwner && !isAdmin) {
+            toast.error('Not authorized to edit this course');
+            navigate(`/courses/${id}`);
+            return;
+          }
+
           setForm({
             title: c.title,
             description: c.description,
@@ -162,7 +172,7 @@ const CourseCreate = () => {
       };
       loadCourse();
     }
-  }, [id, isEdit]);
+  }, [id, isEdit, user, isAdmin, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

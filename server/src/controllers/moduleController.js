@@ -36,20 +36,36 @@ const getModules = asyncHandler(async (req, res) => {
 // @route   PUT /api/modules/:id
 // @access  Private/Instructor
 const updateModule = asyncHandler(async (req, res) => {
-  const module = await Module.findByIdAndUpdate(req.params.id, req.body, {
+  const module = await Module.findById(req.params.id);
+  if (!module) throw ApiError.notFound('Module not found');
+
+  const course = await Course.findById(module.courseId);
+  if (!course) throw ApiError.notFound('Associated course not found');
+  if (course.creatorId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    throw ApiError.forbidden('Not authorized');
+  }
+
+  const updatedModule = await Module.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
   });
-  if (!module) throw ApiError.notFound('Module not found');
-  ApiResponse.success(res, 'Module updated', module);
+  ApiResponse.success(res, 'Module updated', updatedModule);
 });
 
 // @desc    Delete module
 // @route   DELETE /api/modules/:id
 // @access  Private/Instructor
 const deleteModule = asyncHandler(async (req, res) => {
-  const module = await Module.findByIdAndDelete(req.params.id);
+  const module = await Module.findById(req.params.id);
   if (!module) throw ApiError.notFound('Module not found');
+
+  const course = await Course.findById(module.courseId);
+  if (!course) throw ApiError.notFound('Associated course not found');
+  if (course.creatorId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    throw ApiError.forbidden('Not authorized');
+  }
+
+  await Module.findByIdAndDelete(req.params.id);
   ApiResponse.success(res, 'Module deleted');
 });
 

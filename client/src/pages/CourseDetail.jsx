@@ -43,17 +43,16 @@ const CourseDetail = () => {
           setOpenModules({ [courseData.modules[0]._id]: true });
         }
 
-        // Check if student is enrolled OR if user is instructor/creator/admin
+        // Check if student is enrolled OR if user is course creator/admin
         if (isAuthenticated) {
+          const creatorId = courseData?.creatorId?._id || courseData?.creatorId;
+          const isOwnerOrAdmin = (user?._id && creatorId && user._id.toString() === creatorId.toString()) || isAdmin;
           try {
             const enrolledList = await getEnrolledCourses();
             const isAlreadyEnrolled = enrolledList.data.data?.some(e => e.courseId?._id === id || e.courseId === id);
-            const isCreatorOrStaff = isInstructor || isAdmin || user?._id === courseData.creatorId?._id || user?._id === courseData.creatorId;
-            setEnrolled(isAlreadyEnrolled || isCreatorOrStaff);
+            setEnrolled(isAlreadyEnrolled || isOwnerOrAdmin);
           } catch {
-            if (isInstructor || isAdmin) {
-              setEnrolled(true);
-            }
+            setEnrolled(isOwnerOrAdmin);
           }
         }
       } catch {
@@ -312,14 +311,18 @@ const CourseDetail = () => {
                       <span>Go to Classroom</span> 
                       <HiOutlineArrowRight size={18} />
                     </Link>
-                    {(isInstructor || isAdmin || user?._id === creator?._id) && (
-                      <Link 
-                        to={`/course/${id}/edit`} 
-                        className="w-full py-3 px-4 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 font-extrabold text-xs flex items-center justify-center gap-2 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-all shadow-sm"
-                      >
-                        <HiOutlinePencil size={15} /> Edit Course Workspace
-                      </Link>
-                    )}
+                    {(() => {
+                      const creatorId = course?.creatorId?._id || course?.creatorId;
+                      const isOwnerOrAdmin = (user?._id && creatorId && user._id.toString() === creatorId.toString()) || isAdmin;
+                      return isOwnerOrAdmin ? (
+                        <Link 
+                          to={`/course/${id}/edit`} 
+                          className="w-full py-3 px-4 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 font-extrabold text-xs flex items-center justify-center gap-2 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-all shadow-sm"
+                        >
+                          <HiOutlinePencil size={15} /> Edit Course Workspace
+                        </Link>
+                      ) : null;
+                    })()}
                   </div>
                 ) : (
                   <button onClick={handleEnroll} className="btn-detail-accent">

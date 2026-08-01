@@ -348,8 +348,8 @@ const CourseLearn = () => {
       setCompletedIds(prev => new Set([...prev, activeLesson._id]));
       setLiveProgressMap(prev => ({ ...prev, [activeLesson._id]: 100 }));
       toast.success('Lesson completed!');
-    } catch {
-      toast.error('Failed to mark lesson complete');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to mark lesson complete');
     }
   };
 
