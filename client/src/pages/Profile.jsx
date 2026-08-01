@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useAuth } from '../hooks/useAuth';
 import { updateProfile } from '../api/authApi';
 import { loadUser } from '../store/slices/authSlice';
 import toast from 'react-hot-toast';
-import { getInitials } from '../utils/helpers';
+import { getInitials, getMediaUrl } from '../utils/helpers';
 import { 
   HiOutlineUser, 
   HiOutlineCamera, 
@@ -12,6 +12,7 @@ import {
   HiOutlinePencilAlt
 } from 'react-icons/hi';
 import { FaGithub } from 'react-icons/fa';
+import ImageCropperModal from '../components/common/ImageCropperModal';
 import './Profile.css';
 
 const Profile = () => {
@@ -28,20 +29,41 @@ const Profile = () => {
     },
   });
   const [imageFile, setImageFile] = useState(null);
-  const [preview, setPreview] = useState(user?.profileImage || '');
+  const [preview, setPreview] = useState(getMediaUrl(user?.profileImage) || '');
+  const [imageError, setImageError] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [rawImageSrc, setRawImageSrc] = useState(null);
+
+  useEffect(() => {
+    if (user?.profileImage && !imageFile) {
+      setPreview(getMediaUrl(user.profileImage));
+      setImageError(false);
+    }
+  }, [user?.profileImage, imageFile]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image size should be less than 5MB');
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('Image size should be less than 10MB');
         return;
       }
-      setImageFile(file);
-      setPreview(URL.createObjectURL(file));
-      toast.success('Image selected! Click Save Profile to apply.');
+      const reader = new FileReader();
+      reader.onload = () => {
+        setRawImageSrc(reader.result);
+        setCropperOpen(true);
+      };
+      reader.readAsDataURL(file);
+      e.target.value = ''; // Reset input so same file can be chosen again if needed
     }
+  };
+
+  const handleCropComplete = ({ file, previewUrl }) => {
+    setImageFile(file);
+    setPreview(previewUrl);
+    setImageError(false);
+    toast.success('Image cropped! Click Save Profile to apply changes.');
   };
 
   const handleSubmit = async (e) => {
@@ -95,8 +117,13 @@ const Profile = () => {
             {/* Avatar Circle with Upload Trigger */}
             <div className="relative group">
               <div className="w-28 h-28 md:w-32 md:h-32 rounded-full p-1 bg-white dark:bg-[#0c0e17] shadow-xl relative z-10 overflow-hidden">
-                {preview ? (
-                  <img src={preview} alt={form.name} className="w-full h-full rounded-full object-cover" />
+                {preview && !imageError ? (
+                  <img 
+                    src={getMediaUrl(preview)} 
+                    alt="" 
+                    onError={() => setImageError(true)} 
+                    className="w-full h-full rounded-full object-cover" 
+                  />
                 ) : (
                   <div className="w-full h-full rounded-full bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-600 flex items-center justify-center text-2xl font-black text-white shadow-inner">
                     {getInitials(form.name)}
@@ -266,6 +293,13 @@ const Profile = () => {
 
       </div>
 
+      {/* Image Cropper Modal */}
+      <ImageCropperModal
+        isOpen={cropperOpen}
+        imageSrc={rawImageSrc}
+        onClose={() => setCropperOpen(false)}
+        onCropComplete={handleCropComplete}
+      />
     </div>
   );
 };

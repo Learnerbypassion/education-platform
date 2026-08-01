@@ -4,6 +4,7 @@ import { getSubmissions, gradeSubmission, getAssignment } from '../api/assignmen
 import Loader from '../components/common/Loader';
 import toast from 'react-hot-toast';
 import { HiOutlineCheck, HiOutlineX, HiOutlineDownload, HiOutlineExternalLink } from 'react-icons/hi';
+import { getMediaUrl } from '../utils/helpers';
 import './AdminPanel.css'; // Reuse table/panel styling
 
 const GradingDashboard = () => {
@@ -113,7 +114,7 @@ const GradingDashboard = () => {
                     <td>
                       <div className="flex items-center gap-2">
                         {sub.studentId.profileImage ? (
-                          <img src={sub.studentId.profileImage} alt="" style={{ width: '28px', height: '28px', borderRadius: '50%' }} />
+                          <img src={getMediaUrl(sub.studentId.profileImage)} alt="" style={{ width: '28px', height: '28px', borderRadius: '50%' }} />
                         ) : (
                           <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold' }}>
                             {sub.studentId.name[0]}

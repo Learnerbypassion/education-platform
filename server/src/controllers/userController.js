@@ -2,6 +2,8 @@ const asyncHandler = require('../utils/asyncHandler');
 const ApiResponse = require('../utils/ApiResponse');
 const ApiError = require('../utils/ApiError');
 const User = require('../models/User');
+const fs = require('fs');
+const { uploadToImageKit } = require('../services/imagekitService');
 
 // @desc    Get user profile
 // @route   GET /api/users/:id
@@ -16,17 +18,43 @@ const getUserProfile = asyncHandler(async (req, res) => {
 // @route   PUT /api/users/profile
 // @access  Private
 const updateProfile = asyncHandler(async (req, res) => {
-  const { name, bio, githubUsername, socialLinks } = req.body;
-  const updateData = {};
+  const { name, bio, githubUsername } = req.body;
+  let socialLinks = req.body.socialLinks;
 
+  if (typeof socialLinks === 'string') {
+    try {
+      socialLinks = JSON.parse(socialLinks);
+    } catch {
+      socialLinks = undefined;
+    }
+  }
+
+  if (!socialLinks && (req.body['socialLinks[website]'] || req.body['socialLinks[linkedin]'] || req.body['socialLinks[twitter]'])) {
+    socialLinks = {
+      website: req.body['socialLinks[website]'] || '',
+      linkedin: req.body['socialLinks[linkedin]'] || '',
+      twitter: req.body['socialLinks[twitter]'] || '',
+    };
+  }
+
+  const updateData = {};
   if (name) updateData.name = name;
   if (bio !== undefined) updateData.bio = bio;
   if (githubUsername !== undefined) updateData.githubUsername = githubUsername;
   if (socialLinks) updateData.socialLinks = socialLinks;
 
-  // Handle profile image upload
+  // Handle profile image upload with ImageKit integration
   if (req.file) {
-    updateData.profileImage = `/uploads/${req.file.filename}`;
+    try {
+      const ikRes = await uploadToImageKit(req.file.path, req.file.filename, '/profiles');
+      updateData.profileImage = ikRes.url;
+      if (fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+    } catch (err) {
+      console.error('ImageKit upload error:', err);
+      updateData.profileImage = `/uploads/${req.file.filename}`;
+    }
   }
 
   const user = await User.findByIdAndUpdate(req.user._id, updateData, {

@@ -42,13 +42,16 @@ const updateProfileSchema = Joi.object({
   name: Joi.string().trim().min(2).max(100),
   bio: Joi.string().max(500).allow(''),
   githubUsername: Joi.string().trim().allow(''),
-  socialLinks: Joi.object({
-    website: Joi.string().uri().allow(''),
-    linkedin: Joi.string().uri().allow(''),
-    twitter: Joi.string().uri().allow(''),
-    github: Joi.string().uri().allow(''),
-  }),
-});
+  socialLinks: Joi.alternatives().try(
+    Joi.object({
+      website: Joi.string().uri().allow('').optional(),
+      linkedin: Joi.string().uri().allow('').optional(),
+      twitter: Joi.string().uri().allow('').optional(),
+      github: Joi.string().uri().allow('').optional(),
+    }),
+    Joi.string().allow('')
+  ),
+}).unknown(true);
 
 module.exports = {
   registerSchema,

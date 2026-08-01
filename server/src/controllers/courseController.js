@@ -3,13 +3,24 @@ const ApiResponse = require('../utils/ApiResponse');
 const ApiError = require('../utils/ApiError');
 const courseService = require('../services/courseService');
 const Course = require('../models/Course');
+const fs = require('fs');
+const { uploadToImageKit } = require('../services/imagekitService');
 
 // @desc    Create course
 // @route   POST /api/courses
 // @access  Private/Instructor
 const createCourse = asyncHandler(async (req, res) => {
   if (req.file) {
-    req.body.thumbnail = `/uploads/${req.file.filename}`;
+    try {
+      const ikRes = await uploadToImageKit(req.file.path, req.file.filename, '/courses');
+      req.body.thumbnail = ikRes.url;
+      if (fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+    } catch (err) {
+      console.error('ImageKit upload error:', err);
+      req.body.thumbnail = `/uploads/${req.file.filename}`;
+    }
   }
   const course = await courseService.createCourse(req.body, req.user._id);
   ApiResponse.created(res, 'Course created', course);
@@ -50,7 +61,16 @@ const updateCourse = asyncHandler(async (req, res) => {
 
   // Handle thumbnail upload
   if (req.file) {
-    req.body.thumbnail = `/uploads/${req.file.filename}`;
+    try {
+      const ikRes = await uploadToImageKit(req.file.path, req.file.filename, '/courses');
+      req.body.thumbnail = ikRes.url;
+      if (fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+    } catch (err) {
+      console.error('ImageKit upload error:', err);
+      req.body.thumbnail = `/uploads/${req.file.filename}`;
+    }
   }
 
   course = await Course.findByIdAndUpdate(req.params.id, req.body, {
