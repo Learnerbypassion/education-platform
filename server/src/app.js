@@ -25,6 +25,7 @@ const searchRoutes = require('./routes/searchRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 
 const app = express();
+app.set('trust proxy', 1);
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
 // ─── Global Middleware ───────────────────────────────────
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
