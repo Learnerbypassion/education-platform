@@ -227,7 +227,7 @@ const TermsOfService = () => {
               </p>
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-medium text-sm">
                 <HiOutlineMail className="w-5 h-5 text-indigo-500" />
-                <span>legal@eduplatform.com</span>
+                <span>novatech.innovate.solutions@gmail.com</span>
               </div>
             </div>
           </section>
