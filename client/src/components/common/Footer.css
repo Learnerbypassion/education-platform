@@ -165,22 +165,7 @@ html[data-theme='dark'] .footer-copyright {
   color: #94a3b8;
 }
 
-.footer-bottom-badge {
-  font-size: 0.6875rem;
-  font-weight: 800;
-  color: #10b981;
-  background: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.2);
-  padding: 0.3rem 0.75rem;
-  border-radius: 99px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
 
-html[data-theme='dark'] .footer-bottom-badge {
-  background: rgba(16, 185, 129, 0.12);
-  border-color: rgba(16, 185, 129, 0.25);
-}
 
 /* Responsive Grid Adjustments */
 @media (max-width: 900px) {

@@ -71,8 +71,8 @@ const Sidebar = () => {
       />
       <aside
         className={`
-          fixed left-0 top-0 z-50 h-full w-72 border-r border-slate-200/80 bg-white/95 p-5 backdrop-blur-2xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] dark:border-white/10 dark:bg-slate-950/95 shadow-2xl flex flex-col justify-between
-          ${sidebarOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none'}
+          fixed left-0 top-0 z-50 h-full w-72 border-r border-slate-200/80 bg-white/95 p-5 backdrop-blur-2xl transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform dark:border-white/10 dark:bg-slate-950/95 shadow-2xl flex flex-col justify-between
+          ${sidebarOpen ? 'translate-x-0 pointer-events-auto' : '-translate-x-full pointer-events-none'}
         `}
         id="main-sidebar"
       >
@@ -80,7 +80,7 @@ const Sidebar = () => {
           <div className="mb-6 flex items-center justify-between pb-4 border-b border-slate-200 dark:border-white/10">
             <BrandLogo size="md" />
             <button
-              className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-white/5 transition-colors cursor-pointer"
+              className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-white/5 transition-transform duration-150 active:scale-90 touch-manipulation cursor-pointer"
               onClick={close}
               aria-label="Close sidebar"
             >
@@ -96,7 +96,7 @@ const Sidebar = () => {
                   key={link.to}
                   to={link.to}
                   className={
-                    `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 ${
+                    `flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 active:scale-[0.98] touch-manipulation ${
                       active 
                         ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/25' 
                         : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-900/80 dark:hover:text-white'
@@ -116,7 +116,7 @@ const Sidebar = () => {
           {isAuthenticated ? (
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 font-extrabold text-xs border border-rose-500/20 hover:bg-rose-500/20 transition-all cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 font-extrabold text-xs border border-rose-500/20 hover:bg-rose-500/20 active:scale-95 touch-manipulation transition-all cursor-pointer"
             >
               <HiOutlineLogout size={16} />
               <span>Logout Account</span>
@@ -125,7 +125,7 @@ const Sidebar = () => {
             <div className="flex gap-2">
               <NavLink
                 to="/login"
-                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-center font-bold text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 transition-all flex items-center justify-center gap-1.5"
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-center font-bold text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 active:scale-95 touch-manipulation transition-all flex items-center justify-center gap-1.5"
                 onClick={close}
               >
                 <HiOutlineLogin size={15} />
@@ -133,7 +133,7 @@ const Sidebar = () => {
               </NavLink>
               <NavLink
                 to="/register"
-                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-center font-bold text-xs text-white shadow-md transition-all flex items-center justify-center gap-1.5"
+                className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-center font-bold text-xs text-white shadow-md active:scale-95 touch-manipulation transition-all flex items-center justify-center gap-1.5"
                 onClick={close}
               >
                 <HiOutlineUserAdd size={15} />

@@ -10,11 +10,13 @@
 /* Editorial Headline Typography */
 .hero-editorial-heading {
   font-family: var(--font-heading, 'Plus Jakarta Sans', sans-serif);
-  font-size: clamp(2.75rem, 5.5vw, 4.75rem);
+  font-size: clamp(1.45rem, 5.5vw, 4.75rem);
   font-weight: 800;
-  line-height: 1.08;
+  line-height: 1.12;
   letter-spacing: -0.035em;
   color: #0f172a;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 html[data-theme='dark'] .hero-editorial-heading {
@@ -22,14 +24,14 @@ html[data-theme='dark'] .hero-editorial-heading {
 }
 
 .hero-editorial-subtext {
-  font-size: clamp(1rem, 2vw, 1.25rem);
-  line-height: 1.65;
-  color: #475569;
+  font-size: clamp(0.9375rem, 2.5vw, 1.25rem);
+  line-height: 1.7;
+  color: #334155;
   font-weight: 500;
 }
 
 html[data-theme='dark'] .hero-editorial-subtext {
-  color: #94a3b8;
+  color: #cbd5e1;
 }
 
 /* Dashboard Mockup Glass Surface */
@@ -49,15 +51,17 @@ html[data-theme='dark'] .bento-hero-dashboard {
   box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.7), 0 0 40px 0 rgba(129, 140, 248, 0.15);
 }
 
-.bento-hero-dashboard:hover {
-  transform: translateY(-3px);
-  border-color: rgba(99, 102, 241, 0.4);
-  box-shadow: 0 32px 64px -16px rgba(99, 102, 241, 0.2);
-}
+@media (hover: hover) and (pointer: fine) {
+  .bento-hero-dashboard:hover {
+    transform: translateY(-3px);
+    border-color: rgba(99, 102, 241, 0.4);
+    box-shadow: 0 32px 64px -16px rgba(99, 102, 241, 0.2);
+  }
 
-html[data-theme='dark'] .bento-hero-dashboard:hover {
-  border-color: rgba(129, 140, 248, 0.4);
-  box-shadow: 0 36px 72px -18px rgba(0, 0, 0, 0.8), 0 0 48px 0 rgba(129, 140, 248, 0.25);
+  html[data-theme='dark'] .bento-hero-dashboard:hover {
+    border-color: rgba(129, 140, 248, 0.4);
+    box-shadow: 0 36px 72px -18px rgba(0, 0, 0, 0.8), 0 0 48px 0 rgba(129, 140, 248, 0.25);
+  }
 }
 
 /* Floating Decorative Widget Cards */

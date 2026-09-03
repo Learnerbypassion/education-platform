@@ -45,7 +45,6 @@ const Footer = () => (
       </div>
       <div className="footer-bottom">
         <p className="footer-copyright">© {new Date().getFullYear()} EduPlatform. All rights reserved.</p>
-        <span className="footer-bottom-badge">Secure Platform ✓</span>
       </div>
     </div>
   </footer>
