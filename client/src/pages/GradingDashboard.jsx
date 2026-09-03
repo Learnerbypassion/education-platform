@@ -82,7 +82,8 @@ const GradingDashboard = () => {
   if (loading) return <Loader text="Loading submissions..." />;
   if (!assignment) return <div className="container"><h3>Assignment not found</h3></div>;
 
-  const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
+  const rawServerUrl = import.meta.env.VITE_SERVER_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const serverUrl = rawServerUrl.replace(/\/api\/?$/, '').replace(/\/$/, '');
 
   return (
     <div className="admin-panel animate-page-enter">

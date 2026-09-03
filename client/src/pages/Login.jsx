@@ -8,7 +8,8 @@ import { FcGoogle } from 'react-icons/fc';
 import { FaGithub } from 'react-icons/fa';
 
 const Login = () => {
-  const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
+  const rawServerUrl = import.meta.env.VITE_SERVER_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const serverUrl = rawServerUrl.replace(/\/api\/?$/, '').replace(/\/$/, '');
   const [form, setForm] = useState({ email: '', password: '' });
   const [showPass, setShowPass] = useState(false);
   const dispatch = useDispatch();
