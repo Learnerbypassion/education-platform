@@ -121,10 +121,11 @@ const Navbar = () => {
             onClick={toggleTheme}
             className="btn-icon-nav"
             aria-label="Toggle theme"
+            id="theme-toggle-btn"
           >
             {theme === 'light' ? <HiMoon size={18} /> : <HiSun size={18} />}
           </button>
-          <button className="btn-icon-nav" onClick={() => navigate('/courses')} aria-label="Search">
+          <button className="btn-icon-nav navbar-search-btn" onClick={() => navigate('/courses')} aria-label="Search">
             <HiOutlineSearch size={18} />
           </button>
 
