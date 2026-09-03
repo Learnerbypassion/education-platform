@@ -36,7 +36,7 @@ const Footer = () => (
           <div className="footer-links-group">
             <h4>Legal</h4>
             <div className="footer-links-list">
-              <a href="#">Privacy Policy</a>
+              <Link to="/privacy">Privacy Policy</Link>
               <a href="#">Terms of Service</a>
               <a href="#">Cookie Policy</a>
             </div>
