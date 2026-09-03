@@ -4,6 +4,20 @@
 
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
+/* ─── Netlify Drawer / Badge Suppression ────────────── */
+[data-netlify-deploy-id],
+.netlify-badge,
+#netlify-badge,
+#netlify-drawer,
+iframe[title*="Netlify"],
+div[class*="netlify-drawer"],
+div[class*="netlify-badge"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 @theme {
   --color-brand-50: #f4f6ff;
   --color-brand-100: #e9edff;
