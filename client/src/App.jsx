@@ -15,6 +15,7 @@ import ResetPassword from './pages/ResetPassword';
 import NotFound from './pages/NotFound';
 import OAuthCallback from './pages/OAuthCallback';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
 
 // Protected pages
 import Dashboard from './pages/Dashboard';
@@ -53,6 +54,8 @@ function App() {
           <Route path="/verify/:certificateId" element={<VerifyCertificate />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
         </Route>
 
         {/* Protected Dashboard pages */}

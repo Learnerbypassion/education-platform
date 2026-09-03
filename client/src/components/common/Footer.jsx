@@ -37,7 +37,7 @@ const Footer = () => (
             <h4>Legal</h4>
             <div className="footer-links-list">
               <Link to="/privacy">Privacy Policy</Link>
-              <a href="#">Terms of Service</a>
+              <Link to="/terms">Terms of Service</Link>
               <a href="#">Cookie Policy</a>
             </div>
           </div>
