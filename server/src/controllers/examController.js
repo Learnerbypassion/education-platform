@@ -18,12 +18,12 @@ const createExam = asyncHandler(async (req, res) => {
 // @route   GET /api/exams/course/:courseId
 // @access  Private
 const getExams = asyncHandler(async (req, res) => {
-  const exams = await Exam.find({ courseId: req.params.courseId });
-
   if (req.user.role === 'student') {
+    // Students should only see published exams (matches certificate eligibility rules)
+    const exams = await Exam.find({ courseId: req.params.courseId, isPublished: true });
     const examsWithAttemptStatus = await Promise.all(
       exams.map(async (exam) => {
-        const attemptStatus = await examService.getAttemptStatus(exam._id, req.user._id);
+        const attemptStatus = await examService.getAttemptStatus(exam._id, req.user._id, exam);
         return {
           ...exam.toObject(),
           attemptsUsed: attemptStatus.attemptsUsed,
@@ -37,6 +37,7 @@ const getExams = asyncHandler(async (req, res) => {
     return ApiResponse.success(res, 'Exams fetched', examsWithAttemptStatus);
   }
 
+  const exams = await Exam.find({ courseId: req.params.courseId });
   ApiResponse.success(res, 'Exams fetched', exams);
 });
 
@@ -123,13 +124,24 @@ const submitExam = asyncHandler(async (req, res) => {
 // @route   GET /api/exams/:id/results
 // @access  Private/Student
 const getExamResults = asyncHandler(async (req, res) => {
-  const submissions = await Submission.find({
-    examId: req.params.id,
-    studentId: req.user._id,
-    type: 'exam',
-  }).sort({ submittedAt: -1 });
+  const exam = await Exam.findById(req.params.id)
+    .select('title description courseId duration totalMarks passingMarks maxAttempts isPublished')
+    .lean();
+  if (!exam) throw ApiError.notFound('Exam not found');
 
-  ApiResponse.success(res, 'Exam results', submissions);
+  const [submissions, attemptStatus] = await Promise.all([
+    Submission.find({
+      examId: req.params.id,
+      studentId: req.user._id,
+      type: 'exam',
+    })
+      .select('-answers')
+      .sort({ submittedAt: -1 })
+      .lean(),
+    examService.getAttemptStatus(exam._id, req.user._id, exam),
+  ]);
+
+  ApiResponse.success(res, 'Exam results', { exam, submissions, attemptStatus });
 });
 
 // @desc    Update exam

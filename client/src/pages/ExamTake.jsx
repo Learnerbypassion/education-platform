@@ -28,6 +28,7 @@ const ExamTake = () => {
   const [loading, setLoading] = useState(true);
   const [violations, setViolations] = useState(0);
   const [submissionResult, setSubmissionResult] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   
   // Custom Redesign UI States
   const [showInstructions, setShowInstructions] = useState(false);
@@ -36,32 +37,66 @@ const ExamTake = () => {
   const timerRef = useRef(null);
   const endTimeRef = useRef(null);
 
-  // Tab switch proctoring logic (Module 7 stub)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        setViolations(prev => {
-          const next = prev + 1;
-          toast.error(`Warning: Tab switch detected! Violations: ${next}/3`);
-          if (next >= 3) {
-            toast.error('Too many violations. Auto-submitting exam.');
-            handleSubmit(true);
-          }
-          return next;
-        });
+  // Refs mirror the latest state so timer / visibility callbacks never submit stale data
+  const answersRef = useRef({});
+  const questionsRef = useRef([]);
+  const examRef = useRef(null);
+  const submittingRef = useRef(false);
+  const submittedRef = useRef(false);
+  const handleSubmitRef = useRef(null);
+
+  useEffect(() => { answersRef.current = answers; }, [answers]);
+  useEffect(() => { questionsRef.current = questions; }, [questions]);
+  useEffect(() => { examRef.current = exam; }, [exam]);
+
+  const startTimer = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    // High precision interval tied to Date.now()
+    timerRef.current = setInterval(() => {
+      if (!endTimeRef.current) return;
+      const remaining = Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000));
+      setTimeLeft(remaining);
+
+      if (remaining <= 0) {
+        clearInterval(timerRef.current);
+        toast.error('Time is up! Submitting exam.');
+        handleSubmitRef.current?.(true);
       }
+    }, 1000);
+  };
+
+  // Tab switch proctoring logic – only active while the exam is actually in progress
+  const examActive = !loading && !!exam && !submissionResult;
+  useEffect(() => {
+    if (!examActive) return undefined;
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden || submittedRef.current || submittingRef.current) return;
+      setViolations(prev => {
+        const next = prev + 1;
+        if (next >= 3) {
+          toast.error('Too many violations. Auto-submitting exam.');
+          // Defer so we don't trigger side effects inside a state updater
+          setTimeout(() => handleSubmitRef.current?.(true), 0);
+        } else {
+          toast.error(`Warning: Tab switch detected! Violations: ${next}/3`);
+        }
+        return next;
+      });
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [questions, answers]);
+  }, [examActive]);
 
   useEffect(() => {
+    let cancelled = false;
     const loadExam = async () => {
       try {
         const res = await takeExam(id);
+        if (cancelled) return;
         const { exam: examData, questions: qList } = res.data.data;
         setExam(examData);
         setQuestions(qList);
@@ -81,31 +116,20 @@ const ExamTake = () => {
         });
         setAnswers(initial);
 
-        if (timerRef.current) clearInterval(timerRef.current);
-
-        // High precision interval tied to Date.now()
-        timerRef.current = setInterval(() => {
-          if (!endTimeRef.current) return;
-          const remaining = Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000));
-          setTimeLeft(remaining);
-
-          if (remaining <= 0) {
-            clearInterval(timerRef.current);
-            toast.error('Time is up! Submitting exam.');
-            handleSubmit(true);
-          }
-        }, 1000);
+        startTimer();
       } catch (err) {
+        if (cancelled) return;
         toast.error(err.response?.data?.message || 'Failed to load exam. Check if you have attempts left.');
         navigate(-1);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     loadExam();
 
     return () => {
+      cancelled = true;
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [id]);
@@ -127,16 +151,26 @@ const ExamTake = () => {
   };
 
   const handleSubmit = async (isAuto = false) => {
+    // Guard against double submission (timer + proctoring + button can race)
+    if (submittingRef.current || submittedRef.current) return;
     if (!isAuto && !window.confirm('Are you sure you want to submit your exam?')) return;
-    
+
+    submittingRef.current = true;
     if (timerRef.current) clearInterval(timerRef.current);
-    setLoading(true);
+    setSubmitting(true);
+
+    const latestAnswers = answersRef.current;
+    const latestQuestions = questionsRef.current;
+    const latestExam = examRef.current;
+    const remainingSeconds = endTimeRef.current
+      ? Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000))
+      : 0;
 
     try {
       // Map state answers to matching submission schema API expectations
-      const formattedAnswers = Object.keys(answers).map(qId => {
-        const val = answers[qId];
-        const q = questions.find(item => item._id === qId);
+      const formattedAnswers = Object.keys(latestAnswers).map(qId => {
+        const val = latestAnswers[qId];
+        const q = latestQuestions.find(item => item._id === qId);
         if (q?.type === 'multiple-correct') {
           return { questionId: qId, selectedOptions: val };
         } else if (q?.type === 'fill-in-the-blank' || q?.type === 'short-answer') {
@@ -148,18 +182,23 @@ const ExamTake = () => {
 
       const res = await submitExam(id, {
         answers: formattedAnswers,
-        timeSpent: (exam?.duration || 30) * 60 - timeLeft,
+        timeSpent: (Number(latestExam?.duration) || 30) * 60 - remainingSeconds,
       });
 
       const result = res.data.data;
+      submittedRef.current = true;
       setSubmissionResult(result);
       toast.success(result.isPassed ? 'Passed! 🎉' : 'Failed. Try again next time.');
-    } catch {
-      toast.error('Failed to submit exam');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to submit exam. Please try again.');
+      // Let the student retry while time remains
+      if (remainingSeconds > 0) startTimer();
     } finally {
-      setLoading(false);
+      submittingRef.current = false;
+      setSubmitting(false);
     }
   };
+  handleSubmitRef.current = handleSubmit;
 
   const formatTime = (totalSeconds) => {
     if (isNaN(totalSeconds) || totalSeconds <= 0) return '00:00';
@@ -186,13 +225,13 @@ const ExamTake = () => {
     }
   };
 
-  if (loading) {
+  if (loading || submitting) {
     return (
       <div className="exam-loading-wrapper">
-        <Loader text="Initializing secure, proctored classroom environment..." />
+        <Loader text={submitting ? 'Submitting and grading your answers...' : 'Loading your exam...'} />
         <div className="secure-loading-indicator">
           <HiOutlineShieldCheck />
-          <span>Encryption & Proctoring active</span>
+          <span>{submitting ? 'Please don\'t close this tab' : 'Preparing questions & timer'}</span>
         </div>
       </div>
     );
@@ -293,6 +332,13 @@ const ExamTake = () => {
             >
               <span>Back to Course Classroom</span>
               <HiOutlineArrowRight size={18} />
+            </button>
+
+            <button
+              onClick={() => navigate(`/exams/${id}/results`)}
+              className="w-full py-3 px-6 rounded-2xl border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300 font-extrabold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              View All Attempts
             </button>
 
             <button

@@ -62,20 +62,17 @@ const Navbar = () => {
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-  const handleNotifClick = async (notif) => {
-    try {
-      if (!notif.isRead) {
-        await markAsRead(notif._id);
-        setNotifications((prev) =>
-          prev.map((n) => (n._id === notif._id ? { ...n, isRead: true } : n))
-        );
-      }
-      if (notif.link) {
-        setNotifOpen(false);
-        navigate(notif.link);
-      }
-    } catch {
-      // Silently fail
+  const handleNotifClick = (notif) => {
+    if (!notif.isRead) {
+      // Optimistically mark as read; don't block navigation on the API call
+      setNotifications((prev) =>
+        prev.map((n) => (n._id === notif._id ? { ...n, isRead: true } : n))
+      );
+      markAsRead(notif._id).catch(() => {});
+    }
+    if (notif.link) {
+      setNotifOpen(false);
+      navigate(notif.link);
     }
   };
 

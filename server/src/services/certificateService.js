@@ -20,27 +20,10 @@ class CertificateService {
    * Check eligibility and generate a certificate.
    */
   async generateCertificate(studentId, courseId) {
-    // Check if certificate already exists
+    // Check if certificate already exists – just return it (regenerate PDF only if missing on disk)
     const existing = await Certificate.findOne({ studentId, courseId });
     if (existing) {
-      // Regenerate PDF to ensure disk file always has the latest design template
-      try {
-        const verifyUrl = `${config.clientUrl}/verify/${existing.certificateId}`;
-        const qrCodeBuffer = await generateQRBuffer(verifyUrl);
-        const pdfUrl = await this.generatePDF({
-          certificateId: existing.certificateId,
-          studentName: existing.studentName,
-          courseName: existing.courseName,
-          instructorName: existing.instructorName,
-          completionDate: new Date(existing.completionDate),
-          grade: existing.grade,
-          qrCodeBuffer,
-        });
-        existing.pdfUrl = pdfUrl;
-        await existing.save();
-      } catch (err) {
-        console.error('Failed to regenerate existing certificate PDF:', err);
-      }
+      await this.ensurePdf(existing);
       return existing;
     }
 
@@ -179,6 +162,33 @@ class CertificateService {
   }
 
   /**
+   * Make sure the certificate PDF exists on disk (e.g. after a redeploy wiped uploads).
+   * Regenerating on every request is expensive, so only do it when the file is missing.
+   */
+  async ensurePdf(certificate) {
+    try {
+      const filepath = path.join(__dirname, '../../uploads/certificates', `${certificate.certificateId}.pdf`);
+      if (certificate.pdfUrl && fs.existsSync(filepath)) return certificate;
+
+      const verifyUrl = `${config.clientUrl}/verify/${certificate.certificateId}`;
+      const qrCodeBuffer = await generateQRBuffer(verifyUrl);
+      certificate.pdfUrl = await this.generatePDF({
+        certificateId: certificate.certificateId,
+        studentName: certificate.studentName,
+        courseName: certificate.courseName,
+        instructorName: certificate.instructorName,
+        completionDate: new Date(certificate.completionDate),
+        grade: certificate.grade,
+        qrCodeBuffer,
+      });
+      await certificate.save();
+    } catch (err) {
+      console.error('Failed to (re)generate certificate PDF:', err);
+    }
+    return certificate;
+  }
+
+  /**
    * Generate certificate PDF.
    */
   async generatePDF({ certificateId, studentName, courseName, instructorName, completionDate, grade, qrCodeBuffer }) {
@@ -260,20 +270,26 @@ class CertificateService {
    * Verify a certificate by its ID.
    */
   async verifyCertificate(certificateId) {
-    const certificate = await Certificate.findOne({ certificateId });
+    const certificate = await Certificate.findOne({ certificateId: String(certificateId).trim() }).lean();
 
     if (!certificate) {
-      return { valid: false, status: 'not-found' };
+      return { isValid: false, valid: false, status: 'not-found', certificate: null };
     }
 
+    // Only expose public, non-sensitive credential details
     return {
+      isValid: true,
       valid: true,
-      certificateId: certificate.certificateId,
-      studentName: certificate.studentName,
-      courseName: certificate.courseName,
-      instructorName: certificate.instructorName,
-      completionDate: certificate.completionDate,
       status: 'valid',
+      certificate: {
+        certificateId: certificate.certificateId,
+        studentName: certificate.studentName,
+        courseName: certificate.courseName,
+        instructorName: certificate.instructorName,
+        completionDate: certificate.completionDate,
+        grade: certificate.grade,
+        pdfUrl: certificate.pdfUrl,
+      },
     };
   }
 }

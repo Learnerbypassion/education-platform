@@ -50,11 +50,17 @@ class ExamService {
    * Removes correct answers from questions.
    */
   async getExamForStudent(examId, studentId, userRole = 'student') {
-    const exam = await Exam.findById(examId);
+    const Course = require('../models/Course');
+    const Enrollment = require('../models/Enrollment');
+
+    // Load exam and its questions in parallel (questions are only returned if all checks pass)
+    const [exam, questionDocs] = await Promise.all([
+      Exam.findById(examId),
+      Question.find({ examId }).sort({ order: 1 }),
+    ]);
     if (!exam) throw ApiError.notFound('Exam not found');
 
-    const Course = require('../models/Course');
-    const course = await Course.findById(exam.courseId);
+    const course = await Course.findById(exam.courseId).select('creatorId').lean();
     const isCreatorOrAdmin = userRole === 'admin' || (course && course.creatorId.toString() === studentId.toString());
 
     // Check if exam is published (allow creator/admin to preview)
@@ -72,15 +78,16 @@ class ExamService {
         throw ApiError.badRequest('This exam has expired');
       }
 
-      // Check enrollment
-      const Enrollment = require('../models/Enrollment');
-      const enrollment = await Enrollment.findOne({ studentId, courseId: exam.courseId });
+      // Check enrollment and attempt status in parallel
+      const [enrollment, status] = await Promise.all([
+        Enrollment.exists({ studentId, courseId: exam.courseId }),
+        this.getAttemptStatus(examId, studentId, exam),
+      ]);
       if (!enrollment) {
         throw ApiError.forbidden('You must be enrolled in this course to take this exam');
       }
 
       // Check max attempts before loading exam
-      const status = await this.getAttemptStatus(examId, studentId);
       if (status.attemptsLeft <= 0) {
         throw ApiError.badRequest('Maximum attempts reached for this exam', [], {
           attemptsUsed: status.attemptsUsed,
@@ -92,7 +99,7 @@ class ExamService {
       }
     }
 
-    let questions = await Question.find({ examId }).sort({ order: 1 });
+    let questions = questionDocs;
 
     // Randomize if enabled
     if (exam.isRandomized) {
@@ -146,7 +153,7 @@ class ExamService {
       }
 
       // Check max attempts
-      const status = await this.getAttemptStatus(examId, studentId);
+      const status = await this.getAttemptStatus(examId, studentId, exam);
       if (status.attemptsLeft <= 0) {
         throw ApiError.badRequest('Maximum attempts reached for this exam', [], {
           attemptsUsed: status.attemptsUsed,
@@ -291,40 +298,23 @@ class ExamService {
   /**
    * Helper to retrieve attempt statistics and request statuses for a student
    */
-  async getAttemptStatus(examId, studentId) {
-    const exam = await Exam.findById(examId);
-    if (!exam) throw ApiError.notFound('Exam not found');
-
-    const attemptsUsed = await Submission.countDocuments({
-      examId,
-      studentId,
-      type: 'exam',
-    });
-
+  async getAttemptStatus(examId, studentId, preloadedExam = null) {
     const ExamAttemptRequest = require('../models/ExamAttemptRequest');
 
-    const approvedRequests = await ExamAttemptRequest.find({
-      examId,
-      studentId,
-      status: 'approved',
-    });
+    // All lookups are independent, so run them concurrently
+    const [exam, attemptsUsed, approvedRequests, pendingRequest, latestRejectedRequest] = await Promise.all([
+      preloadedExam ? Promise.resolve(preloadedExam) : Exam.findById(examId).select('maxAttempts').lean(),
+      Submission.countDocuments({ examId, studentId, type: 'exam' }),
+      ExamAttemptRequest.find({ examId, studentId, status: 'approved' }).select('grantedAttempts').lean(),
+      ExamAttemptRequest.exists({ examId, studentId, status: 'pending' }),
+      ExamAttemptRequest.exists({ examId, studentId, status: 'rejected' }),
+    ]);
+    if (!exam) throw ApiError.notFound('Exam not found');
 
     const extraAttempts = approvedRequests.reduce(
       (sum, r) => sum + (r.grantedAttempts || 0),
       0
     );
-
-    const pendingRequest = await ExamAttemptRequest.findOne({
-      examId,
-      studentId,
-      status: 'pending',
-    });
-
-    const latestRejectedRequest = await ExamAttemptRequest.findOne({
-      examId,
-      studentId,
-      status: 'rejected',
-    }).sort({ updatedAt: -1 });
 
     const totalAllowedAttempts = exam.maxAttempts + extraAttempts;
     const attemptsLeft = Math.max(totalAllowedAttempts - attemptsUsed, 0);

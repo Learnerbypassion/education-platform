@@ -60,29 +60,24 @@ class CourseService {
    * Get full course details with modules and lessons.
    */
   async getCourseById(courseId, user = null) {
-    const course = await Course.findById(courseId)
-      .populate('creatorId', 'name profileImage bio');
+    // These lookups are independent – run them concurrently to cut page load time
+    const [course, modules, lessons, enrollment] = await Promise.all([
+      Course.findById(courseId).populate('creatorId', 'name profileImage bio'),
+      Module.find({ courseId }).sort({ order: 1 }),
+      Lesson.find({ courseId }).sort({ order: 1 }),
+      user ? Enrollment.exists({ studentId: user._id, courseId }) : Promise.resolve(null),
+    ]);
 
     if (!course) {
       throw ApiError.notFound('Course not found');
     }
 
-    const modules = await Module.find({ courseId })
-      .sort({ order: 1 });
-
-    const lessons = await Lesson.find({ courseId })
-      .sort({ order: 1 });
-
     // Check if the user is authorized to see the full premium content
     let isAuthorized = false;
     if (user) {
-      if (user.role === 'admin' || course.creatorId.toString() === user._id.toString()) {
+      const creatorId = course.creatorId?._id || course.creatorId;
+      if (user.role === 'admin' || creatorId?.toString() === user._id.toString() || enrollment) {
         isAuthorized = true;
-      } else {
-        const enrollment = await Enrollment.findOne({ studentId: user._id, courseId });
-        if (enrollment) {
-          isAuthorized = true;
-        }
       }
     }
 
