@@ -117,48 +117,93 @@
 }
 
 /* ─── Stagger Delays ──────────────────────────── */
-.delay-1 { animation-delay: 0.1s; }
-.delay-2 { animation-delay: 0.2s; }
-.delay-3 { animation-delay: 0.3s; }
-.delay-4 { animation-delay: 0.4s; }
-.delay-5 { animation-delay: 0.5s; }
-.delay-6 { animation-delay: 0.6s; }
-.delay-7 { animation-delay: 0.7s; }
-.delay-8 { animation-delay: 0.8s; }
+.delay-1 { animation-delay: 0.08s; }
+.delay-2 { animation-delay: 0.16s; }
+.delay-3 { animation-delay: 0.24s; }
+.delay-4 { animation-delay: 0.32s; }
+.delay-5 { animation-delay: 0.4s; }
+.delay-6 { animation-delay: 0.48s; }
+.delay-7 { animation-delay: 0.56s; }
+.delay-8 { animation-delay: 0.64s; }
 
-/* ─── Interactive hover micro-animations ──────── */
+/* ─── Interactive hover & tap micro-animations ─── */
 .hover-lift {
-  transition: transform var(--transition-spring),
-              box-shadow var(--transition-spring),
-              border-color var(--transition-base);
-}
-.hover-lift:hover {
-  transform: translateY(-4px) scale(1.01);
-  box-shadow: var(--shadow-lg), var(--shadow-glow);
-  border-color: rgba(99, 102, 241, 0.3);
+  transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 250ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 200ms ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
-html[data-theme='dark'] .hover-lift:hover {
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), var(--shadow-glow);
-  border-color: rgba(99, 102, 241, 0.4);
+@media (hover: hover) and (pointer: fine) {
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
+    border-color: rgba(99, 102, 241, 0.3);
+  }
+
+  html[data-theme='dark'] .hover-lift:hover {
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), var(--shadow-glow);
+    border-color: rgba(99, 102, 241, 0.4);
+  }
+}
+
+.hover-lift:active {
+  transform: scale(0.98);
 }
 
 .hover-glow {
-  transition: all var(--transition-base) ease;
-}
-.hover-glow:hover {
-  box-shadow: var(--shadow-glow);
+  transition: box-shadow 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* ─── Content swap transition (for lesson/question switching) ── */
+@media (hover: hover) and (pointer: fine) {
+  .hover-glow:hover {
+    box-shadow: var(--shadow-glow);
+  }
+}
+
+/* ─── Cross-Device Tactile Touch Feedback Classes ─── */
+.touch-press {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1), opacity 150ms ease;
+}
+
+.touch-press:active {
+  transform: scale(0.96);
+}
+
+/* ─── Content swap transition (for lesson/question/tab switching) ── */
 .content-transition {
-  transition: opacity 200ms ease, transform 200ms ease;
+  transition: opacity 250ms cubic-bezier(0.16, 1, 0.3, 1), transform 250ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .content-transition-enter {
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateY(6px);
 }
 .content-transition-active {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* ─── Low-Power Mobile Performance Optimization ── */
+@media (max-width: 640px) {
+  .animate-float {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* ─── Accessibility: Respect Reduced Motion ───── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
