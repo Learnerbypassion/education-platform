@@ -60,22 +60,29 @@ const CertificateView = () => {
   };
 
   if (loading) return <Loader text="Retrieving verified certificate credentials..." />;
-  if (!cert) return <div className="container"><h3>Certificate not found</h3></div>;
+  if (!cert) return <div className="container py-16 text-center"><h3>Certificate not found</h3></div>;
 
   return (
     <div className="cert-view-page">
       <div className="container">
-        <div className="cert-action-bar animate-fade-in-down">
-          <Link to="/dashboard" className="btn btn-ghost btn-sm">← Back to Dashboard</Link>
+        <div className="cert-action-bar">
+          <Link to="/dashboard" className="btn btn-outline px-3 py-1.5 text-xs font-medium">
+            ← Back to Dashboard
+          </Link>
           <div className="cert-actions-group">
-            <button onClick={handleShare} className="btn btn-outline btn-sm"><HiOutlineShare /> Share Link</button>
+            <button 
+              onClick={handleShare} 
+              className="btn btn-outline px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 cursor-pointer"
+            >
+              <HiOutlineShare size={14} /> Copy Link
+            </button>
             {cert.pdfUrl && (
               <button 
                 onClick={handleDownloadPdf} 
                 disabled={downloading}
-                className="btn btn-primary btn-sm flex items-center gap-1.5 cursor-pointer"
+                className="btn btn-primary px-3.5 py-1.5 text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
-                <HiOutlineDownload /> {downloading ? 'Downloading...' : 'Download PDF'}
+                <HiOutlineDownload size={14} /> {downloading ? 'Downloading...' : 'Download PDF'}
               </button>
             )}
           </div>

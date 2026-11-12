@@ -70,9 +70,14 @@ const Navbar = () => {
       );
       markAsRead(notif._id).catch(() => {});
     }
-    if (notif.link) {
-      setNotifOpen(false);
-      navigate(notif.link);
+    setNotifOpen(false);
+    let targetLink = notif.link;
+    if (!targetLink && (notif.type === 'exam-schedule' || notif.title?.includes('Exam Graded'))) {
+      const examId = notif.metadata?.examId || notif.metadata?.id;
+      if (examId) targetLink = `/exams/${examId}/results`;
+    }
+    if (targetLink) {
+      navigate(targetLink);
     }
   };
 
@@ -201,7 +206,16 @@ const Navbar = () => {
 
               <div className="navbar-user-pill">
                 <div className="navbar-avatar-circle">
-                  {user?.profileImage && !navImgError ? <img src={getMediaUrl(user.profileImage)} alt="" onError={() => setNavImgError(true)} className="h-full w-full rounded-full object-cover" /> : getInitials(user?.name)}
+                  {user?.profileImage && !navImgError ? (
+                    <img 
+                      src={getMediaUrl(user.profileImage)} 
+                      alt="" 
+                      onError={() => setNavImgError(true)} 
+                      className="h-full w-full rounded-full object-cover" 
+                    />
+                  ) : (
+                    getInitials(user?.name)
+                  )}
                 </div>
                 <button onClick={handleLogout} className="navbar-user-btn-logout">
                   Logout

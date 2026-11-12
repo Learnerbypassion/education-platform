@@ -5,54 +5,37 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        heading: ['Outfit', 'sans-serif'],
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        heading: ['Manrope', 'Inter', '-apple-system', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
       },
       colors: {
         brand: {
-          50: '#f4f6ff',
-          100: '#e9edff',
-          200: '#d5dcff',
-          300: '#b2c0ff',
-          400: '#8c9cff',
-          500: '#6b7aff', // vibrant indigo
-          600: '#4f5ae6',
-          700: '#3e46c7',
-          800: '#343c9e',
-          900: '#2d357d',
-          950: '#1b1e47',
+          50: '#f8fafc',
+          100: '#f1f5f9',
+          200: '#e2e8f0',
+          300: '#cbd5e1',
+          400: '#94a3b8',
+          500: '#2563eb',
+          600: '#1d4ed8',
+          700: '#1e40af',
+          800: '#1e293b',
+          900: '#0f172a',
+          950: '#090a0f',
         },
         accent: {
-          50: '#fff1f2',
-          100: '#ffe4e6',
-          200: '#fecdd3',
-          300: '#fda4af',
-          400: '#fb7185',
-          500: '#f43f5e', // vibrant coral/pink
-          600: '#e11d48',
-          700: '#be123c',
-          800: '#9f1239',
-          900: '#881337',
-          950: '#4c0519',
+          50: '#f0fdf4',
+          100: '#dcfce7',
+          500: '#16a34a',
+          600: '#15803d',
+          700: '#166534',
         }
       },
       boxShadow: {
-        soft: '0 4px 20px -2px rgba(15, 23, 42, 0.05)',
-        glow: '0 0 24px -4px rgba(107, 122, 255, 0.3)',
-        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
-        'glass-dark': '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+        'subtle': '0 1px 2px 0 rgba(0, 0, 0, 0.04)',
+        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04)',
+        'elevated': '0 4px 12px -2px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.04)',
       },
-      animation: {
-        'blob': 'blob 7s infinite',
-      },
-      keyframes: {
-        blob: {
-          '0%': { transform: 'translate(0px, 0px) scale(1)' },
-          '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
-          '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
-          '100%': { transform: 'translate(0px, 0px) scale(1)' },
-        }
-      }
     },
   },
   plugins: [],

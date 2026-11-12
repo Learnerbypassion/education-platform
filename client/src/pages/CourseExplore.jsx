@@ -5,7 +5,7 @@ import CourseCard from '../components/course/CourseCard';
 import Loader from '../components/common/Loader';
 import CustomSelect from '../components/common/CustomSelect';
 import { CATEGORIES, DIFFICULTIES } from '../utils/constants';
-import { HiOutlineSearch, HiOutlineAdjustments, HiOutlineChevronDown, HiOutlineTag, HiOutlineAcademicCap, HiOutlineSparkles, HiOutlineCheckCircle } from 'react-icons/hi';
+import { HiOutlineSearch, HiOutlineAdjustments, HiOutlineTag, HiOutlineAcademicCap } from 'react-icons/hi';
 import { useDebounce } from '../hooks/useDebounce';
 import './CourseExplore.css';
 
@@ -24,40 +24,32 @@ const CourseExplore = () => {
   }, [dispatch, debouncedSearch, category, difficulty, page]);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#030303] dark:text-white px-4 py-12 sm:px-6 lg:px-8 max-w-7xl mx-auto transition-colors duration-300">
-      <div className="mx-auto max-w-7xl space-y-10">
+    <div className="min-h-screen bg-transparent text-slate-900 dark:text-white px-4 py-8 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+      <div className="space-y-8">
         
-        <div className="text-center sm:text-left space-y-4 max-w-3xl">
-          <h1 className="text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl font-heading text-slate-900 dark:text-white leading-[1.1]">
-            Elevate Your Expertise.{' '}
-            <br className="hidden sm:inline" />
-            <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
-              Build Without Limits.
-            </span>
+        {/* Editorial Header */}
+        <div className="space-y-2.5 max-w-2xl">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Curriculum Directory</p>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-950 dark:text-white">
+            Course Catalog
           </h1>
-
-          <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-            Discover expert-led courses designed for real-world impact. Learn step-by-step with video modules, hands-on assignments, and verifiable digital certifications.
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
+            Browse structured courses with interactive modules, assignments, and examination pathways leading to verified credentials.
           </p>
-
-          <div className="flex flex-wrap items-center gap-5 pt-1 text-xs font-bold text-slate-500 dark:text-slate-400">
-            <span className="flex items-center gap-1.5"><HiOutlineCheckCircle className="text-emerald-500 text-base" /> Structured Modules</span>
-            <span className="flex items-center gap-1.5"><HiOutlineCheckCircle className="text-emerald-500 text-base" /> Timed Assessments</span>
-            <span className="flex items-center gap-1.5"><HiOutlineCheckCircle className="text-emerald-500 text-base" /> Public Credential Verification</span>
-          </div>
         </div>
 
-        <div className="explore-filter-bar grid gap-4 md:grid-cols-[1.3fr_0.7fr_0.7fr]">
+        {/* Filter & Search Bar */}
+        <div className="explore-filter-bar grid gap-3 md:grid-cols-[1.4fr_0.8fr_0.8fr]">
           <div className="explore-search-wrapper">
             <input 
               type="text" 
               className="explore-search-input" 
-              placeholder="Search courses..." 
+              placeholder="Search by course title or keyword..." 
               value={search} 
               onChange={(e) => { setSearch(e.target.value); setPage(1); }} 
               id="course-search" 
             />
-            <HiOutlineSearch className="explore-search-icon-pos" size={20} />
+            <HiOutlineSearch className="explore-search-icon-pos" size={18} />
           </div>
           
           <div className="relative z-30">
@@ -66,8 +58,8 @@ const CourseExplore = () => {
               name="category"
               value={category}
               onChange={(e) => { setCategory(e.target.value); setPage(1); }}
-              options={[{ value: '', label: 'All Categories' }, ...CATEGORIES]}
-              placeholder="All Categories"
+              options={[{ value: '', label: 'All Disciplines' }, ...CATEGORIES]}
+              placeholder="All Disciplines"
               icon={HiOutlineTag}
               showSearch={true}
             />
@@ -88,18 +80,20 @@ const CourseExplore = () => {
         </div>
 
         {loading ? (
-          <div className="mt-16 flex justify-center"><Loader text="Loading courses..." /></div>
+          <div className="py-20 flex justify-center"><Loader text="Loading catalog..." /></div>
         ) : courses.length === 0 ? (
-          <div className="empty-state-card animate-slide-up mt-12 relative z-1">
+          <div className="empty-state-card py-16">
             <div className="empty-state-icon-box">
-              <HiOutlineAdjustments size={36} />
+              <HiOutlineAdjustments size={28} />
             </div>
-            <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">No courses found</h3>
-            <p className="mt-2 text-sm text-slate-550 dark:text-slate-400 max-w-sm font-medium">Try adjusting your search or filters to find what you are looking for.</p>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">No matching courses</h3>
+            <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400 max-w-sm">
+              Adjust your search keywords or filter criteria to discover available courses.
+            </p>
           </div>
         ) : (
           <>
-            <div className="mt-12 grid gap-8 md:grid-cols-2 xl:grid-cols-3 relative z-1">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {courses.map((course) => (
                 <div key={course._id}>
                   <CourseCard course={course} />
@@ -108,7 +102,7 @@ const CourseExplore = () => {
             </div>
             
             {pagination && pagination.pages > 1 && (
-              <div className="mt-12 flex flex-wrap justify-center gap-3 pt-6 border-t border-slate-200 dark:border-white/[0.06]">
+              <div className="mt-12 flex justify-center pt-6 border-t border-slate-200 dark:border-slate-800">
                 <div className="explore-pagination-capsule">
                   {Array.from({ length: pagination.pages }, (_, i) => (
                     <button 
