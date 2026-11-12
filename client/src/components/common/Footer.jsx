@@ -9,12 +9,14 @@ const Footer = () => (
       <div className="footer-content">
         <div className="footer-grid">
           <div className="footer-brand">
-            <BrandLogo size="lg" />
-            <p className="footer-desc">Simple learning tools for creating courses, managing exams, and issuing certificates without the clutter.</p>
+            <BrandLogo size="md" />
+            <p className="footer-desc">
+              Structured course delivery, timed examination management, and verifiable digital academic credentials.
+            </p>
             <div className="footer-socials">
-              <a href="#" aria-label="GitHub"><FaGithub /></a>
-              <a href="#" aria-label="Twitter"><FaTwitter /></a>
-              <a href="#" aria-label="LinkedIn"><FaLinkedin /></a>
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><FaGithub /></a>
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter"><FaTwitter /></a>
+              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><FaLinkedin /></a>
             </div>
           </div>
           <div className="footer-links-group">
@@ -22,29 +24,30 @@ const Footer = () => (
             <div className="footer-links-list">
               <Link to="/courses">Explore Courses</Link>
               <Link to="/verify">Verify Certificate</Link>
-              <Link to="/register">Become an Instructor</Link>
+              <Link to="/register">Register Account</Link>
             </div>
           </div>
           <div className="footer-links-group">
-            <h4>Resources</h4>
+            <h4>Academic</h4>
             <div className="footer-links-list">
-              <a href="#">Documentation</a>
-              <a href="#">API Reference</a>
-              <a href="#">Help Center</a>
+              <Link to="/courses?category=web-development">Web Engineering</Link>
+              <Link to="/courses?category=data-science">Data Science</Link>
+              <Link to="/verify">Credential Registry</Link>
             </div>
           </div>
           <div className="footer-links-group">
-            <h4>Legal</h4>
+            <h4>System</h4>
             <div className="footer-links-list">
-              <a href="#">Privacy Policy</a>
-              <a href="#">Terms of Service</a>
-              <a href="#">Cookie Policy</a>
+              <Link to="/login">Sign In</Link>
+              <Link to="/dashboard">Workspace</Link>
+              <Link to="/verify">Public Verification</Link>
             </div>
           </div>
         </div>
       </div>
       <div className="footer-bottom">
         <p className="footer-copyright">© {new Date().getFullYear()} EduPlatform. All rights reserved.</p>
+        <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">Standard Academic Edition</span>
       </div>
     </div>
   </footer>

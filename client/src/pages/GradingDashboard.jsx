@@ -85,7 +85,7 @@ const GradingDashboard = () => {
 
   return (
     <div className="admin-panel animate-page-enter">
-      <h1 className="section-title">Grading <span className="gradient-text">Desk</span></h1>
+      <h1 className="section-title">Grading Desk</h1>
       <p className="text-slate-500 mb-md">
         Grading submissions for: <strong>{assignment.title}</strong> ({assignment.type.replace('-', ' ')})
       </p>

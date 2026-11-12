@@ -29,23 +29,35 @@ const Login = () => {
 
   return (
     <div className="w-full max-w-md mx-auto transition-all duration-300 animate-fade-in-up">
-      <div className="space-y-2">
-        <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white font-heading">Welcome back</h2>
-        <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">Sign in to continue your learning journey.</p>
+      <div className="space-y-3 text-left">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white font-heading">Welcome back</h2>
+          <p className="text-sm text-slate-600 dark:text-slate-400 font-normal mt-1">Sign in to continue your learning journey.</p>
+        </div>
+
+        <div className="flex items-center gap-2 pt-1 text-sm text-slate-600 dark:text-slate-400">
+          <span>Don&apos;t have an account?</span>
+          <Link 
+            to="/register" 
+            className="inline-flex items-center justify-center px-3 py-1 text-xs font-semibold rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800/90 text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 hover:border-slate-400 dark:hover:border-slate-500 transition-all shadow-xs cursor-pointer"
+          >
+            Sign up
+          </Link>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-8 space-y-5" id="login-form">
+      <form onSubmit={handleSubmit} className="mt-6 space-y-5" id="login-form">
         
         {/* Email Input */}
         <div className="space-y-1.5 text-left">
-          <label htmlFor="login-email" className="block text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Email Address</label>
+          <label htmlFor="login-email" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Email Address</label>
           <div className="relative flex items-center group">
-            <HiOutlineMail className="pointer-events-none absolute left-3.5 z-10 text-indigo-500 dark:text-indigo-400 group-focus-within:scale-110 transition-transform duration-200" size={19} aria-hidden="true" />
+            <HiOutlineMail className="pointer-events-none absolute left-3.5 z-10 text-slate-400 dark:text-slate-500 transition-colors" size={19} aria-hidden="true" />
             <input 
               id="login-email" 
               type="email" 
               style={{ paddingLeft: '2.75rem' }}
-              className="w-full pr-4 py-3.5 bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:scale-[1.01] transition-all duration-300 text-sm font-medium shadow-sm" 
+              className="w-full pr-4 py-3 bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-slate-900 dark:focus:border-slate-400 focus:ring-1 focus:ring-slate-900/10 dark:focus:ring-slate-400/10 transition-all text-sm font-medium shadow-xs" 
               placeholder="name@example.com" 
               value={form.email} 
               onChange={(e) => setForm({ ...form, email: e.target.value })} 
@@ -58,18 +70,18 @@ const Login = () => {
         {/* Password Input */}
         <div className="space-y-1.5 text-left">
           <div className="flex justify-between items-center">
-            <label htmlFor="login-password" className="block text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Password</label>
-            <Link to="/forgot-password" className="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 hover:underline transition-colors">
+            <label htmlFor="login-password" className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Password</label>
+            <Link to="/forgot-password" className="text-xs font-semibold text-slate-900 dark:text-slate-300 hover:underline transition-colors">
               Forgot password?
             </Link>
           </div>
           <div className="relative flex items-center group">
-            <HiOutlineLockClosed className="pointer-events-none absolute left-3.5 z-10 text-indigo-500 dark:text-indigo-400 group-focus-within:scale-110 transition-transform duration-200" size={19} aria-hidden="true" />
+            <HiOutlineLockClosed className="pointer-events-none absolute left-3.5 z-10 text-slate-400 dark:text-slate-500 transition-colors" size={19} aria-hidden="true" />
             <input 
               id="login-password" 
               type={showPass ? 'text' : 'password'} 
               style={{ paddingLeft: '2.75rem', paddingRight: '2.75rem' }}
-              className="w-full py-3.5 bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:scale-[1.01] transition-all duration-300 text-sm font-medium shadow-sm" 
+              className="w-full py-3 bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-slate-900 dark:focus:border-slate-400 focus:ring-1 focus:ring-slate-900/10 dark:focus:ring-slate-400/10 transition-all text-sm font-medium shadow-xs" 
               placeholder="••••••••" 
               value={form.password} 
               onChange={(e) => setForm({ ...form, password: e.target.value })} 
@@ -78,7 +90,7 @@ const Login = () => {
             />
             <button 
               type="button" 
-              className="absolute right-3.5 z-10 text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-1" 
+              className="absolute right-3.5 z-10 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 transition-colors p-1" 
               onClick={() => setShowPass(!showPass)} 
               aria-label={showPass ? "Hide password" : "Show password"}
             >
@@ -89,7 +101,7 @@ const Login = () => {
 
         {/* Error Alert Box */}
         {error && (
-          <div className="flex items-center gap-2.5 text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 p-3.5 rounded-xl border border-rose-200 dark:border-rose-500/20 animate-scale-in" role="alert">
+          <div className="flex items-center gap-2.5 text-xs font-medium text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 p-3.5 rounded-lg border border-rose-200 dark:border-rose-900 animate-scale-in" role="alert">
             <HiOutlineExclamation className="text-base flex-shrink-0 text-rose-500" />
             <span>{error}</span>
           </div>
@@ -98,7 +110,7 @@ const Login = () => {
         {/* Submit Button */}
         <button 
           type="submit" 
-          className="btn-primary w-full py-4 text-sm font-extrabold rounded-2xl shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:-translate-y-0.5 active:scale-95 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed mt-2 flex items-center justify-center gap-2 cursor-pointer" 
+          className="btn-primary w-full py-3.5 text-sm font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed mt-2 flex items-center justify-center gap-2 cursor-pointer" 
           disabled={loading}
         >
           {loading ? (
@@ -116,7 +128,7 @@ const Login = () => {
         
         {/* Divider */}
         <div className="relative my-6 flex items-center justify-center">
-          <span className="absolute bg-white dark:bg-[#0c0e17] px-3 text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Or continue with</span>
+          <span className="absolute bg-white dark:bg-[#0c0e17] px-3 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Or continue with</span>
           <div className="w-full border-t border-slate-200 dark:border-slate-800"></div>
         </div>
 
@@ -124,27 +136,20 @@ const Login = () => {
         <div className="grid grid-cols-2 gap-3">
           <a 
             href={`${serverUrl}/api/auth/google`} 
-            className="flex w-full items-center justify-center gap-2.5 py-3 px-4 text-xs font-extrabold rounded-2xl bg-slate-100/80 dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-800 hover:-translate-y-1 hover:shadow-md transition-all duration-300"
+            className="flex w-full items-center justify-center gap-2.5 py-2.5 px-4 text-xs font-semibold rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shadow-xs"
           >
             <FcGoogle className="text-lg" />
             <span>Google</span>
           </a>
           <a 
             href={`${serverUrl}/api/auth/github`} 
-            className="flex w-full items-center justify-center gap-2.5 py-3 px-4 text-xs font-extrabold rounded-2xl bg-slate-100/80 dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-200/80 dark:hover:bg-slate-800 hover:-translate-y-1 hover:shadow-md transition-all duration-300"
+            className="flex w-full items-center justify-center gap-2.5 py-2.5 px-4 text-xs font-semibold rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shadow-xs"
           >
             <FaGithub className="text-lg text-slate-900 dark:text-white" />
             <span>GitHub</span>
           </a>
         </div>
       </form>
-      
-      <p className="mt-8 text-center text-sm text-slate-600 dark:text-slate-400 font-medium">
-        Don&apos;t have an account? 
-        <Link to="/register" className="font-extrabold text-indigo-600 dark:text-indigo-400 hover:underline ml-1.5 transition-colors">
-          Sign up
-        </Link>
-      </p>
     </div>
   );
 };

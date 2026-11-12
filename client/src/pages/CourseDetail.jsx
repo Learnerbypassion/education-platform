@@ -10,11 +10,9 @@ import {
   HiOutlineGlobe, 
   HiOutlineAcademicCap, 
   HiOutlineArrowRight, 
-  HiOutlineChevronUp, 
   HiOutlineChevronDown,
   HiOutlineCheck,
   HiOutlineShieldCheck,
-  HiOutlineSparkles,
   HiOutlinePlay,
   HiOutlinePencil
 } from 'react-icons/hi';
@@ -97,61 +95,54 @@ const CourseDetail = () => {
     return `${baseURL}${cleanPath}`;
   };
 
-  if (loading) return <Loader text="Loading course detail..." />;
-  if (!course) return <div className="container" style={{ padding: '4rem 0' }}><h3>Course not found</h3></div>;
+  if (loading) return <Loader text="Loading course syllabus..." />;
+  if (!course) return <div className="container py-16 text-center"><h3>Course not found</h3></div>;
 
   const creator = course.creatorId || {};
 
   return (
-    <div className="course-detail-page min-h-screen bg-slate-50 text-slate-900 dark:bg-[#07080e] dark:text-white transition-colors duration-300 relative">
-      
-      {/* Dynamic Ambient Background Glow Orbs */}
-      <div className="course-detail-orb-1" />
-      <div className="course-detail-orb-2" />
-
-      {/* Main Container Wrapper */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16 relative z-10">
+    <div className="course-detail-page min-h-screen bg-transparent text-slate-900 dark:text-white">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="grid gap-10 lg:grid-cols-12 items-start">
           
           {/* Left Column: Course Header, Instructor & Syllabus */}
-          <div className="lg:col-span-8 space-y-8 animate-fade-in-up">
+          <div className="lg:col-span-8 space-y-8">
             
-            <div className="space-y-5">
-              <div className="flex items-center gap-3">
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="course-detail-category-badge-pill">
-                  <HiOutlineSparkles className="text-indigo-500 animate-pulse" />
                   {getCategoryLabel(course.category)}
                 </span>
-                <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20">
-                  ● {course.difficulty || 'All Levels'}
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400 capitalize px-2 py-0.5 rounded border border-slate-200 dark:border-slate-800">
+                  {course.difficulty || 'All Levels'}
                 </span>
               </div>
               
-              <h1 className="course-detail-title bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-800 dark:from-white dark:via-indigo-100 dark:to-purple-200 bg-clip-text text-transparent">
+              <h1 className="course-detail-title text-3xl sm:text-4xl font-bold tracking-tight text-slate-950 dark:text-white">
                 {course.title}
               </h1>
               
-              <p className="course-detail-subtitle text-slate-600 dark:text-slate-350">
+              <p className="course-detail-subtitle text-slate-600 dark:text-slate-400 text-base leading-relaxed">
                 {course.shortDescription || (course.description && course.description.slice(0, 180) + '...')}
               </p>
               
               {/* Metadata strip */}
               <div className="course-detail-meta-list">
                 <div className="course-meta-pill">
-                  <HiOutlineClock size={16} className="text-indigo-500" />
+                  <HiOutlineClock size={15} className="text-slate-500" />
                   <span>{course.estimatedDuration || 'Self-paced'}</span>
                 </div>
                 <div className="course-meta-pill">
-                  <HiOutlineGlobe size={16} className="text-purple-500" />
+                  <HiOutlineGlobe size={15} className="text-slate-500" />
                   <span className="capitalize">{course.language || 'English'}</span>
                 </div>
                 <div className="course-meta-pill">
-                  <HiOutlineBookOpen size={16} className="text-pink-500" />
+                  <HiOutlineBookOpen size={15} className="text-slate-500" />
                   <span className="capitalize">{course.structureType?.replace('-', ' ')}</span>
                 </div>
                 {course.enrollmentCount > 0 && (
                   <div className="course-meta-pill">
-                    <HiOutlineAcademicCap size={16} className="text-emerald-500" />
+                    <HiOutlineAcademicCap size={15} className="text-slate-500" />
                     <span>{course.enrollmentCount} Enrolled Students</span>
                   </div>
                 )}
@@ -170,93 +161,89 @@ const CourseDetail = () => {
                 </div>
               </div>
               <div className="instructor-text-wrap">
-                <span className="instructor-label">Course Author</span>
-                <span className="instructor-name text-slate-900 dark:text-white">
+                <span className="instructor-label">Faculty Author</span>
+                <span className="instructor-name text-slate-900 dark:text-white flex items-center gap-1.5 font-bold">
                   {creator.name || 'Instructor'} 
-                  <HiOutlineShieldCheck className="text-indigo-500 text-base" title="Verified Creator" />
+                  <HiOutlineShieldCheck className="text-slate-500" title="Verified Creator" size={16} />
                 </span>
               </div>
             </div>
 
             {/* About / Description Card */}
             <div className="detail-content-card">
-              <h2 className="section-title text-slate-900 dark:text-white">About this course</h2>
-              <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-sm whitespace-pre-line">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-3">About this course</h2>
+              <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm whitespace-pre-line">
                 {course.description}
               </p>
 
               {/* Course Highlights Grid */}
-              <div className="mt-6 pt-6 border-t border-slate-200/80 dark:border-white/5 grid sm:grid-cols-2 gap-3">
-                <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 dark:text-slate-300">
-                  <span className="w-5 h-5 rounded-full bg-indigo-500/10 text-indigo-500 flex items-center justify-center font-bold">✓</span>
-                  <span>100% Online & Self-Paced Learning</span>
+              <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 grid sm:grid-cols-2 gap-3">
+                <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                  <HiOutlineCheck className="text-slate-900 dark:text-white shrink-0" />
+                  <span>Sequential course syllabus & video modules</span>
                 </div>
-                <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 dark:text-slate-300">
-                  <span className="w-5 h-5 rounded-full bg-purple-500/10 text-purple-500 flex items-center justify-center font-bold">✓</span>
-                  <span>Auto-Graded Quizzes & Exam System</span>
+                <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                  <HiOutlineCheck className="text-slate-900 dark:text-white shrink-0" />
+                  <span>Automated examination & assessment scoring</span>
                 </div>
-                <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 dark:text-slate-300">
-                  <span className="w-5 h-5 rounded-full bg-pink-500/10 text-pink-500 flex items-center justify-center font-bold">✓</span>
-                  <span>Verifiable Certificate of Completion</span>
+                <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                  <HiOutlineCheck className="text-slate-900 dark:text-white shrink-0" />
+                  <span>Verifiable certificate of completion</span>
                 </div>
-                <div className="flex items-center gap-2.5 text-xs font-bold text-slate-700 dark:text-slate-300">
-                  <span className="w-5 h-5 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold">✓</span>
-                  <span>Lifetime Unlimited Access</span>
+                <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                  <HiOutlineCheck className="text-slate-900 dark:text-white shrink-0" />
+                  <span>Ongoing access to curriculum resources</span>
                 </div>
               </div>
             </div>
 
             {/* Syllabus Accordion Card */}
             <div className="detail-content-card">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="section-title text-slate-900 dark:text-white mb-0">Course Syllabus</h2>
-                <span className="module-count-badge">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Curriculum Syllabus</h2>
+                <span className="text-xs font-mono text-slate-500">
                   {course.modules?.length || 0} Modules
                 </span>
               </div>
               
-              <div className="syllabus-accordion-list space-y-3.5">
+              <div className="syllabus-accordion-list space-y-2">
                 {course.modules?.map((mod, i) => {
                   const isOpen = !!openModules[mod._id];
                   return (
-                    <div key={mod._id} className={`accordion-module ${isOpen ? 'active' : ''}`}>
+                    <div key={mod._id} className={`accordion-module border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden bg-white dark:bg-[#11131c] ${isOpen ? 'active' : ''}`}>
                       <button 
                         onClick={() => toggleModule(mod._id)} 
-                        className="accordion-header flex justify-between items-center w-full"
+                        className="p-4 flex justify-between items-center w-full text-left cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-850 transition-colors"
                       >
-                        <div className="text-left">
-                          <span className="module-label">
+                        <div>
+                          <span className="text-[10px] font-mono uppercase text-slate-400 block">
                             {mod.structureLabel || `Module ${i + 1}`}
                           </span>
-                          <h4 className="module-title text-slate-900 dark:text-white">
+                          <h4 className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">
                             {mod.title}
                           </h4>
                         </div>
-                        <div className="accordion-toggle-icon">
-                          <HiOutlineChevronDown size={16} />
-                        </div>
+                        <HiOutlineChevronDown size={16} className={`text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                       </button>
                       
                       {isOpen && (
-                        <div className="accordion-content">
+                        <div className="p-4 pt-0 border-t border-slate-100 dark:border-slate-800">
                           {mod.lessons && mod.lessons.length > 0 ? (
-                            <div className="lessons-list">
+                            <div className="space-y-1.5 pt-2">
                               {mod.lessons.map((les) => (
-                                <div key={les._id} className="lesson-item flex justify-between items-center text-slate-700 dark:text-slate-300">
-                                  <span className="lesson-title flex items-center gap-2.5 text-sm font-semibold">
-                                    <span className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-500 dark:text-indigo-400">
-                                      <HiOutlinePlay size={14} />
-                                    </span>
+                                <div key={les._id} className="flex justify-between items-center py-1.5 text-xs text-slate-600 dark:text-slate-300">
+                                  <span className="flex items-center gap-2">
+                                    <HiOutlinePlay size={13} className="text-slate-400 shrink-0" />
                                     <span>{les.title}</span>
                                   </span>
-                                  <span className="lesson-type-badge">
+                                  <span className="text-[10px] font-mono text-slate-400 uppercase">
                                     {les.type}
                                   </span>
                                 </div>
                               ))}
                             </div>
                           ) : (
-                            <p className="no-lessons-text text-slate-400 text-xs py-2">No lessons in this module yet.</p>
+                            <p className="text-slate-400 text-xs py-2 italic">No lessons in this module yet.</p>
                           )}
                         </div>
                       )}
@@ -268,63 +255,65 @@ const CourseDetail = () => {
 
           </div>
 
-          {/* Right Column: Sticky Floating Action Card */}
-          <div className="lg:col-span-4 sticky-card-wrapper animate-scale-in">
-            <div className="course-sticky-card">
+          {/* Right Column: Sticky Action Card */}
+          <div className="lg:col-span-4 sticky top-24">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#11131c] overflow-hidden shadow-xs">
               {/* Thumbnail Container */}
-              <div className="sticky-card-image-container">
+              <div className="h-44 overflow-hidden bg-slate-100 dark:bg-slate-900">
                 <img 
                   src={imageError ? getCourseThumbnail({ ...course, thumbnail: null }) : getCourseThumbnail(course)} 
                   alt={course.title} 
-                  className="sticky-card-img" 
+                  className="w-full h-full object-cover" 
                   onError={() => setImageError(true)}
                 />
-                <div className="sticky-card-image-overlay" />
               </div>
 
               {/* Action Body */}
-              <div className="sticky-card-body">
-                <div className="price-row">
-                  <span className="price-label">Course Fee</span>
-                  <span className="price-value">
+              <div className="p-6 space-y-5">
+                <div className="flex items-baseline justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Tuition</span>
+                  <span className="text-2xl font-bold text-slate-900 dark:text-white">
                     {course.price === 0 ? 'Free' : `$${course.price}`}
                   </span>
                 </div>
 
-                <div className="course-feature-list">
-                  <div className="course-feature-item">
-                    <span className="feature-icon-bullet"><HiOutlineCheck /></span>
-                    <span>Full Lifetime Access</span>
+                <div className="space-y-2 text-xs text-slate-600 dark:text-slate-400">
+                  <div className="flex items-center gap-2">
+                    <HiOutlineCheck className="text-slate-900 dark:text-white" />
+                    <span>Complete syllabus access</span>
                   </div>
-                  <div className="course-feature-item">
-                    <span className="feature-icon-bullet"><HiOutlineCheck /></span>
-                    <span>Official Verified Certificate</span>
+                  <div className="flex items-center gap-2">
+                    <HiOutlineCheck className="text-slate-900 dark:text-white" />
+                    <span>Verified certificate upon completion</span>
                   </div>
-                  <div className="course-feature-item">
-                    <span className="feature-icon-bullet"><HiOutlineCheck /></span>
-                    <span>Access on Mobile & Desktop</span>
+                  <div className="flex items-center gap-2">
+                    <HiOutlineCheck className="text-slate-900 dark:text-white" />
+                    <span>Desktop and mobile classroom access</span>
                   </div>
                 </div>
                 
                 {enrolled ? (
-                  <div className="space-y-3">
-                    <Link to={`/courses/${id}/learn`} className="btn-detail-primary">
-                      <span>Go to Classroom</span> 
-                      <HiOutlineArrowRight size={18} />
+                  <div className="space-y-2.5 pt-2">
+                    <Link to={`/courses/${id}/learn`} className="btn btn-primary w-full py-3 px-4 text-xs font-semibold flex items-center justify-center gap-2">
+                      <span>Open Classroom</span> 
+                      <HiOutlineArrowRight size={15} />
                     </Link>
                     {(isInstructor || isAdmin || user?._id === creator?._id) && (
                       <Link 
                         to={`/course/${id}/edit`} 
-                        className="w-full py-3 px-4 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300 font-extrabold text-xs flex items-center justify-center gap-2 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-all shadow-sm"
+                        className="btn btn-outline w-full py-2.5 px-4 text-xs font-medium flex items-center justify-center gap-1.5"
                       >
-                        <HiOutlinePencil size={15} /> Edit Course Workspace
+                        <HiOutlinePencil size={14} /> Edit Course
                       </Link>
                     )}
                   </div>
                 ) : (
-                  <button onClick={handleEnroll} className="btn-detail-accent">
+                  <button 
+                    onClick={handleEnroll} 
+                    className="btn btn-primary w-full py-3 px-4 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer"
+                  >
                     <span>Enroll in Course</span>
-                    <HiOutlineArrowRight size={18} />
+                    <HiOutlineArrowRight size={15} />
                   </button>
                 )}
               </div>
@@ -333,7 +322,6 @@ const CourseDetail = () => {
 
         </div>
       </div>
-
     </div>
   );
 };

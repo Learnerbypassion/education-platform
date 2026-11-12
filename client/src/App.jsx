@@ -28,6 +28,7 @@ import CertificateView from './pages/CertificateView';
 import AdminPanel from './pages/AdminPanel';
 import AssignmentCreate from './pages/AssignmentCreate';
 import GradingDashboard from './pages/GradingDashboard';
+import ExamResult from './pages/ExamResult';
 
 function App() {
   return (
@@ -73,6 +74,8 @@ function App() {
         <Route path="/courses/:id" element={<ProtectedRoute><MainLayout><CourseDetail /></MainLayout></ProtectedRoute>} />
         <Route path="/courses/:id/learn" element={<ProtectedRoute><CourseLearn /></ProtectedRoute>} />
         <Route path="/exams/:id/take" element={<ProtectedRoute><ExamTake /></ProtectedRoute>} />
+        <Route path="/exams/:id/results" element={<ProtectedRoute><MainLayout><ExamResult /></MainLayout></ProtectedRoute>} />
+        <Route path="/exams/:id/result" element={<ProtectedRoute><MainLayout><ExamResult /></MainLayout></ProtectedRoute>} />
         <Route path="/assignments/:id/view" element={<ProtectedRoute><MainLayout><AssignmentView /></MainLayout></ProtectedRoute>} />
         <Route path="/certificates/:id" element={<ProtectedRoute><MainLayout><CertificateView /></MainLayout></ProtectedRoute>} />
 

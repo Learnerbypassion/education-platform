@@ -65,9 +65,14 @@ const Navbar = () => {
           prev.map((n) => (n._id === notif._id ? { ...n, isRead: true } : n))
         );
       }
-      if (notif.link) {
-        setNotifOpen(false);
-        navigate(notif.link);
+      setNotifOpen(false);
+      let targetLink = notif.link;
+      if (!targetLink && (notif.type === 'exam-schedule' || notif.title?.includes('Exam Graded'))) {
+        const examId = notif.metadata?.examId || notif.metadata?.id;
+        if (examId) targetLink = `/exams/${examId}/results`;
+      }
+      if (targetLink) {
+        navigate(targetLink);
       }
     } catch {
       // Silently fail
