@@ -46,7 +46,7 @@ const AdminPanel = () => {
 
   return (
     <div className="admin-page animate-page-enter">
-      <h1 className="section-title">Admin <span className="gradient-text">Panel</span></h1>
+      <h1 className="section-title">Admin Panel</h1>
       <p className="section-subtitle">System administration & user moderation</p>
 
       {stats && (

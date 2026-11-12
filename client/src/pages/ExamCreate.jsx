@@ -217,22 +217,22 @@ const ExamCreate = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 inline-flex items-center gap-1.5">
-            <HiOutlineAcademicCap size={14} /> {questions.length} {questions.length === 1 ? 'Question' : 'Questions'} Added
+          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1.5">
+            <HiOutlineAcademicCap size={14} /> {questions.length} {questions.length === 1 ? 'Question' : 'Questions'}
           </span>
           <button
             type="button"
             onClick={async () => {
               try {
                 const res = await togglePublish(courseId);
-                toast.success(res.data.data.isPublished ? '🎉 Course published live!' : 'Course reverted to draft!');
+                toast.success(res.data.data.isPublished ? 'Course published live' : 'Course moved to draft');
               } catch {
                 toast.error('Failed to update course publish status');
               }
             }}
-            className="px-4 py-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold text-xs shadow-md shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
+            className="px-3.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
           >
-            <HiOutlineGlobeAlt size={16} /> Publish Course Live 🌐
+            <HiOutlineGlobeAlt size={15} /> Toggle Publish
           </button>
         </div>
       </div>
@@ -378,17 +378,17 @@ const ExamCreate = () => {
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-200 dark:border-white/5">
+          <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
             <button 
               type="submit" 
-              className="w-full py-4 px-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:to-pink-700 text-white rounded-2xl font-extrabold text-base shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-[1.01] active:scale-95 transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer border border-white/20" 
+              className="btn btn-primary w-full py-3 px-6 text-xs font-semibold disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-xs" 
               disabled={loading}
             >
               {loading ? (
                 'Publishing Exam...'
               ) : (
                 <>
-                  <HiOutlineAcademicCap size={20} /> Create & Publish Exam <HiOutlineArrowRight size={18} />
+                  <HiCheck size={16} /> Save & Publish Examination
                 </>
               )}
             </button>

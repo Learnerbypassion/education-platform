@@ -8,11 +8,11 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'https://education-platform-8pkc.onrender.com',
+        target: 'http://localhost:5000',
         changeOrigin: true,
       },
       '/uploads': {
-        target: 'https://education-platform-8pkc.onrender.com',
+        target: 'http://localhost:5000',
         changeOrigin: true,
       },
     },

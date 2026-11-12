@@ -3,7 +3,6 @@ import { useNavigate, useParams, Link, useSearchParams } from 'react-router-dom'
 import { createCourse, getCourseById, updateCourse, createModule, createLesson, deleteModule, deleteLesson, togglePublish } from '../api/courseApi';
 import { generateCourseDescription, generateLessonSummary } from '../api/aiApi';
 import toast from 'react-hot-toast';
-import { useAuth } from '../hooks/useAuth';
 import CustomSelect from '../components/common/CustomSelect';
 import { CATEGORIES, DIFFICULTIES, STRUCTURE_TYPES } from '../utils/constants';
 import { 
@@ -30,7 +29,6 @@ import './CourseCreate.css';
 const CourseCreate = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, isAdmin } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const isEdit = !!id;
 
@@ -145,14 +143,6 @@ const CourseCreate = () => {
         try {
           const res = await getCourseById(id);
           const c = res.data.data;
-          const creatorId = c.creatorId?._id || c.creatorId;
-          const isOwner = user?._id && creatorId && user._id.toString() === creatorId.toString();
-          if (!isOwner && !isAdmin) {
-            toast.error('Not authorized to edit this course');
-            navigate(`/courses/${id}`);
-            return;
-          }
-
           setForm({
             title: c.title,
             description: c.description,
@@ -172,7 +162,7 @@ const CourseCreate = () => {
       };
       loadCourse();
     }
-  }, [id, isEdit, user, isAdmin, navigate]);
+  }, [id, isEdit]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -275,8 +265,8 @@ const CourseCreate = () => {
               <HiOutlineSparkles size={13} /> Instructor Studio
             </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black font-heading text-slate-900 dark:text-white tracking-tight">
-            {isEdit ? 'Edit' : 'Create New'} <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">Course Workspace</span>
+          <h1 className="text-3xl sm:text-4xl font-bold font-heading text-slate-900 dark:text-white tracking-tight">
+            {isEdit ? 'Edit' : 'Create New'} <span className="text-slate-900 dark:text-white">Course Workspace</span>
           </h1>
           <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">
             Configure course meta, pricing details, cover image, and curriculum modules.
@@ -333,14 +323,14 @@ const CourseCreate = () => {
           </div>
         )}
         {isEdit && (
-          <div className="flex items-center justify-between flex-wrap gap-4 mt-6 p-2 bg-slate-100/80 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800/90 rounded-2xl shadow-sm backdrop-blur-md">
+          <div className="flex items-center justify-between flex-wrap gap-4 mt-6 p-2 bg-slate-100/80 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800/90 rounded-xl shadow-xs">
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setActiveTab('details')}
-                className={`px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all duration-200 cursor-pointer ${
+                className={`px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer ${
                   activeTab === 'details'
-                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/20'
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-white/5'
                 }`}
               >
@@ -350,9 +340,9 @@ const CourseCreate = () => {
               <button
                 type="button"
                 onClick={() => setActiveTab('curriculum')}
-                className={`px-5 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all duration-200 cursor-pointer ${
+                className={`px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer ${
                   activeTab === 'curriculum'
-                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/20'
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-white/5'
                 }`}
               >
@@ -360,7 +350,7 @@ const CourseCreate = () => {
               </button>
             </div>
 
-            <div className="text-xs font-bold text-slate-500 dark:text-slate-400 px-3 hidden sm:block">
+            <div className="text-xs font-medium text-slate-500 dark:text-slate-400 px-3 hidden sm:block">
               {activeTab === 'details' ? 'Editing Course Metadata & Pricing' : 'Building Modules & Lessons'}
             </div>
           </div>
@@ -639,18 +629,18 @@ const CourseCreate = () => {
 
             <button 
               type="submit" 
-              className="w-full sm:w-auto px-10 py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:to-pink-700 text-white rounded-2xl font-extrabold text-base shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-[1.01] active:scale-95 transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer border border-white/20" 
+              className="btn-primary w-full sm:w-auto px-8 py-3 rounded-lg text-sm font-semibold cursor-pointer flex items-center justify-center gap-2" 
               disabled={loading}
             >
               {loading ? (
                 'Saving Changes...'
               ) : isEdit ? (
                 <>
-                  Save & Continue to Curriculum <HiOutlineArrowRight size={18} />
+                  Save & Continue to Curriculum <HiOutlineArrowRight size={16} />
                 </>
               ) : (
                 <>
-                  Create Course & Build Outline <HiOutlineArrowRight size={18} />
+                  Create Course & Build Outline <HiOutlineArrowRight size={16} />
                 </>
               )}
             </button>
@@ -672,7 +662,7 @@ const CourseCreate = () => {
               </div>
               <button 
                 type="button" 
-                className="px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-2xl text-xs font-extrabold shadow-md hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5" 
+                className="btn-primary px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer" 
                 onClick={() => {
                   const weeks = Array.from(new Set([1, ...modules.map(m => m.week || 1), ...extraWeeks]));
                   const nextWeek = Math.max(...weeks, 0) + 1;
@@ -885,7 +875,7 @@ const CourseCreate = () => {
                                     </button>
                                     <button 
                                       type="button" 
-                                      className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-extrabold rounded-xl shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer" 
+                                      className="btn-primary px-4 py-2 text-xs font-semibold rounded-lg cursor-pointer" 
                                       onClick={(e) => handleAddLesson(e, mod._id)}
                                     >
                                       Save Lesson →
@@ -917,24 +907,24 @@ const CourseCreate = () => {
                 <button
                   type="button"
                   onClick={handleTogglePublish}
-                  className={`px-6 py-3 rounded-2xl font-extrabold text-xs transition-all flex items-center gap-2 cursor-pointer shadow-md ${
+                  className={`px-5 py-2.5 rounded-lg font-semibold text-xs transition-colors flex items-center gap-2 cursor-pointer shadow-xs ${
                     form.isPublished 
-                      ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 hover:bg-amber-500/20' 
-                      : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-emerald-500/25 hover:scale-105 active:scale-95'
+                      ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 hover:bg-amber-500/20' 
+                      : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs'
                   }`}
                 >
                   <HiOutlineGlobeAlt size={16} />
-                  {form.isPublished ? 'Unpublish Course (Draft)' : 'Publish Course Live 🌐'}
+                  {form.isPublished ? 'Unpublish Course (Draft)' : 'Publish Course Live'}
                 </button>
                 <Link
                   to={`/course/${id}`}
-                  className="px-6 py-3 border border-slate-200 dark:border-white/10 hover:border-indigo-500 text-slate-700 dark:text-slate-200 font-extrabold text-xs rounded-2xl transition-all flex items-center gap-2"
+                  className="px-5 py-2.5 border border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600 text-slate-700 dark:text-slate-200 font-semibold text-xs rounded-lg transition-colors flex items-center gap-2"
                 >
                   Preview Course Page
                 </Link>
                 <Link
                   to="/dashboard"
-                  className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md flex items-center gap-2"
+                  className="btn-primary px-5 py-2.5 text-xs font-semibold rounded-lg flex items-center gap-2"
                 >
                   <HiOutlineCheckCircle size={16} /> Return to Dashboard
                 </Link>

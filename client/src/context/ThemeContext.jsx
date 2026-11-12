@@ -6,6 +6,8 @@ const ThemeContext = createContext(null);
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
     if (typeof window === 'undefined') return 'light';
+    const urlTheme = new URLSearchParams(window.location.search).get('theme');
+    if (urlTheme === 'dark' || urlTheme === 'light') return urlTheme;
     return localStorage.getItem('edu-theme') || 'light';
   });
 

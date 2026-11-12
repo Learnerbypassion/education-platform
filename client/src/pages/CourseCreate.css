@@ -95,8 +95,8 @@
   top: 0;
   left: 0;
   bottom: 0;
-  width: 5px;
-  background: linear-gradient(to bottom, #6366f1, #8b5cf6, #ec4899);
+  width: 4px;
+  background: #0f172a;
 }
 
 html[data-theme='dark'] .week-section {
@@ -205,22 +205,19 @@ html[data-theme='dark'] .outline-lesson-item:hover {
 
 /* ─── Ultra-Luxury Add Lesson Form Box ────────────────────── */
 .add-lesson-box {
-  padding: 1.85rem;
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.35rem;
-  border-top: 2px solid transparent;
-  border-image: linear-gradient(135deg, #6366f1, #a855f7, #ec4899) 1;
-  background: linear-gradient(135deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.95));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 12px 30px -5px rgba(99, 102, 241, 0.08);
-  border-bottom-left-radius: 1.5rem;
-  border-bottom-right-radius: 1.5rem;
+  gap: 1.25rem;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-card);
+  border-bottom-left-radius: 1.25rem;
+  border-bottom-right-radius: 1.25rem;
 }
 
 html[data-theme='dark'] .add-lesson-box {
-  background: linear-gradient(135deg, rgba(12, 15, 27, 0.96), rgba(18, 22, 38, 0.96));
-  border-top-color: rgba(129, 140, 248, 0.35);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 20px 40px -5px rgba(0, 0, 0, 0.6);
+  background: #11131c;
+  border-top-color: rgba(255, 255, 255, 0.08);
 }
 
 .add-lesson-box input,

@@ -1,9 +1,9 @@
-import { useEffect, useState, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useEffect, useState, useRef, useMemo } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getCourseById, updateProgress, getEnrolledCourses, getMySubmissions, startLesson } from '../api/courseApi';
 import { getAssignments } from '../api/assignmentApi';
 import { getExams, requestExamAttempt } from '../api/examApi';
-import { generateCertificate } from '../api/certificateApi';
+import { generateCertificate, getMyCertificates } from '../api/certificateApi';
 import Loader from '../components/common/Loader';
 import toast from 'react-hot-toast';
 import { 
@@ -27,6 +27,7 @@ import DOMPurify from 'dompurify';
 
 const CourseLearn = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [course, setCourse] = useState(null);
   const [assignments, setAssignments] = useState([]);
   const [exams, setExams] = useState([]);
@@ -59,29 +60,40 @@ const CourseLearn = () => {
 
   const fetchCourseData = async () => {
     try {
-      const courseRes = await getCourseById(id);
+      // Parallelize all requests to eliminate waterfall delays and load instantly
+      const [courseRes, assignmentsRes, examsRes, submissionsRes, enrolledRes, certsRes] = await Promise.all([
+        getCourseById(id),
+        getAssignments(id).catch(err => { console.warn('Failed to load assignments', err); return { data: { data: [] } }; }),
+        getExams(id).catch(err => { console.warn('Failed to load exams', err); return { data: { data: [] } }; }),
+        getMySubmissions().catch(err => { console.warn('Failed to load submissions', err); return { data: { data: [] } }; }),
+        getEnrolledCourses().catch(err => { console.warn('Failed to load enrolled courses', err); return { data: { data: [] } }; }),
+        getMyCertificates().catch(() => ({ data: { data: [] } })),
+      ]);
+
       const data = courseRes.data.data;
       setCourse(data);
 
-      if (data.modules?.length > 0) {
+      if (data?.modules?.length > 0) {
         setActiveModule(data.modules[0]);
         setViewingAssessments(false);
       }
 
-      // Fetch assignments, exams, and submissions
-      const [assignmentsRes, examsRes, submissionsRes] = await Promise.all([
-        getAssignments(id),
-        getExams(id),
-        getMySubmissions(),
-      ]);
-      setAssignments(assignmentsRes.data.data);
-      setExams(examsRes.data.data);
-      setSubmissions(submissionsRes.data.data);
+      setAssignments(assignmentsRes.data?.data || []);
+      setExams(examsRes.data?.data || []);
+      setSubmissions(submissionsRes.data?.data || []);
 
-      const enrolledRes = await getEnrolledCourses();
-      const enrollmentObj = enrolledRes.data.data.find(e => e.courseId?._id === id);
+      const enrollmentObj = enrolledRes.data?.data?.find(e => (e.courseId?._id || e.courseId) === id);
       if (enrollmentObj) {
         setCompletedIds(new Set(enrollmentObj.completedLessons || []));
+      }
+
+      // Check if user already has an issued certificate for this course (preserves state on refresh)
+      const existingCert = certsRes.data?.data?.find(c => {
+        const cCourseId = c.courseId?._id || c.courseId;
+        return String(cCourseId) === String(id) && c.isValid !== false;
+      });
+      if (existingCert) {
+        setCertUrl(`/certificates/${existingCert._id}`);
       }
     } catch (err) {
       console.error('Failed to load course contents:', err);
@@ -348,17 +360,56 @@ const CourseLearn = () => {
       setCompletedIds(prev => new Set([...prev, activeLesson._id]));
       setLiveProgressMap(prev => ({ ...prev, [activeLesson._id]: 100 }));
       toast.success('Lesson completed!');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to mark lesson complete');
+    } catch {
+      toast.error('Failed to mark lesson complete');
     }
   };
 
+  // Certificate eligibility calculation
+  const allLessons = useMemo(() => course?.modules?.flatMap(m => m.lessons || []) || [], [course]);
+  const isAllLessonsCompleted = useMemo(() => {
+    return allLessons.length > 0 && allLessons.every(l => completedIds.has(l._id));
+  }, [allLessons, completedIds]);
+
+  const isAllExamsPassed = useMemo(() => {
+    if (exams.length === 0) return true;
+    return exams.every(ex => submissions.some(s => (s.examId?._id === ex._id || s.examId === ex._id) && s.isPassed));
+  }, [exams, submissions]);
+
+  const isAllAssignmentsPassed = useMemo(() => {
+    if (assignments.length === 0) return true;
+    return assignments.every(as => submissions.some(s => (s.assignmentId?._id === as._id || s.assignmentId === as._id) && s.isPassed));
+  }, [assignments, submissions]);
+
+  const isClaimable = isAllLessonsCompleted && isAllExamsPassed && isAllAssignmentsPassed;
+
   const handleGenerateCertificate = async () => {
+    if (certUrl) {
+      navigate(certUrl);
+      return;
+    }
+
+    if (!isClaimable) {
+      if (!isAllLessonsCompleted) {
+        toast.error(`Incomplete lessons: Please finish all ${allLessons.length} lessons before claiming.`);
+      } else if (!isAllExamsPassed) {
+        toast.error('Required exams have not all been passed yet.');
+      } else if (!isAllAssignmentsPassed) {
+        toast.error('Required assignments have not all been passed yet.');
+      } else {
+        toast.error('Course requirements not yet fulfilled.');
+      }
+      return;
+    }
+
     setGeneratingCert(true);
     try {
       const res = await generateCertificate(id);
-      setCertUrl(`/certificates/${res.data.data._id}`);
-      toast.success('Certificate generated successfully!');
+      const certificate = res.data.data;
+      const targetUrl = `/certificates/${certificate._id}`;
+      setCertUrl(targetUrl);
+      toast.success('Certificate generated successfully! 🎓 Opening certificate...');
+      navigate(targetUrl);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Certificate eligibility verification failed. Complete all exams/assignments.');
     } finally {
@@ -448,7 +499,6 @@ const CourseLearn = () => {
     }));
   };
 
-  const allLessons = course?.modules?.reduce((acc, mod) => [...acc, ...(mod.lessons || [])], []) || [];
   const totalCourseLessons = allLessons.length;
   const currentCourseSum = allLessons.reduce((acc, l) => acc + getLessonProgress(l._id), 0);
   const coursePercent = totalCourseLessons > 0 ? Math.min(100, (currentCourseSum / totalCourseLessons)).toFixed(1) : '0.0';
@@ -516,7 +566,24 @@ const CourseLearn = () => {
     return embedUrl;
   };
 
-  if (loading) return <div className="flex min-h-screen items-center justify-center bg-[#06070c]"><Loader text="Entering classroom workspace..." /></div>;
+  if (loading) {
+    return (
+      <div className="classroom-loading-screen flex min-h-screen items-center justify-center bg-slate-50 dark:bg-[#06070c] p-6">
+        <div className="max-w-md w-full glass-card p-8 rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-2xl flex flex-col items-center text-center animate-fade-in">
+          <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-3xl mb-4 border border-indigo-500/20">
+            <HiOutlineAcademicCap size={32} className="animate-pulse" />
+          </div>
+          <h3 className="text-xl font-black text-slate-900 dark:text-white font-heading tracking-tight mb-2">
+            Loading Course Classroom
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 font-medium">
+            Retrieving modules, assessments, and learning progress...
+          </p>
+          <Loader size="md" text="Syncing real-time workspace..." />
+        </div>
+      </div>
+    );
+  }
   if (!course) return <div className="container" style={{ padding: '4rem 0' }}><h3>Workspace not found</h3></div>;
 
   const overallColor = getProgressColorStyle(coursePercent);
@@ -647,11 +714,40 @@ const CourseLearn = () => {
 
         <div className="classroom-sidebar-footer">
           {certUrl ? (
-            <Link to={certUrl} className="btn-detail-primary text-center block w-full py-3 font-extrabold shadow-lg">View Certificate 🏆</Link>
-          ) : (
-            <button onClick={handleGenerateCertificate} disabled={generatingCert} className="btn-detail-primary w-full py-3 font-extrabold shadow-lg">
-              {generatingCert ? 'Checking Eligibility...' : 'Claim Certificate 🎓'}
+            <button
+              onClick={() => navigate(certUrl)}
+              className="btn-detail-primary text-center block w-full py-3 font-extrabold shadow-lg cursor-pointer"
+              title="Open your earned certificate"
+            >
+              View Certificate 🏆
             </button>
+          ) : isClaimable ? (
+            <button
+              onClick={handleGenerateCertificate}
+              disabled={generatingCert}
+              className="btn-detail-primary w-full py-3 font-extrabold shadow-lg cursor-pointer"
+              title="Claim and open your official certificate"
+            >
+              {generatingCert ? 'Generating Certificate...' : 'Claim Certificate 🎓'}
+            </button>
+          ) : (
+            <div className="flex flex-col gap-1.5 w-full">
+              <button
+                type="button"
+                disabled
+                className="w-full py-3 px-4 rounded-xl bg-slate-200 dark:bg-white/5 text-slate-400 dark:text-slate-500 font-extrabold text-xs cursor-not-allowed border border-slate-300 dark:border-white/10 flex items-center justify-center gap-2 select-none filter-none"
+                title="Complete all lessons and assessments to unlock certificate"
+              >
+                <span>Certificate Locked 🔒</span>
+              </button>
+              <p className="text-[11px] text-center text-slate-400 dark:text-slate-500 font-semibold px-1">
+                {!isAllLessonsCompleted
+                  ? `Complete all lessons (${completedIds.size}/${allLessons.length}) to claim`
+                  : !isAllExamsPassed || !isAllAssignmentsPassed
+                  ? 'Pass all assessments to claim'
+                  : 'Requirements incomplete'}
+              </p>
+            </div>
           )}
         </div>
       </div>
@@ -774,7 +870,7 @@ const CourseLearn = () => {
                     )}
                     <div className="material-card-left">
                       <div className="material-card-icon-box">
-                        🏆
+                        <HiOutlineAcademicCap size={20} className="text-slate-700 dark:text-slate-300" />
                       </div>
                     </div>
                     <div className="material-card-center">
@@ -785,30 +881,30 @@ const CourseLearn = () => {
                       <h4 className="material-title">{ex.title}</h4>
                       <p className="material-desc">
                         Duration: {ex.duration} mins • Passing Score: {ex.passingMarks} / {ex.totalMarks}
-                        <span className="block text-[11px] text-slate-400 font-semibold mt-1">
+                        <span className="block text-[11px] text-slate-400 font-medium mt-1">
                           Attempts: {ex.attemptsUsed ?? 0} / {ex.totalAllowedAttempts ?? ex.maxAttempts} used • {ex.attemptsLeft ?? ex.maxAttempts} left
                         </span>
                       </p>
                     </div>
                     <div className="material-card-right flex flex-col items-end gap-2">
                       {hasAttemptsLeft ? (
-                        <Link to={`/exams/${ex._id}/take`} className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl text-xs font-bold transition-all duration-300 shadow-md active:scale-95">
+                        <Link to={`/exams/${ex._id}/take`} className="btn btn-primary px-4 py-2 text-xs font-semibold">
                           {ex.attemptsUsed > 0 ? 'Retake Exam' : 'Start Exam'}
                         </Link>
                       ) : (
                         <>
                           {ex.requestStatus === 'pending' ? (
-                            <span className="px-3 py-1 rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/20 text-xs font-bold">
+                            <span className="px-3 py-1 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 text-xs font-medium">
                               Request Pending
                             </span>
                           ) : ex.requestStatus === 'rejected' ? (
                             <div className="flex flex-col items-end gap-1.5">
-                              <span className="px-3 py-1 rounded-lg bg-rose-500/10 text-rose-500 border border-rose-500/20 text-xs font-bold">
+                              <span className="px-3 py-1 rounded-md bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800 text-xs font-medium">
                                 Request Rejected
                               </span>
                               <button
                                 onClick={() => handleOpenRequestModal(ex)}
-                                className="text-[11px] font-bold text-indigo-500 hover:text-indigo-400 underline cursor-pointer"
+                                className="text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:underline cursor-pointer"
                               >
                                 Re-request Attempts
                               </button>
@@ -816,7 +912,7 @@ const CourseLearn = () => {
                           ) : (
                             <button
                               onClick={() => handleOpenRequestModal(ex)}
-                              className="px-4 py-2 border border-indigo-500/30 text-indigo-500 hover:bg-indigo-500/10 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                              className="btn btn-outline px-3.5 py-1.5 text-xs font-medium cursor-pointer"
                             >
                               Request Extra Attempts
                             </button>
@@ -837,7 +933,7 @@ const CourseLearn = () => {
                     )}
                     <div className="material-card-left">
                       <div className="material-card-icon-box">
-                        📝
+                        <HiOutlineDocumentText size={20} className="text-slate-700 dark:text-slate-300" />
                       </div>
                     </div>
                     <div className="material-card-center">
@@ -848,7 +944,7 @@ const CourseLearn = () => {
                       <p className="material-desc">Passing Marks: {ass.passingMarks} / {ass.totalMarks}</p>
                     </div>
                     <div className="material-card-right">
-                      <Link to={`/assignments/${ass._id}/view`} className="px-5 py-2.5 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl text-xs font-bold text-center block transition-all duration-300">
+                      <Link to={`/assignments/${ass._id}/view`} className="btn btn-outline px-4 py-2 text-xs font-semibold text-center block">
                         {assSubmission ? 'View Submission' : 'Submit Assignment'}
                       </Link>
                     </div>
@@ -934,14 +1030,14 @@ const CourseLearn = () => {
                       <div className="material-card-right flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
                         {isVideoType ? (
                           <button 
-                            className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl text-xs font-bold transition-all duration-300 shadow-md hover:shadow-indigo-500/25 active:scale-95 flex items-center gap-1.5 cursor-pointer" 
+                            className="btn btn-primary px-4 py-2 text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs" 
                             onClick={() => handleLessonSelect(les)}
                           >
-                            <HiOutlinePlay size={15} /> Watch Lesson
+                            <HiOutlinePlay size={14} /> Watch Lesson
                           </button>
                         ) : (
                           <button 
-                            className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl text-xs font-bold transition-all duration-300 shadow-md hover:shadow-indigo-500/25 active:scale-95 cursor-pointer" 
+                            className="btn btn-primary px-4 py-2 text-xs font-semibold cursor-pointer shadow-xs" 
                             onClick={() => handleLessonSelect(les)}
                           >
                             Open Notes
@@ -953,7 +1049,7 @@ const CourseLearn = () => {
                             href={les.attachments[0].url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-4 py-2 border border-slate-200/80 text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/[0.04] rounded-xl text-xs font-bold text-center transition-all duration-300"
+                            className="px-4 py-2 border border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 rounded-lg text-xs font-medium text-center transition-colors"
                             onClick={(e) => e.stopPropagation()}
                           >
                             PDF Attachment
@@ -968,65 +1064,46 @@ const CourseLearn = () => {
           </div>
         ) : (
           <div className="classroom-empty">
-            <HiOutlineBookOpen size={56} className="text-indigo-500 animate-bounce" />
-            <p>Select a chapter from the outline drawer to begin learning</p>
+            <HiOutlineBookOpen size={48} className="text-slate-400" />
+            <p className="text-sm text-slate-500 font-medium">Select a module or lesson to begin</p>
           </div>
         )}
       </div>
 
-      {/* Request Extra Attempts Modal - AI Futuristic Design */}
+      {/* Request Extra Attempts Modal */}
       {requestingExam && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#05070e]/85 backdrop-blur-xl animate-fade-in">
-          
-          {/* Ambient Background Glow Halo */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-tr from-indigo-600/30 via-purple-600/30 to-pink-500/20 rounded-full blur-[100px] pointer-events-none" />
-
-          <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-indigo-500/30 bg-[#0b0d18]/90 p-6 sm:p-8 shadow-[0_0_60px_rgba(99,102,241,0.2)] backdrop-blur-2xl space-y-6 animate-scale-up">
-            
-            {/* Top Futuristic Gradient Accent Line */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
-
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="relative w-full max-w-lg overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#11131c] p-6 shadow-xl space-y-5">
             {/* Modal Header */}
-            <div className="flex items-start justify-between pb-4 border-b border-slate-800/80">
+            <div className="flex items-start justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
               <div className="space-y-1">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 text-indigo-400 shadow-inner">
-                    <HiOutlineAcademicCap size={22} />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-black font-heading text-white tracking-wide">
-                      Request Extra Attempt
-                    </h3>
-                    <p className="text-[11px] font-semibold text-slate-400">
-                      Exam: <span className="text-indigo-300 font-bold">{requestingExam.title}</span>
-                    </p>
-                  </div>
-                </div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                  Request Extra Attempt
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Assessment: <span className="font-semibold text-slate-700 dark:text-slate-300">{requestingExam.title}</span>
+                </p>
               </div>
               <button
                 onClick={() => setRequestingExam(null)}
-                className="p-2 text-slate-400 hover:text-white rounded-xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition-all cursor-pointer"
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md transition-colors cursor-pointer"
               >
                 <HiOutlineX size={18} />
               </button>
             </div>
 
             {/* Reason Category Selection */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-[11px] font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                  Select Reason Category
-                </label>
-                <span className="text-[10px] font-extrabold text-indigo-400/80 uppercase tracking-widest">Step 1 of 2</span>
-              </div>
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Reason Category
+              </label>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {[
-                  { id: 'mastery', icon: <HiOutlineSparkles size={16} />, label: 'Self-Paced Mastery', desc: 'Need retake for higher score/certificate' },
-                  { id: 'tech', icon: <HiOutlineLightningBolt size={16} />, label: 'Technical Disconnection', desc: 'Network or browser issue during test' },
-                  { id: 'emergency', icon: <HiOutlineExclamationCircle size={16} />, label: 'Unforeseen Emergency', desc: 'Urgent interruption while taking exam' },
-                  { id: 'other', icon: <HiOutlinePencilAlt size={16} />, label: 'Custom Explanation', desc: 'Write detailed custom request notes' }
+                  { id: 'mastery', icon: <HiOutlineSparkles size={15} />, label: 'Mastery & Improvement', desc: 'Seeking to improve assessment score' },
+                  { id: 'tech', icon: <HiOutlineLightningBolt size={15} />, label: 'Technical Interruption', desc: 'Connection or browser error' },
+                  { id: 'emergency', icon: <HiOutlineExclamationCircle size={15} />, label: 'Unforeseen Circumstance', desc: 'Urgent unavoidable disruption' },
+                  { id: 'other', icon: <HiOutlinePencilAlt size={15} />, label: 'Other Explanation', desc: 'Provide custom reasoning below' }
                 ].map((cat) => {
                   const isSelected = requestCategory === cat.id;
                   return (
@@ -1036,30 +1113,26 @@ const CourseLearn = () => {
                       onClick={() => {
                         setRequestCategory(cat.id);
                         if (cat.id === 'mastery') {
-                          setRequestReasonText('[Self-Paced Mastery] Requesting an extra attempt to practice and improve my score.');
+                          setRequestReasonText('[Mastery] Requesting an extra attempt to study and demonstrate subject improvement.');
                         } else if (cat.id === 'tech') {
-                          setRequestReasonText('[Technical Issue] Experienced network disconnection/browser issue during previous attempt.');
+                          setRequestReasonText('[Technical Issue] Experienced a browser or connection interruption during the previous session.');
                         } else if (cat.id === 'emergency') {
-                          setRequestReasonText('[Urgent Emergency] Interrupted due to an urgent emergency situation during test.');
+                          setRequestReasonText('[Emergency] Interrupted due to an urgent situation during the exam window.');
                         } else if (cat.id === 'other') {
                           setRequestReasonText('');
                         }
                       }}
-                      className={`p-3.5 rounded-2xl border text-left transition-all duration-300 cursor-pointer relative overflow-hidden group ${
+                      className={`p-3 rounded-lg border text-left transition-colors cursor-pointer ${
                         isSelected
-                          ? 'border-indigo-500/80 bg-indigo-500/15 text-indigo-300 shadow-[0_0_20px_rgba(99,102,241,0.2)] scale-[1.02]'
-                          : 'border-slate-800/80 bg-slate-900/40 text-slate-400 hover:border-slate-700 hover:bg-slate-900/70'
+                          ? 'border-slate-900 bg-slate-50 dark:border-white dark:bg-slate-800/80 text-slate-900 dark:text-white'
+                          : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 text-slate-600 dark:text-slate-400'
                       }`}
                     >
-                      <div className="flex items-center gap-2.5 font-extrabold text-xs">
-                        <span className={`p-1.5 rounded-lg transition-colors ${
-                          isSelected ? 'bg-indigo-500/30 text-indigo-200' : 'bg-slate-800/60 text-slate-400 group-hover:text-indigo-400'
-                        }`}>
-                          {cat.icon}
-                        </span>
-                        <span className="font-bold tracking-tight text-white">{cat.label}</span>
+                      <div className="flex items-center gap-2 font-semibold text-xs">
+                        <span>{cat.icon}</span>
+                        <span>{cat.label}</span>
                       </div>
-                      <p className="text-[10px] text-slate-400 mt-2 line-clamp-1 font-medium pl-0.5">
+                      <p className="text-[11px] text-slate-400 mt-1 line-clamp-1">
                         {cat.desc}
                       </p>
                     </button>
@@ -1069,41 +1142,32 @@ const CourseLearn = () => {
             </div>
 
             {/* Detailed Explanation Textarea with Word Counter */}
-            <div className="space-y-2.5">
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label htmlFor="request-explanation" className="text-[11px] font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
-                  Detailed Request Notes
+                <label htmlFor="request-explanation" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Explanation Notes
                 </label>
-                <div className={`px-2.5 py-0.5 rounded-full border text-[10px] font-black tracking-wider ${
-                  wordCount < 5 
-                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' 
-                    : wordCount > 200 
-                    ? 'bg-rose-500/10 text-rose-400 border-rose-500/30' 
-                    : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                }`}>
-                  {wordCount} / 200 WORDS {wordCount < 5 && '(MIN 5)'}
+                <div className="text-[11px] text-slate-400 font-mono">
+                  {wordCount} / 200 words {wordCount < 5 && '(min 5)'}
                 </div>
               </div>
 
-              <div className="relative">
-                <textarea
-                  id="request-explanation"
-                  rows={4}
-                  className="w-full px-4 py-3.5 rounded-2xl border border-slate-800 bg-slate-950/70 text-xs font-medium text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500/80 focus:ring-2 focus:ring-indigo-500/30 focus:shadow-[0_0_25px_rgba(99,102,241,0.15)] transition-all resize-none"
-                  placeholder="Explain your situation in detail and how you plan to prepare for this attempt..."
-                  value={requestReasonText}
-                  onChange={(e) => setRequestReasonText(e.target.value)}
-                />
-              </div>
+              <textarea
+                id="request-explanation"
+                rows={3}
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-slate-900 dark:focus:border-white resize-none"
+                placeholder="Explain why you are requesting additional attempts..."
+                value={requestReasonText}
+                onChange={(e) => setRequestReasonText(e.target.value)}
+              />
             </div>
 
             {/* Modal Actions */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800/80">
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
               <button
                 type="button"
                 onClick={() => setRequestingExam(null)}
-                className="px-5 py-2.5 rounded-xl border border-slate-800 text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-900/60 transition-all cursor-pointer"
+                className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -1111,12 +1175,12 @@ const CourseLearn = () => {
                 type="button"
                 disabled={submittingRequest || wordCount < 5 || wordCount > 200}
                 onClick={handleConfirmSubmitRequest}
-                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-black text-xs tracking-wider uppercase shadow-[0_0_25px_rgba(99,102,241,0.35)] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none transition-all duration-300 cursor-pointer flex items-center gap-2"
+                className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-semibold text-xs disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer flex items-center gap-1.5"
               >
                 {submittingRequest ? (
                   <>
-                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Submitting Request...</span>
+                    <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Submitting...</span>
                   </>
                 ) : (
                   <span>Submit Request</span>

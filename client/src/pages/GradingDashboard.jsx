@@ -4,7 +4,6 @@ import { getSubmissions, gradeSubmission, getAssignment } from '../api/assignmen
 import Loader from '../components/common/Loader';
 import toast from 'react-hot-toast';
 import { HiOutlineCheck, HiOutlineX, HiOutlineDownload, HiOutlineExternalLink } from 'react-icons/hi';
-import { getMediaUrl } from '../utils/helpers';
 import './AdminPanel.css'; // Reuse table/panel styling
 
 const GradingDashboard = () => {
@@ -82,12 +81,11 @@ const GradingDashboard = () => {
   if (loading) return <Loader text="Loading submissions..." />;
   if (!assignment) return <div className="container"><h3>Assignment not found</h3></div>;
 
-  const rawServerUrl = import.meta.env.VITE_SERVER_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000';
-  const serverUrl = rawServerUrl.replace(/\/api\/?$/, '').replace(/\/$/, '');
+  const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
 
   return (
     <div className="admin-panel animate-page-enter">
-      <h1 className="section-title">Grading <span className="gradient-text">Desk</span></h1>
+      <h1 className="section-title">Grading Desk</h1>
       <p className="text-slate-500 mb-md">
         Grading submissions for: <strong>{assignment.title}</strong> ({assignment.type.replace('-', ' ')})
       </p>
@@ -115,7 +113,7 @@ const GradingDashboard = () => {
                     <td>
                       <div className="flex items-center gap-2">
                         {sub.studentId.profileImage ? (
-                          <img src={getMediaUrl(sub.studentId.profileImage)} alt="" style={{ width: '28px', height: '28px', borderRadius: '50%' }} />
+                          <img src={sub.studentId.profileImage} alt="" style={{ width: '28px', height: '28px', borderRadius: '50%' }} />
                         ) : (
                           <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 'bold' }}>
                             {sub.studentId.name[0]}

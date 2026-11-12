@@ -30,7 +30,7 @@ const Dashboard = () => {
         return c;
       });
       setCoursesList(updated);
-      toast.success(res.data.data.isPublished ? 'Course published successfully!' : 'Course reverted to draft!');
+      toast.success(res.data.data.isPublished ? 'Course published live' : 'Course moved to draft');
     } catch (err) {
       console.error('Failed to toggle course visibility:', err);
       toast.error('Failed to toggle course visibility');
@@ -45,13 +45,12 @@ const Dashboard = () => {
 
     let instructorResponse = '';
     if (status === 'rejected') {
-      instructorResponse = window.prompt('Enter optional feedback for rejection:') || '';
+      instructorResponse = window.prompt('Enter optional feedback for student:') || '';
     }
 
     try {
       await updateAttemptRequestStatus(requestId, { status, instructorResponse });
-      toast.success(`Request ${status} successfully!`);
-      // Refresh list
+      toast.success(`Request ${status} successfully`);
       const res = await getInstructorAttemptRequests();
       setAttemptRequests(res.data.data || []);
     } catch (err) {
@@ -63,14 +62,12 @@ const Dashboard = () => {
     const fetchDashboardData = async () => {
       setLoading(true);
       try {
-        // Fetch stats
         let statsRes;
         if (isAdmin) statsRes = await getAdminStats();
         else if (isInstructor) statsRes = await getInstructorStats();
         else statsRes = await getStudentStats();
         setStats(statsRes.data.data);
 
-        // Fetch lists based on tab
         if (tab === 'enrolled') {
           const res = await getEnrolledCourses();
           setCoursesList(res.data.data);
@@ -92,37 +89,37 @@ const Dashboard = () => {
     fetchDashboardData();
   }, [isAdmin, isInstructor, tab]);
 
-  if (loading) return <div className="flex min-h-[50vh] items-center justify-center"><Loader text="Loading dashboard content..." /></div>;
+  if (loading) return <div className="flex min-h-[50vh] items-center justify-center"><Loader text="Loading workspace..." /></div>;
 
   // Render Enrolled Courses
   if (tab === 'enrolled') {
     return (
-      <div className="space-y-8 animate-page-enter">
-        <div className="glass-card p-8 border border-slate-200/80 dark:border-white/[0.04] rounded-2xl">
-          <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">Enrolled <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">courses</span></h1>
-          <p className="mt-2.5 text-sm text-slate-550 dark:text-slate-400 font-medium">Resume your learning journey where you left off.</p>
+      <div className="space-y-6 animate-fade-in">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#11131c] p-6 shadow-xs">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Enrolled Courses</h1>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Continue your active coursework and progress toward certification.</p>
         </div>
         {coursesList.length === 0 ? (
-          <div className="empty-state-card animate-slide-up">
+          <div className="empty-state-card py-16">
             <div className="empty-state-icon-box">
-              <HiOutlineBookOpen size={36} />
+              <HiOutlineBookOpen size={28} />
             </div>
-            <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">No enrolled courses</h3>
-            <p className="mt-2 text-sm text-slate-550 dark:text-slate-400 font-medium">You haven't started any courses yet.</p>
-            <Link to="/courses" className="btn btn-primary mt-6 px-6 max-w-xs">Browse Catalog</Link>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">No enrolled courses</h3>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 max-w-sm">You are not currently enrolled in any courses.</p>
+            <Link to="/courses" className="btn btn-primary mt-4 px-4 py-2 text-xs font-semibold">Browse Course Catalog</Link>
           </div>
         ) : (
-          <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3 animate-slide-up">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {coursesList.map((enrollment) => (
-              <div key={enrollment._id} className="space-y-4 hover:-translate-y-1 transition-all duration-300">
+              <div key={enrollment._id} className="space-y-3">
                 <CourseCard course={enrollment.courseId} />
-                <div className="glass-card p-5 border border-slate-200/80 dark:border-white/[0.04] rounded-2xl">
-                  <div className="mb-3 flex items-center justify-between text-xs font-bold text-slate-550 dark:text-slate-400 uppercase tracking-wider">
-                    <span>Progress</span>
-                    <span className="text-indigo-600 dark:text-indigo-400">{enrollment.progress}%</span>
+                <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#11131c] p-3 shadow-xs">
+                  <div className="mb-2 flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    <span>Curriculum Progress</span>
+                    <span className="text-slate-900 dark:text-white">{enrollment.progress}%</span>
                   </div>
-                  <div className="h-2 rounded-full bg-slate-100 dark:bg-white/[0.05] overflow-hidden shadow-inner">
-                    <div className="h-full rounded-full bg-gradient-to-r from-indigo-600 to-purple-600" style={{ width: `${enrollment.progress}%` }} />
+                  <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                    <div className="h-full rounded-full bg-slate-900 dark:bg-white transition-all duration-300" style={{ width: `${enrollment.progress}%` }} />
                   </div>
                 </div>
               </div>
@@ -136,72 +133,62 @@ const Dashboard = () => {
   // Render Instructor's Created Courses
   if (tab === 'courses') {
     return (
-      <div className="space-y-8 animate-page-enter">
-        <div className="flex flex-col justify-between gap-6 glass-card p-8 sm:flex-row sm:items-center border border-slate-200/80 dark:border-white/[0.04] rounded-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none -z-10" />
-          <div className="space-y-1.5">
-            <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">My created <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">courses</span></h1>
-            <p className="text-sm text-slate-550 dark:text-slate-400 font-medium">Manage, edit, and publish your content.</p>
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#11131c] p-6 shadow-xs">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Created Courses</h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Manage syllabus content, edit lesson modules, and publish live.</p>
           </div>
-          <Link to="/course/create" className="btn-detail-primary sm:w-auto px-6 whitespace-nowrap">Create Course</Link>
+          <Link to="/course/create" className="btn btn-primary px-4 py-2 text-xs font-semibold whitespace-nowrap self-start sm:self-auto">
+            Create New Course
+          </Link>
         </div>
         {coursesList.length === 0 ? (
-          <div className="empty-state-card animate-slide-up">
+          <div className="empty-state-card py-16">
             <div className="empty-state-icon-box">
-              <HiOutlineDocumentText size={36} />
+              <HiOutlineDocumentText size={28} />
             </div>
-            <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">No courses created yet</h3>
-            <p className="mt-2 text-sm text-slate-550 dark:text-slate-400 font-medium">Share your knowledge with the world.</p>
-            <Link to="/course/create" className="btn btn-primary mt-6 px-6 max-w-xs">Create Your First Course</Link>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">No courses created</h3>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 max-w-sm">Begin by authoring your first curriculum module.</p>
+            <Link to="/course/create" className="btn btn-primary mt-4 px-4 py-2 text-xs font-semibold">Create First Course</Link>
           </div>
         ) : (
-          <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3 animate-slide-up">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {coursesList.map((course) => (
-              <div key={course._id} className="space-y-4 hover:-translate-y-1 transition-all duration-300">
+              <div key={course._id} className="space-y-3">
                 <CourseCard course={course} />
-                <div className="glass-card flex items-center justify-between p-4 border border-slate-200/80 dark:border-white/[0.06] rounded-2xl">
-                  <span className={`inline-flex items-center gap-1.5 font-extrabold text-[11px] uppercase tracking-wider px-3 py-1 rounded-full border ${
+                <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#11131c] flex items-center justify-between p-3 shadow-xs">
+                  <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded ${
                     course.isPublished 
-                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' 
-                      : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' 
+                      : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800'
                   }`}>
-                    <span className="relative flex h-2 w-2">
-                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                        course.isPublished ? 'bg-emerald-400' : 'bg-amber-400'
-                      }`}></span>
-                      <span className={`relative inline-flex rounded-full h-2 w-2 ${
-                        course.isPublished ? 'bg-emerald-500' : 'bg-amber-500'
-                      }`}></span>
-                    </span>
-                    {course.isPublished ? 'Published' : 'Draft'}
+                    <span className={`w-1.5 h-1.5 rounded-full ${course.isPublished ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                    {course.isPublished ? 'Live' : 'Draft'}
                   </span>
                   
-                  <div className="flex gap-2">
+                  <div className="flex gap-1.5">
                     <button 
                       type="button" 
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all duration-300 cursor-pointer ${
-                        course.isPublished 
-                          ? 'border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400' 
-                          : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 shadow-md shadow-emerald-500/20'
-                      }`} 
+                      className="px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer flex items-center gap-1"
                       onClick={() => handleTogglePublish(course._id)}
                     >
                       {course.isPublished ? (
                         <>
-                          <HiOutlineEyeOff size={14} /> Unpublish
+                          <HiOutlineEyeOff size={13} /> Unpublish
                         </>
                       ) : (
                         <>
-                          <HiOutlineGlobeAlt size={14} /> Publish
+                          <HiOutlineGlobeAlt size={13} /> Publish
                         </>
                       )}
                     </button>
 
                     <Link 
                       to={`/course/${course._id}/edit`} 
-                      className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-indigo-500/40 hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-400 text-xs font-bold transition-all duration-300 flex items-center gap-1"
+                      className="px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-medium transition-colors flex items-center gap-1"
                     >
-                      <HiOutlinePencil size={13} /> Edit
+                      <HiOutlinePencil size={12} /> Edit
                     </Link>
                   </div>
                 </div>
@@ -216,79 +203,75 @@ const Dashboard = () => {
   // Render Instructor's Attempt Requests
   if (tab === 'exam-requests' && (isInstructor || isAdmin)) {
     return (
-      <div className="space-y-8 animate-page-enter">
-        <div className="glass-card p-8 border border-slate-200/80 dark:border-white/[0.04] rounded-2xl">
-          <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">Exam Attempt <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">requests</span></h1>
-          <p className="mt-2.5 text-sm text-slate-550 dark:text-slate-400 font-medium">Approve or reject student requests for extra exam attempts.</p>
+      <div className="space-y-6 animate-fade-in">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#11131c] p-6 shadow-xs">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Exam Attempt Requests</h1>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Review student requests for additional assessment attempts.</p>
         </div>
         {attemptRequests.length === 0 ? (
-          <div className="empty-state-card animate-slide-up">
+          <div className="empty-state-card py-16">
             <div className="empty-state-icon-box">
-              <HiOutlineClipboardCheck size={36} />
+              <HiOutlineClipboardCheck size={28} />
             </div>
-            <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">No attempt requests</h3>
-            <p className="mt-2 text-sm text-slate-550 dark:text-slate-400 font-medium">There are currently no requests for extra exam attempts.</p>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">No pending requests</h3>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 max-w-sm">There are no outstanding student exam attempt requests.</p>
           </div>
         ) : (
-          <div className="bg-white/40 dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.04] rounded-2xl overflow-hidden shadow-sm animate-slide-up">
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#11131c] overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
-                <thead className="bg-slate-50/50 dark:bg-white/[0.01] text-slate-500 dark:text-slate-400 border-b border-slate-200/60 dark:border-white/[0.03]">
+              <table className="min-w-full text-left text-xs">
+                <thead className="bg-slate-50 dark:bg-slate-900/60 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                   <tr>
-                    <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider">Student</th>
-                    <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider">Course / Exam</th>
-                    <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider">Reason</th>
-                    <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider text-right">Actions</th>
+                    <th className="px-5 py-3 font-semibold uppercase tracking-wider">Student</th>
+                    <th className="px-5 py-3 font-semibold uppercase tracking-wider">Course / Exam</th>
+                    <th className="px-5 py-3 font-semibold uppercase tracking-wider">Reason</th>
+                    <th className="px-5 py-3 font-semibold uppercase tracking-wider">Status</th>
+                    <th className="px-5 py-3 font-semibold uppercase tracking-wider text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100/50 dark:divide-white/[0.02]">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {attemptRequests.map((reqItem) => (
-                    <tr key={reqItem._id} className="hover:bg-indigo-50/10 dark:hover:bg-white/[0.01] transition-colors">
-                      <td className="px-6 py-4.5">
-                        <div className="font-bold text-slate-800 dark:text-slate-200 max-w-[150px] truncate" title={reqItem.studentId?.name}>{reqItem.studentId?.name}</div>
-                        <div className="text-xs text-slate-400 mt-0.5 max-w-[150px] truncate" title={reqItem.studentId?.email}>{reqItem.studentId?.email}</div>
+                    <tr key={reqItem._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
+                      <td className="px-5 py-3.5">
+                        <div className="font-semibold text-slate-900 dark:text-white">{reqItem.studentId?.name}</div>
+                        <div className="text-[11px] text-slate-400">{reqItem.studentId?.email}</div>
                       </td>
-                      <td className="px-6 py-4.5">
-                        <div className="font-semibold text-slate-700 dark:text-slate-300 max-w-[150px] truncate" title={reqItem.examId?.title}>{reqItem.examId?.title}</div>
-                        <div className="text-xs text-slate-400 mt-0.5 max-w-[150px] truncate" title={reqItem.courseId?.title}>{reqItem.courseId?.title}</div>
+                      <td className="px-5 py-3.5">
+                        <div className="font-medium text-slate-800 dark:text-slate-200">{reqItem.examId?.title}</div>
+                        <div className="text-[11px] text-slate-400">{reqItem.courseId?.title}</div>
                       </td>
-                      <td className="px-6 py-4.5 text-slate-600 dark:text-slate-350">
-                        <div className="max-w-[200px] truncate" title={reqItem.message}>
-                          {reqItem.message || <span className="text-slate-400 dark:text-slate-500 italic text-xs font-medium">No reason provided</span>}
-                        </div>
+                      <td className="px-5 py-3.5 text-slate-600 dark:text-slate-400 max-w-xs truncate">
+                        {reqItem.message || <span className="italic text-slate-400">None provided</span>}
                       </td>
-                      <td className="px-6 py-4.5">
-                        <span className={`badge border font-bold text-[10px] uppercase tracking-wider px-3 py-1 ${
+                      <td className="px-5 py-3.5">
+                        <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${
                           reqItem.status === 'approved' 
-                            ? 'bg-emerald-100/80 text-emerald-800 border-emerald-200/50 dark:bg-emerald-950/20 dark:text-emerald-450 dark:border-emerald-500/10' 
+                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400' 
                             : reqItem.status === 'rejected' 
-                            ? 'bg-rose-100/80 text-rose-850 border-rose-200/50 dark:bg-rose-950/20 dark:text-rose-450 dark:border-rose-500/10' 
-                            : 'bg-amber-100/80 text-amber-805 border-amber-200/50 dark:bg-amber-950/20 dark:text-amber-450 dark:border-amber-500/10'
+                            ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400' 
+                            : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400'
                         }`}>
                           {reqItem.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4.5 text-right">
+                      <td className="px-5 py-3.5 text-right">
                         {reqItem.status === 'pending' ? (
-                          <div className="flex justify-end gap-2.5">
+                          <div className="flex justify-end gap-2">
                             <button
                               onClick={() => handleReviewRequest(reqItem._id, 'approved')}
-                              className="rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm active:scale-95 transition-all duration-300 text-xs font-bold px-3.5 py-1.5"
+                              className="px-2.5 py-1 rounded bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-semibold hover:opacity-90 transition-opacity"
                             >
                               Approve (+2)
                             </button>
                             <button
                               onClick={() => handleReviewRequest(reqItem._id, 'rejected')}
-                              className="rounded-xl text-rose-650 hover:bg-rose-500 hover:text-white border border-rose-250 hover:border-transparent transition-all duration-300 text-xs font-bold px-3.5 py-1.5"
+                              className="px-2.5 py-1 rounded border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                             >
                               Reject
                             </button>
                           </div>
                         ) : (
-                          <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">
-                            Reviewed
-                          </span>
+                          <span className="text-slate-400">Resolved</span>
                         )}
                       </td>
                     </tr>
@@ -305,40 +288,39 @@ const Dashboard = () => {
   // Render Instructor Analytics Table
   if (tab === 'analytics' && (isInstructor || isAdmin)) {
     return (
-      <div className="space-y-8 animate-page-enter">
-        <div className="glass-card p-8 border border-slate-200/80 dark:border-white/[0.04] rounded-2xl">
-          <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">Course <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">performance</span></h1>
-          <p className="mt-2.5 text-sm text-slate-550 dark:text-slate-400 font-medium">Real-time statistics on enrollment and exam scores.</p>
+      <div className="space-y-6 animate-fade-in">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#11131c] p-6 shadow-xs">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Performance Metrics</h1>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Student enrollment volume and average assessment scores.</p>
         </div>
 
         {stats?.courseStats?.length === 0 ? (
-          <div className="glass-card flex flex-col items-center justify-center px-8 py-20 text-center animate-slide-up border border-slate-200/80 dark:border-white/[0.04] rounded-2xl">
-            <div className="rounded-full bg-indigo-50 dark:bg-white/[0.03] p-6 text-indigo-600 dark:text-indigo-400 mb-6 shadow-sm">
-              <HiOutlineChartBar size={56} />
+          <div className="empty-state-card py-16">
+            <div className="empty-state-icon-box">
+              <HiOutlineChartBar size={28} />
             </div>
-            <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">No performance data available</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">No performance data</h3>
+            <p className="mt-1 text-xs text-slate-500 max-w-sm">Course analytics will display once students begin active coursework.</p>
           </div>
         ) : (
-          <>
-            <div className="bg-white/40 dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.04] rounded-2xl overflow-hidden shadow-sm animate-slide-up">
+          <div className="space-y-6">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#11131c] overflow-hidden shadow-xs">
               <div className="overflow-x-auto">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="bg-slate-50/50 dark:bg-white/[0.01] text-slate-500 dark:text-slate-400 border-b border-slate-200/60 dark:border-white/[0.03]">
+                <table className="min-w-full text-left text-xs">
+                  <thead className="bg-slate-50 dark:bg-slate-900/60 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                     <tr>
-                      <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider">Course Title</th>
-                      <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider">Students Enrolled</th>
-                      <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider">Average Exam Score</th>
+                      <th className="px-5 py-3 font-semibold uppercase tracking-wider">Course Title</th>
+                      <th className="px-5 py-3 font-semibold uppercase tracking-wider">Students Enrolled</th>
+                      <th className="px-5 py-3 font-semibold uppercase tracking-wider">Average Exam Score</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100/50 dark:divide-white/[0.02]">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {stats?.courseStats?.map((c) => (
-                      <tr key={c.courseId} className="hover:bg-indigo-50/10 dark:hover:bg-white/[0.01] transition-colors">
-                        <td className="px-6 py-4.5">
-                          <div className="font-bold text-slate-800 dark:text-slate-200 max-w-[250px] truncate" title={c.title}>{c.title}</div>
-                        </td>
-                        <td className="px-6 py-4.5 font-semibold text-slate-600 dark:text-slate-350">{c.students} students</td>
-                        <td className="px-6 py-4.5">
-                          <span className="badge border bg-emerald-100/85 text-emerald-800 border-emerald-250/20 dark:bg-emerald-950/20 dark:text-emerald-450 dark:border-emerald-500/10 font-bold px-4 py-1.5 text-xs tracking-wider rounded-xl">
+                      <tr key={c.courseId} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
+                        <td className="px-5 py-3.5 font-semibold text-slate-900 dark:text-white">{c.title}</td>
+                        <td className="px-5 py-3.5 text-slate-600 dark:text-slate-400">{c.students} students</td>
+                        <td className="px-5 py-3.5">
+                          <span className="font-mono font-medium text-slate-900 dark:text-white">
                             {c.averageScore ? `${Math.round(c.averageScore)}%` : '—'}
                           </span>
                         </td>
@@ -350,50 +332,42 @@ const Dashboard = () => {
             </div>
 
             {stats?.recentSubmissions?.length > 0 && (
-              <div className="space-y-4">
-                <div className="glass-card p-6 border border-slate-200/80 dark:border-white/[0.04] rounded-2xl">
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white font-heading">Recent student <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">submissions</span></h3>
-                  <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold mt-1">Track individual grades for exams and assignments.</p>
+              <div className="space-y-3">
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#11131c] p-5 shadow-xs">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Recent Student Submissions</h3>
+                  <p className="text-slate-500 text-xs mt-0.5">Individual results for exam and assignment assessments.</p>
                 </div>
-                <div className="bg-white/40 dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.04] rounded-2xl overflow-hidden shadow-sm">
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#11131c] overflow-hidden shadow-xs">
                   <div className="overflow-x-auto">
-                    <table className="min-w-full text-left text-sm">
-                      <thead className="bg-slate-50/50 dark:bg-white/[0.01] text-slate-500 dark:text-slate-400 border-b border-slate-200/60 dark:border-white/[0.03]">
+                    <table className="min-w-full text-left text-xs">
+                      <thead className="bg-slate-50 dark:bg-slate-900/60 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                         <tr>
-                          <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider">Student</th>
-                          <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider">Course</th>
-                          <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider">Activity / Assessment</th>
-                          <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider">Type</th>
-                          <th className="px-6 py-4.5 text-xs font-bold uppercase tracking-wider">Score / Status</th>
+                          <th className="px-5 py-3 font-semibold uppercase tracking-wider">Student</th>
+                          <th className="px-5 py-3 font-semibold uppercase tracking-wider">Course</th>
+                          <th className="px-5 py-3 font-semibold uppercase tracking-wider">Assessment</th>
+                          <th className="px-5 py-3 font-semibold uppercase tracking-wider">Type</th>
+                          <th className="px-5 py-3 font-semibold uppercase tracking-wider">Score</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100/50 dark:divide-white/[0.02]">
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                         {stats?.recentSubmissions?.map((s) => (
-                          <tr key={s._id} className="hover:bg-indigo-50/10 dark:hover:bg-white/[0.01] transition-colors">
-                            <td className="px-6 py-4.5">
-                              <div className="font-bold text-slate-800 dark:text-slate-200 max-w-[150px] truncate" title={s.studentId?.name}>{s.studentId?.name}</div>
-                              <div className="text-xs text-slate-400 mt-0.5 max-w-[150px] truncate" title={s.studentId?.email}>{s.studentId?.email}</div>
+                          <tr key={s._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
+                            <td className="px-5 py-3.5">
+                              <div className="font-semibold text-slate-900 dark:text-white">{s.studentId?.name}</div>
+                              <div className="text-[11px] text-slate-400">{s.studentId?.email}</div>
                             </td>
-                            <td className="px-6 py-4.5 font-semibold text-slate-655 dark:text-slate-350">
-                              <div className="max-w-[150px] truncate" title={s.courseId?.title}>{s.courseId?.title}</div>
+                            <td className="px-5 py-3.5 text-slate-600 dark:text-slate-400">{s.courseId?.title}</td>
+                            <td className="px-5 py-3.5 font-medium text-slate-800 dark:text-slate-200">
+                              {s.examId?.title || s.assignmentId?.title || 'Submission'}
                             </td>
-                            <td className="px-6 py-4.5 font-bold text-slate-700 dark:text-slate-300">
-                              <div className="max-w-[150px] truncate" title={s.examId?.title || s.assignmentId?.title || 'Quiz / Submission'}>
-                                {s.examId?.title || s.assignmentId?.title || 'Quiz / Submission'}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4.5 capitalize text-slate-505 font-medium text-xs">{s.type}</td>
-                            <td className="px-6 py-4.5">
+                            <td className="px-5 py-3.5 capitalize text-slate-500">{s.type}</td>
+                            <td className="px-5 py-3.5">
                               {s.type === 'exam' ? (
-                                <span className={`badge border font-bold text-xs px-3.5 py-1 rounded-xl ${
-                                  s.isPassed 
-                                    ? 'bg-emerald-100/80 text-emerald-800 border-emerald-250/20 dark:bg-emerald-950/20 dark:text-emerald-450 dark:border-emerald-500/10' 
-                                    : 'bg-rose-100/80 text-rose-850 border-rose-250/20 dark:bg-rose-950/20 dark:text-rose-450 dark:border-rose-500/10'
-                                }`}>
-                                  {s.score} / {s.totalMarks} ({s.percentage}%)
+                                <span className={`font-mono font-medium ${s.isPassed ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                                  {s.score}/{s.totalMarks} ({s.percentage}%)
                                 </span>
                               ) : (
-                                <span className="badge border bg-indigo-50/80 text-indigo-700 border-indigo-100/50 dark:bg-white/[0.04] dark:text-slate-300 dark:border-white/10 px-3.5 py-1 rounded-xl text-xs font-bold font-heading">Submitted</span>
+                                <span className="text-slate-500 font-medium">Submitted</span>
                               )}
                             </td>
                           </tr>
@@ -404,7 +378,7 @@ const Dashboard = () => {
                 </div>
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
     );
@@ -412,75 +386,74 @@ const Dashboard = () => {
 
   // Fallback / Overview Tab
   return (
-    <div className="space-y-8 animate-page-enter">
-      <div className="glass-card p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 border border-slate-200/80 dark:border-white/[0.04] rounded-2xl relative overflow-hidden">
-        {/* Subtle internal glowing orb */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none -z-10" />
-        
-        <div className="space-y-1.5">
-          <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">
-            Welcome back, <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">{user?.name}</span>
+    <div className="space-y-6 animate-fade-in">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#11131c] p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
+        <div className="space-y-1">
+          <p className="text-xs uppercase tracking-wider font-semibold text-slate-400">Workspace Overview</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-950 dark:text-white">
+            Welcome back, {user?.name}
           </h1>
-          <p className="text-sm text-slate-550 dark:text-slate-400 font-medium">Here's what's happening with your learning journey today.</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Summary of your current academic coursework and platform activities.</p>
         </div>
-        <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50/50 px-4.5 py-2 text-[11px] font-bold uppercase tracking-wider text-indigo-600 dark:bg-white/[0.03] dark:text-indigo-400 border border-indigo-150 dark:border-white/10 shadow-sm backdrop-blur-md">
-          <span className="w-2 h-2 rounded-full bg-indigo-500 dark:bg-indigo-400 animate-pulse"></span>
-          {user?.role}
+        <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider bg-slate-100 dark:bg-slate-850 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 self-start md:self-auto">
+          <span className="w-1.5 h-1.5 rounded-full bg-slate-900 dark:bg-white" />
+          <span>{user?.role}</span>
         </div>
       </div>
 
       {!isInstructor && !isAdmin && stats && (
         <>
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 animate-slide-up">
-            <StatsCard icon={<HiOutlineBookOpen />} label="Enrolled Courses" value={stats.enrolledCourses || 0} color="#6b7aff" />
-            <StatsCard icon={<HiOutlineClipboardCheck />} label="Completed" value={stats.completedCourses || 0} color="#10b981" />
-            <StatsCard icon={<HiOutlineChartBar />} label="In Progress" value={stats.inProgressCourses || 0} color="#f59e0b" />
-            <StatsCard icon={<HiOutlineAcademicCap />} label="Certificates" value={stats.certificates || 0} color="#f43f5e" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatsCard icon={<HiOutlineBookOpen />} label="Enrolled Courses" value={stats.enrolledCourses || 0} />
+            <StatsCard icon={<HiOutlineClipboardCheck />} label="Completed Courses" value={stats.completedCourses || 0} />
+            <StatsCard icon={<HiOutlineChartBar />} label="In Progress" value={stats.inProgressCourses || 0} />
+            <StatsCard icon={<HiOutlineAcademicCap />} label="Certificates Earned" value={stats.certificates || 0} />
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 animate-slide-up mt-6">
+          <div className="grid md:grid-cols-2 gap-6 mt-6">
             {/* Upcoming Exams */}
-            <div className="glass-card p-6 border border-slate-200/80 dark:border-white/[0.04] rounded-2xl">
-              <h3 className="text-lg font-bold mb-5 flex items-center gap-2 text-slate-900 dark:text-white font-heading">
-                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span> Upcoming Exams
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#11131c] p-5 shadow-xs">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">
+                Upcoming Examinations
               </h3>
               {stats.upcomingExams && stats.upcomingExams.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {stats.upcomingExams.map((exam) => (
-                    <div key={exam._id} className="border-b border-slate-100 dark:border-white/[0.03] pb-3.5 last:border-0 last:pb-0">
-                      <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm">{exam.title}</h4>
-                      <p className="text-xs text-slate-550 dark:text-slate-400 font-medium mt-0.5">{exam.courseId?.title}</p>
-                      <p className="text-[11px] text-rose-555 dark:text-rose-455 font-bold mt-1.5 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500/20 dark:bg-rose-405/20" />
-                        Starts: {new Date(exam.startDate).toLocaleString()}
+                    <div key={exam._id} className="border-b border-slate-100 dark:border-slate-850 pb-3 last:border-0 last:pb-0">
+                      <h4 className="font-semibold text-slate-900 dark:text-white text-xs">{exam.title}</h4>
+                      <p className="text-[11px] text-slate-500 mt-0.5">{exam.courseId?.title}</p>
+                      <p className="text-[11px] text-slate-400 font-mono mt-1">
+                        Scheduled: {new Date(exam.startDate).toLocaleString()}
                       </p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-slate-400 dark:text-slate-500 text-sm font-medium">No upcoming exams scheduled.</div>
+                <div className="text-center py-6 text-slate-400 text-xs">No exams currently scheduled.</div>
               )}
             </div>
 
             {/* Recent Submissions */}
-            <div className="glass-card p-6 border border-slate-200/80 dark:border-white/[0.04] rounded-2xl">
-              <h3 className="text-lg font-bold mb-5 text-slate-900 dark:text-white font-heading">Recent Submissions</h3>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#11131c] p-5 shadow-xs">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">
+                Recent Submissions
+              </h3>
               {stats.recentSubmissions && stats.recentSubmissions.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {stats.recentSubmissions.map((sub) => (
-                    <div key={sub._id} className="border-b border-slate-100 dark:border-white/[0.03] pb-3.5 last:border-0 last:pb-0 flex justify-between items-center gap-4">
+                    <div key={sub._id} className="border-b border-slate-100 dark:border-slate-850 pb-3 last:border-0 last:pb-0 flex justify-between items-center gap-3">
                       <div>
-                        <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm">{sub.examId?.title || sub.assignmentId?.title || 'Submission'}</h4>
-                        <p className="text-xs text-slate-505 dark:text-slate-400 font-medium mt-0.5">{sub.courseId?.title} • <span className="capitalize">{sub.type}</span></p>
+                        <h4 className="font-semibold text-slate-900 dark:text-white text-xs">{sub.examId?.title || sub.assignmentId?.title || 'Submission'}</h4>
+                        <p className="text-[11px] text-slate-500 mt-0.5">{sub.courseId?.title} • <span className="capitalize">{sub.type}</span></p>
                       </div>
-                      <span className={`badge ${sub.isPassed ? 'badge-success' : 'badge-primary'} px-2.5 py-1 text-[11px] font-bold`}>
+                      <span className="font-mono text-xs font-semibold text-slate-900 dark:text-white">
                         {sub.score}/{sub.totalMarks}
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-slate-400 dark:text-slate-500 text-sm font-medium">No recent submissions.</div>
+                <div className="text-center py-6 text-slate-400 text-xs">No recent submissions found.</div>
               )}
             </div>
           </div>
@@ -488,87 +461,63 @@ const Dashboard = () => {
       )}
 
       {isInstructor && !isAdmin && stats && (
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 animate-slide-up">
-          <StatsCard icon={<HiOutlineBookOpen />} label="Total Courses" value={stats.totalCourses || 0} color="#6b7aff" />
-          <StatsCard icon={<HiOutlineDocumentText />} label="Published" value={stats.publishedCourses || 0} color="#10b981" />
-          <StatsCard icon={<HiOutlineUsers />} label="Total Students" value={stats.totalStudents || 0} color="#3b82f6" />
-          <StatsCard icon={<HiOutlineClipboardCheck />} label="Submissions" value={stats.totalSubmissions || 0} color="#f59e0b" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatsCard icon={<HiOutlineBookOpen />} label="Total Courses" value={stats.totalCourses || 0} />
+          <StatsCard icon={<HiOutlineDocumentText />} label="Published Courses" value={stats.publishedCourses || 0} />
+          <StatsCard icon={<HiOutlineUsers />} label="Total Students" value={stats.totalStudents || 0} />
+          <StatsCard icon={<HiOutlineClipboardCheck />} label="Total Submissions" value={stats.totalSubmissions || 0} />
         </div>
       )}
 
       {isAdmin && stats && (
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 animate-slide-up">
-          <StatsCard icon={<HiOutlineUsers />} label="Total Users" value={stats.totalUsers || 0} color="#6b7aff" />
-          <StatsCard icon={<HiOutlineBookOpen />} label="Total Courses" value={stats.totalCourses || 0} color="#10b981" />
-          <StatsCard icon={<HiOutlineClipboardCheck />} label="Enrollments" value={stats.totalEnrollments || 0} color="#3b82f6" />
-          <StatsCard icon={<HiOutlineAcademicCap />} label="Certificates" value={stats.totalCertificates || 0} color="#f43f5e" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatsCard icon={<HiOutlineUsers />} label="Registered Users" value={stats.totalUsers || 0} />
+          <StatsCard icon={<HiOutlineBookOpen />} label="Platform Courses" value={stats.totalCourses || 0} />
+          <StatsCard icon={<HiOutlineClipboardCheck />} label="Total Enrollments" value={stats.totalEnrollments || 0} />
+          <StatsCard icon={<HiOutlineAcademicCap />} label="Issued Certificates" value={stats.totalCertificates || 0} />
         </div>
       )}
 
-      {/* Instructor's Created Courses & Quick Publish Controls */}
+      {/* Instructor's Created Courses quick section */}
       {(isInstructor || isAdmin) && coursesList.length > 0 && (
-        <div className="space-y-4 animate-slide-up mt-6">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div>
-              <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">
-                My Created Courses & Status
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                Publish or unpublish your courses to control student access.
-              </p>
-            </div>
-            <Link to="/dashboard?tab=courses" className="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 hover:underline">
-              View All Courses ({coursesList.length}) →
+        <div className="space-y-3 mt-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+              Course Catalog & Visibility
+            </h2>
+            <Link to="/dashboard?tab=courses" className="text-xs font-semibold text-slate-900 dark:text-white hover:underline">
+              View All ({coursesList.length}) →
             </Link>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {coursesList.map((course) => (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {coursesList.slice(0, 3).map((course) => (
               <div key={course._id} className="space-y-3">
                 <CourseCard course={course} />
-                <div className="glass-card flex items-center justify-between p-3.5 border border-slate-200/80 dark:border-white/[0.06] rounded-2xl">
-                  <span className={`inline-flex items-center gap-1.5 font-extrabold text-[11px] uppercase tracking-wider px-3 py-1 rounded-full border ${
+                <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#11131c] flex items-center justify-between p-3 shadow-xs">
+                  <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded ${
                     course.isPublished 
-                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' 
-                      : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800' 
+                      : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800'
                   }`}>
-                    <span className="relative flex h-2 w-2">
-                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                        course.isPublished ? 'bg-emerald-400' : 'bg-amber-400'
-                      }`}></span>
-                      <span className={`relative inline-flex rounded-full h-2 w-2 ${
-                        course.isPublished ? 'bg-emerald-500' : 'bg-amber-500'
-                      }`}></span>
-                    </span>
-                    {course.isPublished ? 'Published' : 'Draft'}
+                    <span className={`w-1.5 h-1.5 rounded-full ${course.isPublished ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                    {course.isPublished ? 'Live' : 'Draft'}
                   </span>
                   
-                  <div className="flex gap-2">
+                  <div className="flex gap-1.5">
                     <button 
                       type="button" 
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all duration-300 cursor-pointer ${
-                        course.isPublished 
-                          ? 'border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400' 
-                          : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 shadow-md shadow-emerald-500/20'
-                      }`} 
+                      className="px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer" 
                       onClick={() => handleTogglePublish(course._id)}
                     >
-                      {course.isPublished ? (
-                        <>
-                          <HiOutlineEyeOff size={14} /> Unpublish
-                        </>
-                      ) : (
-                        <>
-                          <HiOutlineGlobeAlt size={14} /> Publish Course Live
-                        </>
-                      )}
+                      {course.isPublished ? 'Unpublish' : 'Publish'}
                     </button>
 
                     <Link 
                       to={`/course/${course._id}/edit`} 
-                      className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-indigo-500/40 hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-400 text-xs font-bold transition-all duration-300 flex items-center gap-1"
+                      className="px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-medium transition-colors"
                     >
-                      <HiOutlinePencil size={13} /> Edit
+                      Edit
                     </Link>
                   </div>
                 </div>
@@ -578,29 +527,32 @@ const Dashboard = () => {
         </div>
       )}
 
-      <div className="glass-card p-8 animate-slide-up border border-slate-200/80 dark:border-white/[0.04] rounded-2xl relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none -z-10" />
-        <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">Quick actions</h2>
-        <div className="mt-6 flex flex-wrap gap-4 items-center">
+      {/* Quick navigation actions */}
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#11131c] p-6 shadow-xs">
+        <h2 className="text-base font-bold text-slate-900 dark:text-white">Workspace Shortcuts</h2>
+        <div className="mt-4 flex flex-wrap gap-2.5">
           {isInstructor || isAdmin ? (
             <>
-              <Link to="/course/create" className="px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-extrabold text-sm shadow-lg hover:shadow-indigo-500/25 hover:scale-105 active:scale-95 transition-all duration-300 inline-flex items-center gap-2">
-                <HiOutlineDocumentText size={18} /> Create Course
+              <Link to="/course/create" className="btn btn-primary px-4 py-2 text-xs font-semibold">
+                Create Course
               </Link>
-              <Link to="/courses" className="px-6 py-3 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 font-extrabold text-sm shadow-sm hover:scale-105 active:scale-95 transition-all duration-300 inline-flex items-center gap-2">
-                <HiOutlineBookOpen size={18} /> View All Courses
+              <Link to="/courses" className="btn btn-outline px-4 py-2 text-xs font-medium">
+                Explore Courses
+              </Link>
+              <Link to="/dashboard?tab=exam-requests" className="btn btn-outline px-4 py-2 text-xs font-medium">
+                Attempt Requests
               </Link>
             </>
           ) : (
             <>
-              <Link to="/courses" className="px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-extrabold text-sm shadow-lg hover:shadow-indigo-500/25 hover:scale-105 active:scale-95 transition-all duration-300 inline-flex items-center gap-2">
-                <HiOutlineBookOpen size={18} /> Browse Courses
+              <Link to="/courses" className="btn btn-primary px-4 py-2 text-xs font-semibold">
+                Browse Courses
               </Link>
-              <Link to="/verify" className="px-6 py-3 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 font-extrabold text-sm shadow-sm hover:scale-105 active:scale-95 transition-all duration-300 inline-flex items-center gap-2">
-                <HiOutlineAcademicCap size={18} /> Verify Certificate
+              <Link to="/dashboard?tab=enrolled" className="btn btn-outline px-4 py-2 text-xs font-medium">
+                My Enrolled Courses
               </Link>
-              <Link to="/dashboard?tab=enrolled" className="px-6 py-3 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 font-extrabold text-sm shadow-sm hover:scale-105 active:scale-95 transition-all duration-300 inline-flex items-center gap-2">
-                <HiOutlineClipboardCheck size={18} /> My Courses
+              <Link to="/verify" className="btn btn-outline px-4 py-2 text-xs font-medium">
+                Verify Credentials
               </Link>
             </>
           )}

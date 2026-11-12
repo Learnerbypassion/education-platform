@@ -25,6 +25,7 @@ import CourseLearn from './pages/CourseLearn';
 import CourseCreate from './pages/CourseCreate';
 import ExamTake from './pages/ExamTake';
 import ExamCreate from './pages/ExamCreate';
+import ExamResult from './pages/ExamResult';
 import ExamResults from './pages/ExamResults';
 import AssignmentView from './pages/AssignmentView';
 import CertificateView from './pages/CertificateView';
@@ -81,6 +82,7 @@ function App() {
         <Route path="/courses/:id/learn" element={<ProtectedRoute><CourseLearn /></ProtectedRoute>} />
         <Route path="/exams/:id/take" element={<ProtectedRoute><ExamTake /></ProtectedRoute>} />
         <Route path="/exams/:id/results" element={<ProtectedRoute><MainLayout><ExamResults /></MainLayout></ProtectedRoute>} />
+        <Route path="/exams/:id/result" element={<ProtectedRoute><MainLayout><ExamResult /></MainLayout></ProtectedRoute>} />
         <Route path="/assignments/:id/view" element={<ProtectedRoute><MainLayout><AssignmentView /></MainLayout></ProtectedRoute>} />
         <Route path="/certificates/:id" element={<ProtectedRoute><MainLayout><CertificateView /></MainLayout></ProtectedRoute>} />
 

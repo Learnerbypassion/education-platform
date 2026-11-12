@@ -135,8 +135,7 @@ const AssignmentCreate = () => {
   return (
     <div className="create-exam-page animate-page-enter">
       <h1 className="section-title">
-        {isEdit ? 'Edit' : 'Create'}{' '}
-        <span className="gradient-text">Assignment</span>
+        {isEdit ? 'Edit' : 'Create'} Assignment
       </h1>
 
       <div className="create-exam-layout">
