@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { HiOutlineArrowRight, HiOutlineClock } from 'react-icons/hi';
-import { getCategoryLabel, truncateText, getInitials, getCourseThumbnail } from '../../utils/helpers';
+import { getCategoryLabel, truncateText, getInitials, getCourseThumbnail, getMediaUrl } from '../../utils/helpers';
 import './CourseCard.css';
 
 const CourseCard = ({ course }) => {
@@ -48,7 +48,7 @@ const CourseCard = ({ course }) => {
           <div className="course-card-instructor-info">
             <div className="course-card-instructor-avatar">
               {creator.profileImage ? (
-                <img src={creator.profileImage} alt={creator.name} className="h-full w-full rounded-full object-cover" />
+                <img src={getMediaUrl(creator.profileImage)} alt={creator.name} className="h-full w-full rounded-full object-cover" />
               ) : (
                 getInitials(creator.name)
               )}

@@ -36,10 +36,10 @@ const Footer = () => (
             </div>
           </div>
           <div className="footer-links-group">
-            <h4>System</h4>
+            <h4>Legal</h4>
             <div className="footer-links-list">
-              <Link to="/login">Sign In</Link>
-              <Link to="/dashboard">Workspace</Link>
+              <Link to="/privacy">Privacy Policy</Link>
+              <Link to="/terms">Terms of Service</Link>
               <Link to="/verify">Public Verification</Link>
             </div>
           </div>

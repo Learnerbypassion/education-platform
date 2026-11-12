@@ -95,7 +95,12 @@ export const getCourseThumbnail = (course) => {
 
 export const getMediaUrl = (urlPath) => {
   if (!urlPath) return '';
-  if (urlPath.startsWith('http://') || urlPath.startsWith('https://')) {
+  if (
+    urlPath.startsWith('http://') || 
+    urlPath.startsWith('https://') || 
+    urlPath.startsWith('blob:') || 
+    urlPath.startsWith('data:')
+  ) {
     return urlPath;
   }
   const apiURL = import.meta.env.VITE_API_URL || '';

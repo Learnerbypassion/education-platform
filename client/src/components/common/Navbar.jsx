@@ -5,7 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { logout } from '../../store/slices/authSlice';
 import { toggleSidebar } from '../../store/slices/uiSlice';
 import { HiOutlineMenu, HiOutlineBell, HiOutlineSearch, HiMoon, HiSun } from 'react-icons/hi';
-import { getInitials } from '../../utils/helpers';
+import { getInitials, getMediaUrl } from '../../utils/helpers';
 import { useTheme } from '../../context/ThemeContext';
 import BrandLogo from './BrandLogo';
 import { getNotifications, markAsRead, markAllAsRead } from '../../api/notificationApi';
@@ -21,7 +21,12 @@ const Navbar = () => {
   // Notification state
   const [notifications, setNotifications] = useState([]);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [navImgError, setNavImgError] = useState(false);
   const notifRef = useRef(null);
+
+  useEffect(() => {
+    setNavImgError(false);
+  }, [user?.profileImage]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -57,25 +62,22 @@ const Navbar = () => {
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-  const handleNotifClick = async (notif) => {
-    try {
-      if (!notif.isRead) {
-        await markAsRead(notif._id);
-        setNotifications((prev) =>
-          prev.map((n) => (n._id === notif._id ? { ...n, isRead: true } : n))
-        );
-      }
-      setNotifOpen(false);
-      let targetLink = notif.link;
-      if (!targetLink && (notif.type === 'exam-schedule' || notif.title?.includes('Exam Graded'))) {
-        const examId = notif.metadata?.examId || notif.metadata?.id;
-        if (examId) targetLink = `/exams/${examId}/results`;
-      }
-      if (targetLink) {
-        navigate(targetLink);
-      }
-    } catch {
-      // Silently fail
+  const handleNotifClick = (notif) => {
+    if (!notif.isRead) {
+      // Optimistically mark as read; don't block navigation on the API call
+      setNotifications((prev) =>
+        prev.map((n) => (n._id === notif._id ? { ...n, isRead: true } : n))
+      );
+      markAsRead(notif._id).catch(() => {});
+    }
+    setNotifOpen(false);
+    let targetLink = notif.link;
+    if (!targetLink && (notif.type === 'exam-schedule' || notif.title?.includes('Exam Graded'))) {
+      const examId = notif.metadata?.examId || notif.metadata?.id;
+      if (examId) targetLink = `/exams/${examId}/results`;
+    }
+    if (targetLink) {
+      navigate(targetLink);
     }
   };
 
@@ -204,7 +206,16 @@ const Navbar = () => {
 
               <div className="navbar-user-pill">
                 <div className="navbar-avatar-circle">
-                  {user?.profileImage ? <img src={user.profileImage} alt={user.name} className="h-full w-full rounded-full object-cover" /> : getInitials(user?.name)}
+                  {user?.profileImage && !navImgError ? (
+                    <img 
+                      src={getMediaUrl(user.profileImage)} 
+                      alt="" 
+                      onError={() => setNavImgError(true)} 
+                      className="h-full w-full rounded-full object-cover" 
+                    />
+                  ) : (
+                    getInitials(user?.name)
+                  )}
                 </div>
                 <button onClick={handleLogout} className="navbar-user-btn-logout">
                   Logout

@@ -41,17 +41,16 @@ const CourseDetail = () => {
           setOpenModules({ [courseData.modules[0]._id]: true });
         }
 
-        // Check if student is enrolled OR if user is instructor/creator/admin
+        // Check if student is enrolled OR if user is course creator/admin
         if (isAuthenticated) {
+          const creatorId = courseData?.creatorId?._id || courseData?.creatorId;
+          const isOwnerOrAdmin = (user?._id && creatorId && user._id.toString() === creatorId.toString()) || isAdmin;
           try {
             const enrolledList = await getEnrolledCourses();
             const isAlreadyEnrolled = enrolledList.data.data?.some(e => e.courseId?._id === id || e.courseId === id);
-            const isCreatorOrStaff = isInstructor || isAdmin || user?._id === courseData.creatorId?._id || user?._id === courseData.creatorId;
-            setEnrolled(isAlreadyEnrolled || isCreatorOrStaff);
+            setEnrolled(isAlreadyEnrolled || isOwnerOrAdmin);
           } catch {
-            if (isInstructor || isAdmin) {
-              setEnrolled(true);
-            }
+            setEnrolled(isOwnerOrAdmin);
           }
         }
       } catch {
@@ -298,14 +297,18 @@ const CourseDetail = () => {
                       <span>Open Classroom</span> 
                       <HiOutlineArrowRight size={15} />
                     </Link>
-                    {(isInstructor || isAdmin || user?._id === creator?._id) && (
-                      <Link 
-                        to={`/course/${id}/edit`} 
-                        className="btn btn-outline w-full py-2.5 px-4 text-xs font-medium flex items-center justify-center gap-1.5"
-                      >
-                        <HiOutlinePencil size={14} /> Edit Course
-                      </Link>
-                    )}
+                    {(() => {
+                      const creatorId = course?.creatorId?._id || course?.creatorId;
+                      const isOwnerOrAdmin = (user?._id && creatorId && user._id.toString() === creatorId.toString()) || isAdmin;
+                      return isOwnerOrAdmin ? (
+                        <Link 
+                          to={`/course/${id}/edit`} 
+                          className="btn btn-outline w-full py-2.5 px-4 text-xs font-medium flex items-center justify-center gap-1.5"
+                        >
+                          <HiOutlinePencil size={14} /> Edit Course
+                        </Link>
+                      ) : null;
+                    })()}
                   </div>
                 ) : (
                   <button 

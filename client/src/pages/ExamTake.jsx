@@ -29,6 +29,7 @@ const ExamTake = () => {
   const [error, setError] = useState(null);
   const [violations, setViolations] = useState(0);
   const [submissionResult, setSubmissionResult] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   
   // Custom Redesign UI States
   const [showInstructions, setShowInstructions] = useState(false);
@@ -38,109 +39,126 @@ const ExamTake = () => {
   const endTimeRef = useRef(null);
   const handleSubmitRef = useRef(null);
 
-  // Tab switch proctoring logic (Module 7 stub)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden && !submissionResult) {
-        setViolations(prev => {
-          const next = prev + 1;
-          toast.error(`Warning: Tab switch detected! Violations: ${next}/3`);
-          if (next >= 3) {
-            toast.error('Too many violations. Auto-submitting exam.');
-            if (handleSubmitRef.current) {
-              handleSubmitRef.current(true);
-            }
-          }
-          return next;
-        });
+  // Refs mirror the latest state so timer / visibility callbacks never submit stale data
+  const answersRef = useRef({});
+  const questionsRef = useRef([]);
+  const examRef = useRef(null);
+  const submittingRef = useRef(false);
+  const submittedRef = useRef(false);
+
+  useEffect(() => { answersRef.current = answers; }, [answers]);
+  useEffect(() => { questionsRef.current = questions; }, [questions]);
+  useEffect(() => { examRef.current = exam; }, [exam]);
+
+  const startTimer = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    // High precision interval tied to Date.now()
+    timerRef.current = setInterval(() => {
+      if (!endTimeRef.current) return;
+      const remaining = Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000));
+      setTimeLeft(remaining);
+
+      if (remaining <= 0) {
+        clearInterval(timerRef.current);
+        toast.error('Time is up! Submitting exam.');
+        handleSubmitRef.current?.(true);
       }
+    }, 1000);
+  };
+
+  // Tab switch proctoring logic – only active while the exam is actually in progress
+  const examActive = !loading && !!exam && !submissionResult;
+  useEffect(() => {
+    if (!examActive) return undefined;
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden || submittedRef.current || submittingRef.current) return;
+      setViolations(prev => {
+        const next = prev + 1;
+        if (next >= 3) {
+          toast.error('Too many violations. Auto-submitting exam.');
+          setTimeout(() => handleSubmitRef.current?.(true), 0);
+        } else {
+          toast.error(`Warning: Tab switch detected! Violations: ${next}/3`);
+        }
+        return next;
+      });
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [submissionResult]);
-
-  const loadExam = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await takeExam(id);
-      const { exam: examData, questions: qList } = res.data.data;
-      setExam(examData);
-      setQuestions(qList);
-
-      const durationMinutes = Number(examData.duration) || 30;
-      const totalSeconds = durationMinutes * 60;
-      
-      // Check if session has active in-progress state for refresh recovery
-      let savedAnswers = null;
-      let savedEndTime = null;
-      try {
-        const rawAnswers = sessionStorage.getItem(`exam_answers_${id}`);
-        if (rawAnswers) savedAnswers = JSON.parse(rawAnswers);
-        const rawEnd = sessionStorage.getItem(`exam_end_${id}`);
-        if (rawEnd) savedEndTime = parseInt(rawEnd, 10);
-      } catch (e) {
-        console.warn('Session restoration failed:', e);
-      }
-
-      // Calculate absolute end target time
-      const targetEnd = (savedEndTime && savedEndTime > Date.now()) 
-        ? savedEndTime 
-        : Date.now() + totalSeconds * 1000;
-
-      endTimeRef.current = targetEnd;
-      try {
-        sessionStorage.setItem(`exam_end_${id}`, String(targetEnd));
-      } catch {
-        // Ignore quota errors
-      }
-
-      const remainingSecs = Math.max(0, Math.ceil((targetEnd - Date.now()) / 1000));
-      setTimeLeft(remainingSecs);
-
-      // Prepopulate empty answers or restore saved answers
-      const initial = {};
-      qList.forEach(q => {
-        if (q.type === 'multiple-correct') initial[q._id] = [];
-        else initial[q._id] = '';
-      });
-
-      const restoredAnswers = savedAnswers ? { ...initial, ...savedAnswers } : initial;
-      setAnswers(restoredAnswers);
-
-      if (timerRef.current) clearInterval(timerRef.current);
-
-      // High precision interval tied to Date.now()
-      timerRef.current = setInterval(() => {
-        if (!endTimeRef.current) return;
-        const remaining = Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000));
-        setTimeLeft(remaining);
-
-        if (remaining <= 0) {
-          clearInterval(timerRef.current);
-          toast.error('Time is up! Submitting exam.');
-          if (handleSubmitRef.current) {
-            handleSubmitRef.current(true);
-          }
-        }
-      }, 1000);
-    } catch (err) {
-      console.error('Failed to load exam:', err);
-      const msg = err.response?.data?.message || 'Failed to load exam. Check if you have attempts left.';
-      setError(msg);
-      toast.error(msg);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [examActive]);
 
   useEffect(() => {
+    let cancelled = false;
+    const loadExam = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await takeExam(id);
+        if (cancelled) return;
+        const { exam: examData, questions: qList } = res.data.data;
+        setExam(examData);
+        setQuestions(qList);
+
+        const durationMinutes = Number(examData.duration) || 30;
+        const totalSeconds = durationMinutes * 60;
+        
+        // Check if session has active in-progress state for refresh recovery
+        let savedAnswers = null;
+        let savedEndTime = null;
+        try {
+          const rawAnswers = sessionStorage.getItem(`exam_answers_${id}`);
+          if (rawAnswers) savedAnswers = JSON.parse(rawAnswers);
+          const rawEnd = sessionStorage.getItem(`exam_end_${id}`);
+          if (rawEnd) savedEndTime = parseInt(rawEnd, 10);
+        } catch (e) {
+          console.warn('Session restoration failed:', e);
+        }
+
+        // Calculate absolute end target time
+        const targetEnd = (savedEndTime && savedEndTime > Date.now()) 
+          ? savedEndTime 
+          : Date.now() + totalSeconds * 1000;
+
+        endTimeRef.current = targetEnd;
+        try {
+          sessionStorage.setItem(`exam_end_${id}`, String(targetEnd));
+        } catch {
+          // Ignore quota errors
+        }
+
+        const remainingSecs = Math.max(0, Math.ceil((targetEnd - Date.now()) / 1000));
+        setTimeLeft(remainingSecs);
+
+        // Prepopulate empty answers or restore saved answers
+        const initial = {};
+        qList.forEach(q => {
+          if (q.type === 'multiple-correct') initial[q._id] = [];
+          else initial[q._id] = '';
+        });
+
+        const restoredAnswers = savedAnswers ? { ...initial, ...savedAnswers } : initial;
+        setAnswers(restoredAnswers);
+
+        startTimer();
+      } catch (err) {
+        if (cancelled) return;
+        console.error('Failed to load exam:', err);
+        const msg = err.response?.data?.message || 'Failed to load exam. Check if you have attempts left.';
+        setError(msg);
+        toast.error(msg);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
     loadExam();
 
     return () => {
+      cancelled = true;
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [id]);
@@ -175,16 +193,26 @@ const ExamTake = () => {
   };
 
   const handleSubmit = async (isAuto = false) => {
+    // Guard against double submission (timer + proctoring + button can race)
+    if (submittingRef.current || submittedRef.current) return;
     if (!isAuto && !window.confirm('Are you sure you want to submit your exam?')) return;
     
+    submittingRef.current = true;
     if (timerRef.current) clearInterval(timerRef.current);
-    setLoading(true);
+    setSubmitting(true);
+
+    const latestAnswers = answersRef.current;
+    const latestQuestions = questionsRef.current;
+    const latestExam = examRef.current;
+    const remainingSeconds = endTimeRef.current
+      ? Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000))
+      : 0;
 
     try {
       // Map state answers to matching submission schema API expectations
-      const formattedAnswers = Object.keys(answers).map(qId => {
-        const val = answers[qId];
-        const q = questions.find(item => item._id === qId);
+      const formattedAnswers = Object.keys(latestAnswers).map(qId => {
+        const val = latestAnswers[qId];
+        const q = latestQuestions.find(item => item._id === qId);
         if (q?.type === 'multiple-correct') {
           return { questionId: qId, selectedOptions: val };
         } else if (q?.type === 'fill-in-the-blank' || q?.type === 'short-answer') {
@@ -196,7 +224,7 @@ const ExamTake = () => {
 
       const res = await submitExam(id, {
         answers: formattedAnswers,
-        timeSpent: (exam?.duration || 30) * 60 - timeLeft,
+        timeSpent: (Number(latestExam?.duration) || 30) * 60 - remainingSeconds,
       });
 
       // Clear session persistence on successful submission
@@ -208,12 +236,16 @@ const ExamTake = () => {
       }
 
       const result = res.data.data;
+      submittedRef.current = true;
       setSubmissionResult(result);
       toast.success(result.isPassed ? 'Passed! 🎉' : 'Failed. Try again next time.');
-    } catch {
-      toast.error('Failed to submit exam');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to submit exam. Please try again.');
+      // Let the student retry while time remains
+      if (remainingSeconds > 0) startTimer();
     } finally {
-      setLoading(false);
+      submittingRef.current = false;
+      setSubmitting(false);
     }
   };
 
@@ -244,7 +276,7 @@ const ExamTake = () => {
     }
   };
 
-  if (loading) {
+  if (loading || submitting) {
     return (
       <div className="exam-loading-wrapper">
         <div className="exam-loading-card animate-fade-in">
@@ -253,16 +285,16 @@ const ExamTake = () => {
           </div>
           <div>
             <h3 className="text-xl font-black text-slate-900 dark:text-white font-heading tracking-tight mb-2">
-              Preparing Secure Assessment Console
+              {submitting ? 'Submitting & Grading Assessment' : 'Preparing Secure Assessment Console'}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto font-medium">
-              Verifying student credentials, initializing proctoring protocols, and loading questions...
+              {submitting ? 'Please do not close or refresh this tab while your answers are being evaluated...' : 'Verifying student credentials, initializing proctoring protocols, and loading questions...'}
             </p>
           </div>
-          <Loader size="md" text="Syncing examination session..." />
+          <Loader size="md" text={submitting ? 'Recording and evaluating score...' : 'Syncing examination session...'} />
           <div className="secure-loading-indicator">
             <HiOutlineShieldCheck />
-            <span>Assessment Session Initialized</span>
+            <span>{submitting ? 'Secure Submission Active' : 'Assessment Session Initialized'}</span>
           </div>
         </div>
       </div>
@@ -404,6 +436,13 @@ const ExamTake = () => {
             >
               <span>Back to Course Classroom</span>
               <HiOutlineArrowRight size={18} />
+            </button>
+
+            <button
+              onClick={() => navigate(`/exams/${id}/results`)}
+              className="btn btn-outline w-full py-3 px-6 font-medium text-xs flex items-center justify-center gap-2 cursor-pointer"
+            >
+              View All Attempts
             </button>
 
             <button
